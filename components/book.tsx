@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState, useCallback, useEffect } from "react";
+import { useRef, useMemo, useCallback, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Project } from "@/data/types";
@@ -72,7 +72,6 @@ export function Book({
   reduceMotion,
 }: BookProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const [hoverCursor, setHoverCursor] = useState(false);
 
   const coverTexture = useGradientTexture(project.coverMedia.background);
   const spineColor = useMemo(() => {
@@ -85,17 +84,30 @@ export function Book({
     const offWhite = new THREE.MeshStandardMaterial({
       color: "#F2F1EE",
       roughness: 0.8,
+      transparent: true,
     });
     const spine = new THREE.MeshStandardMaterial({
       color: spineColor,
       roughness: 0.6,
+      transparent: true,
     });
     const cover = new THREE.MeshStandardMaterial({
       map: coverTexture,
       roughness: 0.7,
+      transparent: true,
     });
     return [offWhite, spine, offWhite, offWhite, cover, offWhite];
   }, [coverTexture, spineColor]);
+
+  // Dispose materials and textures on unmount
+  useEffect(() => {
+    return () => {
+      materials.forEach((mat) => {
+        if (mat.map) mat.map.dispose();
+        mat.dispose();
+      });
+    };
+  }, [materials]);
 
   const centerOffset = index - (total - 1) / 2;
   // All books face the same direction — angled ~70° like books on a shelf
@@ -110,7 +122,6 @@ export function Book({
     y: baseY,
     z: baseZ,
     rotY: baseRotY,
-    brightness: 1,
   });
 
   useEffect(() => {
@@ -118,9 +129,8 @@ export function Book({
       target.current = {
         x: baseX,
         y: 0.4,
-        z: 1.5, // forward to clear other books
+        z: 1.5,
         rotY: 0,
-        brightness: 1,
       };
     } else if (anyHovered) {
       target.current = {
@@ -128,7 +138,6 @@ export function Book({
         y: baseY,
         z: baseZ,
         rotY: baseRotY,
-        brightness: 0.65,
       };
     } else {
       target.current = {
@@ -136,7 +145,6 @@ export function Book({
         y: baseY,
         z: baseZ,
         rotY: baseRotY,
-        brightness: 0.88,
       };
     }
   }, [isHovered, anyHovered, baseX, baseY, baseZ, baseRotY]);
@@ -152,32 +160,20 @@ export function Book({
     group.position.z = THREE.MathUtils.lerp(group.position.z, t.z, speed);
     group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, t.rotY, speed);
 
-    const targetOpacity = isHovered ? 1 : anyHovered ? 0.55 : 0.88;
+    const targetOpacity = isHovered ? 1 : anyHovered ? 0.55 : 1;
     materials.forEach((mat) => {
-      mat.transparent = true;
       mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, speed);
     });
   });
 
-  useEffect(() => {
-    if (hoverCursor) {
-      document.body.style.cursor = "pointer";
-    }
-    return () => {
-      if (hoverCursor) {
-        document.body.style.cursor = "";
-      }
-    };
-  }, [hoverCursor]);
-
   const handlePointerOver = useCallback(() => {
     onHover(index);
-    setHoverCursor(true);
+    document.body.style.cursor = "pointer";
   }, [index, onHover]);
 
   const handlePointerOut = useCallback(() => {
     onHover(null);
-    setHoverCursor(false);
+    document.body.style.cursor = "";
   }, [onHover]);
 
   const handleClick = useCallback(() => {
