@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-canvas: #efebe4;
+  --color-canvas: #f9f8f6;
   --color-panel: #e4dfd7;
   --color-line: rgba(19, 19, 19, 0.12);
   --color-ink: #131313;
@@ -26,9 +26,7 @@ html {
 body {
   min-height: 100vh;
   font-family: var(--font-body), sans-serif;
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.72), transparent 30%),
-    linear-gradient(180deg, #f2efe8 0%, #efebe4 34%, #ebe7df 100%);
+  background: #f9f8f6;
 }
 
 a {

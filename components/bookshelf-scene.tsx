@@ -113,7 +113,7 @@ export function BookshelfScene({ projects }: BookshelfSceneProps) {
       <Canvas
         dpr={[1, 1.75]}
         gl={{ antialias: true, alpha: true }}
-        camera={{ position: [0, 1.2, 8], fov: 35 }}
+        camera={{ position: [0, 0.5, 6], fov: 40 }}
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>

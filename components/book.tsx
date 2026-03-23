@@ -57,9 +57,9 @@ function useGradientTexture(cssGradient: string, width = 512, height = 720) {
   }, [cssGradient, width, height]);
 }
 
-const BOOK_WIDTH = 2.2;
-const BOOK_HEIGHT = 3.2;
-const BOOK_DEPTH = 0.15;
+const BOOK_WIDTH = 0.7;
+const BOOK_HEIGHT = 0.7;
+const BOOK_DEPTH = 0.05;
 
 export function Book({
   project,
@@ -98,10 +98,12 @@ export function Book({
   }, [coverTexture, spineColor]);
 
   const centerOffset = index - (total - 1) / 2;
-  const baseRotY = centerOffset * -0.22;
-  const baseX = centerOffset * (BOOK_WIDTH + 0.3);
+  // All books face the same direction — angled ~70° like books on a shelf
+  const baseRotY = 1.2;
+  // Tight spacing since they're edge-on
+  const baseX = centerOffset * 0.22;
   const baseY = 0;
-  const baseZ = -Math.abs(centerOffset) * 0.15;
+  const baseZ = 0;
 
   const target = useRef({
     x: baseX,
@@ -115,8 +117,8 @@ export function Book({
     if (isHovered) {
       target.current = {
         x: baseX,
-        y: 0.3,
-        z: 0.6,
+        y: 0.4,
+        z: 1.5, // forward to clear other books
         rotY: 0,
         brightness: 1,
       };
@@ -143,7 +145,7 @@ export function Book({
     const group = groupRef.current;
     if (!group) return;
     const t = target.current;
-    const speed = reduceMotion ? 1 : 1 - Math.exp(-delta * 8);
+    const speed = reduceMotion ? 1 : 1 - Math.exp(-delta * 5);
 
     group.position.x = THREE.MathUtils.lerp(group.position.x, t.x, speed);
     group.position.y = THREE.MathUtils.lerp(group.position.y, t.y, speed);
