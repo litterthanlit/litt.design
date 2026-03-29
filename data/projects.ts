@@ -211,7 +211,7 @@ export const projects: Project[] = [
   },
   {
     slug: "vceezy",
-    title: "VCeezy",
+    title: "VCEEZY",
     category: "Web3 Platform",
     description:
       "A music and NFT platform on Hedera. Player, collection, archive, merch, and token-gated content with wallet connectivity. Monochrome quiet-luxury design with spring-driven motion.",

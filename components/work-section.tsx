@@ -128,7 +128,7 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
       onMouseLeave={() => onHover(null)}
     >
       <motion.div
-        className="group flex w-full items-center gap-4"
+        className="group flex w-full items-center justify-between rounded-full bg-[#0a0a0a] px-7 py-4 md:px-9 md:py-5"
         initial={
           reduceMotion
             ? {}
@@ -142,20 +142,17 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
           damping: 28,
           delay: index * 0.05,
         }}
+        whileHover={reduceMotion ? {} : { y: -2 }}
+        whileTap={{ scale: 0.98 }}
       >
-        {/* Pill around title only */}
-        <motion.span
-          className="inline-block rounded-full bg-[#0a0a0a] px-7 py-3 text-[clamp(1.1rem,3vw,1.5rem)] font-medium tracking-[-0.03em] text-white md:px-9 md:py-4"
-          whileHover={reduceMotion ? {} : { y: -2 }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        >
+        {/* Name */}
+        <span className="text-[clamp(1.1rem,3vw,1.5rem)] font-medium tracking-[-0.03em] text-white">
           {project.title}
-        </motion.span>
+        </span>
 
         {/* Arrow */}
         <motion.span
-          className="text-[16px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]"
+          className="text-[16px] text-white/40 transition-colors duration-150 group-hover:text-white"
           animate={reduceMotion ? {} : { x: isHovered ? 4 : 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
