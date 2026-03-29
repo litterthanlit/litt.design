@@ -31,7 +31,7 @@ export function SiteHeader() {
           <AnimatePresence>
             {showTooltip && (
               <motion.span
-                className="absolute left-full top-1/2 ml-3 whitespace-nowrap rounded-full bg-[#0a0a0a] px-3.5 py-1.5 text-[12px] text-white"
+                className="absolute left-full top-1/2 ml-3 whitespace-nowrap rounded-full border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-1.5 text-[12px] text-[#0a0a0a]"
                 initial={
                   reduceMotion
                     ? { opacity: 0 }
