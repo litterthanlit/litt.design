@@ -25,9 +25,9 @@ export function WorkSection({ projects }: WorkSectionProps) {
 
   return (
     <section id="work" className="section-shell py-20 md:py-32">
-      {/* Eyebrow — clipPath reveal */}
+      {/* Eyebrow */}
       <motion.p
-        className="eyebrow mb-16"
+        className="eyebrow mb-10"
         initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
         whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
         viewport={{ once: true }}
@@ -54,14 +54,11 @@ export function WorkSection({ projects }: WorkSectionProps) {
               transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.8 }}
             >
               <div className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-                {/* Gradient strip */}
                 <div
                   className="h-32"
                   style={{ background: hoveredProject.coverMedia.background }}
                 />
-
                 <div className="space-y-3 p-5">
-                  {/* Category + Year */}
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
                       {hoveredProject.category}
@@ -70,13 +67,9 @@ export function WorkSection({ projects }: WorkSectionProps) {
                       {hoveredProject.year}
                     </span>
                   </div>
-
-                  {/* Description */}
                   <p className="text-[13px] leading-[1.6] text-[#525252]">
                     {hoveredProject.oneLineOutcome}
                   </p>
-
-                  {/* Stack pills — staggered blur-in */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {hoveredProject.stack.map((tech, i) => (
                       <motion.span
@@ -101,10 +94,10 @@ export function WorkSection({ projects }: WorkSectionProps) {
           )}
         </AnimatePresence>
 
-        {/* Project list */}
-        <div className="divide-y divide-[rgba(0,0,0,0.06)]">
+        {/* Project pills */}
+        <div className="flex flex-wrap gap-2">
           {projects.map((project, index) => (
-            <ProjectRow
+            <ProjectPill
               key={project.slug}
               project={project}
               index={index}
@@ -119,7 +112,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
   );
 }
 
-type ProjectRowProps = {
+type ProjectPillProps = {
   project: Project;
   index: number;
   isHovered: boolean;
@@ -127,80 +120,46 @@ type ProjectRowProps = {
   reduceMotion: boolean;
 };
 
-function ProjectRow({ project, index, isHovered, onHover, reduceMotion }: ProjectRowProps) {
-  const num = String(index + 1).padStart(2, "0");
-
+function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: ProjectPillProps) {
   return (
     <Link
       href={`/work/${project.slug}`}
-      className="group block"
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
     >
-      {/* Scroll entrance — blur-in with stagger */}
       <motion.div
-        className="flex items-baseline gap-4 py-6 md:gap-6 md:py-8"
+        className="group flex items-center gap-2.5 rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-colors duration-150 hover:border-[rgba(0,0,0,0.2)] hover:bg-white"
         initial={
           reduceMotion
             ? {}
-            : { opacity: 0, y: 20, filter: "blur(4px)" }
+            : { opacity: 0, y: 12, filter: "blur(4px)" }
         }
         whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        viewport={{ once: true, margin: "-60px" }}
+        viewport={{ once: true, margin: "-40px" }}
         transition={{
           type: "spring",
-          stiffness: 100,
-          damping: 30,
-          delay: index * 0.06,
+          stiffness: 120,
+          damping: 28,
+          delay: index * 0.05,
         }}
-        // Hover nudge — snappy spring
-        animate={
-          reduceMotion
-            ? {}
-            : { x: isHovered ? 8 : 0 }
-        }
-        whileHover={reduceMotion ? {} : undefined}
+        whileHover={reduceMotion ? {} : { y: -2 }}
+        whileTap={{ scale: 0.97 }}
       >
-        {/* Number */}
-        <span className="font-mono text-[11px] tabular-nums text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
-          {num}
-        </span>
-
-        {/* Project name */}
-        <h3 className="text-[clamp(1.6rem,4vw,3.2rem)] font-[450] leading-[1] tracking-[-0.04em] text-[#0a0a0a]">
-          {project.title}
-        </h3>
-
-        {/* Accent dot — fades in on hover */}
-        <motion.span
-          className="h-2 w-2 rounded-full"
+        {/* Accent dot */}
+        <span
+          className="h-2 w-2 shrink-0 rounded-full"
           style={{ backgroundColor: project.accent }}
-          initial={false}
-          animate={
-            reduceMotion
-              ? { opacity: isHovered ? 1 : 0 }
-              : {
-                  opacity: isHovered ? 1 : 0,
-                  scale: isHovered ? 1 : 0.5,
-                  filter: isHovered ? "blur(0px)" : "blur(2px)",
-                }
-          }
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
         />
 
-        {/* Category — visible on larger screens */}
-        <span className="ml-auto hidden font-mono text-[11px] uppercase tracking-[0.08em] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#737373] md:block">
-          {project.category}
+        {/* Name */}
+        <span className="text-[15px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+          {project.title}
         </span>
 
-        {/* Arrow — slides right on hover */}
+        {/* Arrow */}
         <motion.span
-          className="text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]"
-          animate={
-            reduceMotion
-              ? {}
-              : { x: isHovered ? 4 : 0 }
-          }
+          className="text-[12px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]"
+          animate={reduceMotion ? {} : { x: isHovered ? 3 : 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           &rarr;
