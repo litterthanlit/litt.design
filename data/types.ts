@@ -35,6 +35,17 @@ export type Project = {
   metrics?: Metric[];
 };
 
+export type ServiceItem = {
+  name: string;
+  description: string;
+};
+
+export type ApproachItem = {
+  step: string;
+  title: string;
+  description: string;
+};
+
 export type SiteSettings = {
   brandName: string;
   tagline: string;
@@ -48,15 +59,8 @@ export type SiteSettings = {
     color: string;
   };
   about: string[];
-  services: {
-    name: string;
-    description: string;
-  }[];
-  approach: {
-    step: string;
-    title: string;
-    description: string;
-  }[];
+  services: ServiceItem[];
+  approach: ApproachItem[];
   socialLinks: {
     label: string;
     href: string;
