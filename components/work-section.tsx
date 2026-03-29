@@ -152,7 +152,7 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
         />
 
         {/* Name */}
-        <span className="text-[15px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+        <span className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
           {project.title}
         </span>
 

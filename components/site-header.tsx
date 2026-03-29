@@ -11,8 +11,8 @@ export function SiteHeader() {
           <Image
             src="/logo.gif"
             alt="litt.design"
-            width={64}
-            height={34}
+            width={80}
+            height={42}
             unoptimized
             priority
           />
