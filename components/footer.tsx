@@ -67,7 +67,7 @@ export function Footer({ settings }: FooterProps) {
           >
             {link.label}
             <span className="text-[11px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
-              &nearr;
+              ↗
             </span>
           </motion.a>
         ))}
@@ -94,7 +94,7 @@ export function Footer({ settings }: FooterProps) {
         >
           {settings.contactEmail}
           <span className="text-[11px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
-            &nearr;
+            ↗
           </span>
         </motion.a>
       </motion.div>
