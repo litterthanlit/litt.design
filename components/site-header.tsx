@@ -45,7 +45,7 @@ export function SiteHeader() {
                 }
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
-                yes, this is handmade
+                yes, made by hand
               </motion.span>
             )}
           </AnimatePresence>
