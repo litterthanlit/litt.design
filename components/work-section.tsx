@@ -94,8 +94,8 @@ export function WorkSection({ projects }: WorkSectionProps) {
           )}
         </AnimatePresence>
 
-        {/* Project pills */}
-        <div className="flex flex-wrap gap-2">
+        {/* Project pills — stacked */}
+        <div className="flex flex-col gap-3">
           {projects.map((project, index) => (
             <ProjectPill
               key={project.slug}
@@ -128,7 +128,7 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
       onMouseLeave={() => onHover(null)}
     >
       <motion.div
-        className="group flex items-center gap-2.5 rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-colors duration-150 hover:border-[rgba(0,0,0,0.2)] hover:bg-white"
+        className="group flex w-full items-center justify-between rounded-full bg-[#0a0a0a] px-7 py-4 md:px-9 md:py-5"
         initial={
           reduceMotion
             ? {}
@@ -143,23 +143,17 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
           delay: index * 0.05,
         }}
         whileHover={reduceMotion ? {} : { y: -2 }}
-        whileTap={{ scale: 0.97 }}
+        whileTap={{ scale: 0.98 }}
       >
-        {/* Accent dot */}
-        <span
-          className="h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: project.accent }}
-        />
-
         {/* Name */}
-        <span className="text-[15px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+        <span className="text-[clamp(1.1rem,3vw,1.5rem)] font-medium tracking-[-0.03em] text-white">
           {project.title}
         </span>
 
         {/* Arrow */}
         <motion.span
-          className="text-[12px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]"
-          animate={reduceMotion ? {} : { x: isHovered ? 3 : 0 }}
+          className="text-[16px] text-white/40 transition-colors duration-150 group-hover:text-white"
+          animate={reduceMotion ? {} : { x: isHovered ? 4 : 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           &rarr;
