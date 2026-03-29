@@ -1,30 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import localFont from "next/font/local";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
 import { siteSettings } from "@/data/site";
 import "./globals.css";
-
-const display = localFont({
-  variable: "--font-display",
-  src: [
-    { path: "./fonts/schibsted-grotesk-400.ttf", weight: "400", style: "normal" },
-    { path: "./fonts/schibsted-grotesk-500.ttf", weight: "500", style: "normal" },
-    { path: "./fonts/schibsted-grotesk-600.ttf", weight: "600", style: "normal" },
-    { path: "./fonts/schibsted-grotesk-700.ttf", weight: "700", style: "normal" },
-    { path: "./fonts/schibsted-grotesk-800.ttf", weight: "800", style: "normal" },
-    { path: "./fonts/schibsted-grotesk-900.ttf", weight: "900", style: "normal" },
-  ],
-});
-
-const body = localFont({
-  variable: "--font-body",
-  src: [
-    { path: "./fonts/ibm-plex-sans-400.ttf", weight: "400", style: "normal" },
-    { path: "./fonts/ibm-plex-sans-500.ttf", weight: "500", style: "normal" },
-    { path: "./fonts/ibm-plex-sans-600.ttf", weight: "600", style: "normal" },
-  ],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://litt.design"),
@@ -58,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${body.variable} bg-canvas text-ink antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} bg-canvas text-ink antialiased`}>
         <div className="grain" aria-hidden="true" />
         <SiteHeader settings={siteSettings} />
         {children}
