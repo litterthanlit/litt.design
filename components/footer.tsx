@@ -32,7 +32,7 @@ export function Footer({ settings }: FooterProps) {
         <p className="text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
           I build tools for creators.
         </p>
-        <p className="mt-2 text-[15px] leading-[1.7] text-[#525252]">
+        <p className="mt-2 text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
           The craft is in what I leave out.
         </p>
         <p className="mt-4 text-[13px] leading-[1.7] text-[#a3a3a3]">
