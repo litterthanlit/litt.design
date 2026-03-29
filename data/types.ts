@@ -1,13 +1,38 @@
+export type HeroFrame = {
+  id: string;
+  background: string;
+  texture?: string;
+  focus: number;
+};
+
+export type StoryBlock = {
+  label: string;
+  heading: string;
+  body: string;
+};
+
+export type Metric = {
+  label: string;
+  value: string;
+};
+
 export type Project = {
   slug: string;
   title: string;
   category: string;
   description: string;
+  oneLineOutcome: string;
+  client: string;
+  year: string;
+  services: string[];
   stack: string[];
   accent: string;
   coverMedia: {
     background: string;
   };
+  heroFrames: HeroFrame[];
+  storyBlocks: StoryBlock[];
+  metrics?: Metric[];
 };
 
 export type SiteSettings = {
