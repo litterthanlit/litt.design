@@ -45,7 +45,7 @@ export function SiteHeader() {
                 }
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
-                yes, made by hand
+                frame by frame
               </motion.span>
             )}
           </AnimatePresence>
