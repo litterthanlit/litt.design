@@ -106,6 +106,36 @@ export function WorkSection({ projects }: WorkSectionProps) {
               reduceMotion={reduceMotion ?? false}
             />
           ))}
+
+          {/* Art pill — links to /art */}
+          <Link href="/art">
+            <motion.div
+              className="group flex items-center gap-2.5 rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-colors duration-150 hover:border-[rgba(0,0,0,0.2)] hover:bg-white"
+              initial={
+                reduceMotion
+                  ? {}
+                  : { opacity: 0, y: 12, filter: "blur(4px)" }
+              }
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{
+                type: "spring",
+                stiffness: 120,
+                damping: 28,
+                delay: projects.length * 0.05,
+              }}
+              whileHover={reduceMotion ? {} : { y: -2 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <span className="h-2 w-2 shrink-0 rounded-full bg-[#8B0000]" />
+              <span className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+                Art
+              </span>
+              <span className="text-[12px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
+                →
+              </span>
+            </motion.div>
+          </Link>
         </div>
       </div>
     </section>
