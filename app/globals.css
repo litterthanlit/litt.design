@@ -28,7 +28,10 @@ html {
 body {
   min-height: 100vh;
   font-family: var(--font-sans), system-ui, sans-serif;
-  background: var(--color-canvas);
+  background:
+    radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.04) 1px, transparent 0) 0 0 / 24px 24px,
+    radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, 0.02) 0%, transparent 60%),
+    var(--color-canvas);
 }
 
 a {
