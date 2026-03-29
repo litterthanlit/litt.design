@@ -121,9 +121,16 @@ type ProjectPillProps = {
 };
 
 function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: ProjectPillProps) {
+  const isExternal = !!project.externalUrl;
+  const href = isExternal ? project.externalUrl! : `/work/${project.slug}`;
+
+  const linkProps = isExternal
+    ? { href, target: "_blank" as const, rel: "noopener noreferrer" }
+    : { href };
+
   return (
     <Link
-      href={`/work/${project.slug}`}
+      {...linkProps}
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
     >
@@ -162,7 +169,7 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
           animate={reduceMotion ? {} : { x: isHovered ? 3 : 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
-          &rarr;
+          {isExternal ? "↗" : "→"}
         </motion.span>
       </motion.div>
     </Link>

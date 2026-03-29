@@ -33,6 +33,7 @@ export type Project = {
   heroFrames: HeroFrame[];
   storyBlocks: StoryBlock[];
   metrics?: Metric[];
+  externalUrl?: string;
 };
 
 export type ServiceItem = {

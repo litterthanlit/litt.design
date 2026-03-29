@@ -261,4 +261,25 @@ export const projects: Project[] = [
       { label: "Design", value: "Monochrome" },
     ],
   },
+  {
+    slug: "litt-works",
+    title: "litt.works",
+    category: "Digital Art",
+    description:
+      "Abstract digital art exploring emotional turbulence and psychological landscapes. Dark, introspective pieces available as prints.",
+    oneLineOutcome:
+      "Abstract art that sits between chaos and stillness.",
+    client: "Personal Practice",
+    year: "2024–2026",
+    services: ["Art Direction", "Digital Art", "Print"],
+    stack: [],
+    accent: "#8B0000",
+    externalUrl: "https://litt.works/",
+    coverMedia: {
+      background:
+        "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 40%, #2d1111 100%)",
+    },
+    heroFrames: [],
+    storyBlocks: [],
+  },
 ];
