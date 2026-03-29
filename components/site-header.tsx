@@ -1,22 +1,55 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 export function SiteHeader() {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const reduceMotion = useReducedMotion();
+
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="section-shell flex items-center justify-between py-5">
-        <Link href="/" aria-label="Home">
-          <Image
-            src="/logo.gif"
-            alt="litt.design"
-            width={80}
-            height={42}
-            unoptimized
-            priority
-          />
-        </Link>
+        <div
+          className="relative"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          <Link href="/" aria-label="Home">
+            <Image
+              src="/logo.gif"
+              alt="litt.design"
+              width={80}
+              height={42}
+              unoptimized
+              priority
+            />
+          </Link>
+
+          <AnimatePresence>
+            {showTooltip && (
+              <motion.span
+                className="absolute left-full top-1/2 ml-3 whitespace-nowrap rounded-full bg-[#0a0a0a] px-3.5 py-1.5 text-[12px] text-white"
+                initial={
+                  reduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, x: -6, scale: 0.96, filter: "blur(4px)" }
+                }
+                animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
+                exit={
+                  reduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, x: -4, scale: 0.97, filter: "blur(2px)" }
+                }
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              >
+                yes, this is handmade
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </header>
   );
