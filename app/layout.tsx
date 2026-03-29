@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
-import { siteSettings } from "@/data/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -40,7 +39,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${GeistSans.variable} ${GeistMono.variable} bg-canvas text-ink antialiased`}>
         <div className="grain" aria-hidden="true" />
-        <SiteHeader settings={siteSettings} />
+        <SiteHeader />
         {children}
       </body>
     </html>
