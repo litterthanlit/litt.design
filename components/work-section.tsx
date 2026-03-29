@@ -25,7 +25,16 @@ export function WorkSection({ projects }: WorkSectionProps) {
 
   return (
     <section id="work" className="section-shell py-20 md:py-32">
-      <p className="eyebrow mb-16">Selected Work</p>
+      {/* Eyebrow — clipPath reveal */}
+      <motion.p
+        className="eyebrow mb-16"
+        initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
+        whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
+        viewport={{ once: true }}
+        transition={{ type: "spring", stiffness: 80, damping: 30 }}
+      >
+        Selected Work
+      </motion.p>
 
       <div
         ref={containerRef}
@@ -34,15 +43,15 @@ export function WorkSection({ projects }: WorkSectionProps) {
       >
         {/* Floating preview card */}
         <AnimatePresence>
-          {hoveredProject && (
+          {hoveredProject && !reduceMotion && (
             <motion.div
               key={hoveredProject.slug}
               className="pointer-events-none absolute right-0 z-10 hidden w-[340px] lg:block"
               style={{ top: cursorY - 100 }}
-              initial={reduceMotion ? { opacity: 1 } : { opacity: 0, x: 12, scale: 0.97 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 8, scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 500, damping: 35, mass: 0.8 }}
+              initial={{ opacity: 0, x: 16, scale: 0.96, filter: "blur(8px)" }}
+              animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, x: 10, scale: 0.97, filter: "blur(4px)" }}
+              transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.8 }}
             >
               <div className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
                 {/* Gradient strip */}
@@ -67,15 +76,23 @@ export function WorkSection({ projects }: WorkSectionProps) {
                     {hoveredProject.oneLineOutcome}
                   </p>
 
-                  {/* Stack pills */}
+                  {/* Stack pills — staggered blur-in */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {hoveredProject.stack.map((tech) => (
-                      <span
+                    {hoveredProject.stack.map((tech, i) => (
+                      <motion.span
                         key={tech}
                         className="rounded-full border border-[rgba(0,0,0,0.06)] bg-[#fafafa] px-2 py-0.5 font-mono text-[10px] text-[#737373]"
+                        initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
+                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 200,
+                          damping: 25,
+                          delay: 0.06 + i * 0.04,
+                        }}
                       >
                         {tech}
-                      </span>
+                      </motion.span>
                     ))}
                   </div>
                 </div>
@@ -120,17 +137,32 @@ function ProjectRow({ project, index, isHovered, onHover, reduceMotion }: Projec
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
     >
+      {/* Scroll entrance — blur-in with stagger */}
       <motion.div
         className="flex items-baseline gap-4 py-6 md:gap-6 md:py-8"
+        initial={
+          reduceMotion
+            ? {}
+            : { opacity: 0, y: 20, filter: "blur(4px)" }
+        }
+        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{
+          type: "spring",
+          stiffness: 100,
+          damping: 30,
+          delay: index * 0.06,
+        }}
+        // Hover nudge — snappy spring
         animate={
           reduceMotion
             ? {}
             : { x: isHovered ? 8 : 0 }
         }
-        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+        whileHover={reduceMotion ? {} : undefined}
       >
         {/* Number */}
-        <span className="font-mono text-[11px] tabular-nums text-[#a3a3a3] transition-colors duration-200 group-hover:text-[#0a0a0a]">
+        <span className="font-mono text-[11px] tabular-nums text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
           {num}
         </span>
 
@@ -139,16 +171,37 @@ function ProjectRow({ project, index, isHovered, onHover, reduceMotion }: Projec
           {project.title}
         </h3>
 
+        {/* Accent dot — fades in on hover */}
+        <motion.span
+          className="h-2 w-2 rounded-full"
+          style={{ backgroundColor: project.accent }}
+          initial={false}
+          animate={
+            reduceMotion
+              ? { opacity: isHovered ? 1 : 0 }
+              : {
+                  opacity: isHovered ? 1 : 0,
+                  scale: isHovered ? 1 : 0.5,
+                  filter: isHovered ? "blur(0px)" : "blur(2px)",
+                }
+          }
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        />
+
         {/* Category — visible on larger screens */}
-        <span className="ml-auto hidden font-mono text-[11px] uppercase tracking-[0.08em] text-[#a3a3a3] transition-colors duration-200 group-hover:text-[#737373] md:block">
+        <span className="ml-auto hidden font-mono text-[11px] uppercase tracking-[0.08em] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#737373] md:block">
           {project.category}
         </span>
 
-        {/* Arrow */}
+        {/* Arrow — slides right on hover */}
         <motion.span
-          className="text-[#a3a3a3] transition-colors duration-200 group-hover:text-[#0a0a0a]"
-          animate={reduceMotion ? {} : { x: isHovered ? 4 : 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]"
+          animate={
+            reduceMotion
+              ? {}
+              : { x: isHovered ? 4 : 0 }
+          }
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           &rarr;
         </motion.span>

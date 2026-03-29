@@ -7,9 +7,10 @@ type RevealProps = {
   children: ReactNode;
   className?: string;
   delay?: number;
+  blur?: number;
 };
 
-export function Reveal({ children, className, delay = 0 }: RevealProps) {
+export function Reveal({ children, className, delay = 0, blur = 4 }: RevealProps) {
   const reduceMotion = useReducedMotion();
 
   if (reduceMotion) {
@@ -19,10 +20,16 @@ export function Reveal({ children, className, delay = 0 }: RevealProps) {
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.24 }}
-      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay }}
+      initial={{ opacity: 0, y: 20, filter: `blur(${blur}px)` }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{
+        type: "spring",
+        stiffness: 100,
+        damping: 30,
+        mass: 1,
+        delay,
+      }}
     >
       {children}
     </motion.div>
