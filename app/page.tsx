@@ -7,7 +7,7 @@ import { siteSettings } from "@/data/site";
 
 export default function HomePage() {
   return (
-    <main className="pt-24 md:pt-32">
+    <main>
       <WorkSection projects={projects} />
       <WritingSection entries={writings} />
       <Footer settings={siteSettings} />

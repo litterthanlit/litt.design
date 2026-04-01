@@ -10,7 +10,7 @@ export function SiteHeader() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header className="relative z-50">
       <div className="section-shell flex items-center justify-between py-5">
         <div
           className="relative"
