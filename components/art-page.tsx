@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
 const artProjects = [
@@ -127,6 +128,61 @@ export function ArtPage() {
           </motion.a>
         ))}
       </div>
+
+      {/* Featured */}
+      <motion.div className="mt-24" {...useFadeUp(0.12)}>
+        <motion.p
+          className="eyebrow mb-10"
+          initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
+          whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
+          viewport={{ once: true }}
+          transition={{ type: "spring", stiffness: 80, damping: 30 }}
+        >
+          Featured
+        </motion.p>
+
+        <motion.a
+          href="https://x.com/immuta_art/status/1844058791031238957"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group block overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)]"
+          whileHover={reduceMotion ? {} : { y: -4 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+        >
+          <div className="relative h-64 overflow-hidden md:h-80">
+            <Image
+              src="/art/reaching-my-self-destruction.png"
+              alt="Reaching My Self Destruction — digital abstract art"
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            />
+          </div>
+
+          <div className="space-y-3 bg-white p-6">
+            <div className="flex items-center justify-between">
+              <span className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+                Reaching My Self Destruction
+              </span>
+              <span className="text-[12px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
+                ↗
+              </span>
+            </div>
+
+            <p className="text-[13px] leading-[1.6] text-[#525252]">
+              Featured on ImmutArt — New Artist Spotlight. 1/1 piece sold at auction for 3,700 HBAR.
+            </p>
+
+            <div className="flex gap-2">
+              <span className="rounded-full border border-[rgba(0,0,0,0.06)] px-3 py-1 font-mono text-[10px] text-[#a3a3a3]">
+                ImmutArt Gallery
+              </span>
+              <span className="rounded-full border border-[rgba(0,0,0,0.06)] px-3 py-1 font-mono text-[10px] tabular-nums text-[#a3a3a3]">
+                2024
+              </span>
+            </div>
+          </div>
+        </motion.a>
+      </motion.div>
     </main>
   );
 }

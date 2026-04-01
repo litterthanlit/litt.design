@@ -94,53 +94,114 @@ export function WorkSection({ projects }: WorkSectionProps) {
           )}
         </AnimatePresence>
 
-        {/* Project pills */}
-        <div className="flex flex-wrap gap-2">
-          {projects.map((project, index) => (
-            <ProjectPill
-              key={project.slug}
-              project={project}
-              index={index}
-              isHovered={hoveredSlug === project.slug}
-              onHover={setHoveredSlug}
-              reduceMotion={reduceMotion ?? false}
-            />
-          ))}
-
-          {/* Art pill — links to /art */}
-          <Link href="/art">
-            <motion.div
-              className="group flex items-center gap-2.5 rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-colors duration-150 hover:border-[rgba(0,0,0,0.2)] hover:bg-white"
-              initial={
-                reduceMotion
-                  ? {}
-                  : { opacity: 0, y: 12, filter: "blur(4px)" }
-              }
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{
-                type: "spring",
-                stiffness: 120,
-                damping: 28,
-                delay: projects.length * 0.05,
-              }}
-              whileHover={reduceMotion ? {} : { y: -2 }}
-              whileTap={{ scale: 0.97 }}
+        {/* Project pills — grouped by tier */}
+        <div className="space-y-6">
+          {/* Tools */}
+          <div>
+            <motion.span
+              className="mb-2.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-[#0a0a0a]"
+              initial={reduceMotion ? {} : { opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.05 }}
             >
-              <span className="h-2 w-2 shrink-0 rounded-full bg-[#8B0000]" />
-              <span className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
-                Art
-              </span>
-              <span className="text-[12px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
-                →
-              </span>
-            </motion.div>
-          </Link>
+              Tools
+            </motion.span>
+            <div className="flex flex-wrap gap-2">
+              {projects
+                .filter((p) => ["ergon", "wavr", "good-md"].includes(p.slug))
+                .map((project, index) => (
+                  <ProjectPill
+                    key={project.slug}
+                    project={project}
+                    index={index}
+                    isHovered={hoveredSlug === project.slug}
+                    onHover={setHoveredSlug}
+                    reduceMotion={reduceMotion ?? false}
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* Products */}
+          <div>
+            <motion.span
+              className="mb-2.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-[#0a0a0a]"
+              initial={reduceMotion ? {} : { opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+            >
+              Products
+            </motion.span>
+            <div className="flex flex-wrap gap-2">
+              {projects
+                .filter((p) => ["studio-os", "vceezy"].includes(p.slug))
+                .map((project, index) => (
+                  <ProjectPill
+                    key={project.slug}
+                    project={project}
+                    index={index + 3}
+                    isHovered={hoveredSlug === project.slug}
+                    onHover={setHoveredSlug}
+                    reduceMotion={reduceMotion ?? false}
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* Art */}
+          <div>
+            <motion.span
+              className="mb-2.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-[#0a0a0a]"
+              initial={reduceMotion ? {} : { opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.25 }}
+            >
+              Art
+            </motion.span>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/art">
+                <motion.div
+                  className="group flex items-center rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-all duration-200 hover:border-[#C2452D30] hover:bg-[#C2452D0A]"
+                  initial={
+                    reduceMotion
+                      ? {}
+                      : { opacity: 0, y: 12, filter: "blur(4px)" }
+                  }
+                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 28,
+                    delay: 0.25,
+                  }}
+                  whileHover={reduceMotion ? {} : { y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <span className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a] transition-colors duration-200 group-hover:text-[#C2452D]">
+                    litt.works
+                  </span>
+                </motion.div>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
 }
+
+// Individual pill colors — muted, tasteful, no neon
+const PILL_COLORS: Record<string, string> = {
+  ergon: "#2D3436",     // charcoal
+  wavr: "#4A6741",      // sage green
+  "good-md": "#6B5B73", // muted plum
+  "studio-os": "#1a56db", // deep blue
+  vceezy: "#1A1A1A",    // obsidian
+};
 
 type ProjectPillProps = {
   project: Project;
@@ -153,6 +214,7 @@ type ProjectPillProps = {
 function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: ProjectPillProps) {
   const isExternal = !!project.externalUrl;
   const href = isExternal ? project.externalUrl! : `/work/${project.slug}`;
+  const color = PILL_COLORS[project.slug] ?? "#2D3436";
 
   const linkProps = isExternal
     ? { href, target: "_blank" as const, rel: "noopener noreferrer" }
@@ -165,7 +227,11 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
       onMouseLeave={() => onHover(null)}
     >
       <motion.div
-        className="group flex items-center gap-2.5 rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-colors duration-150 hover:border-[rgba(0,0,0,0.2)] hover:bg-white"
+        className="flex items-center rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-all duration-200"
+        style={{
+          backgroundColor: isHovered ? `${color}0A` : "transparent",
+          borderColor: isHovered ? `${color}30` : "rgba(0,0,0,0.08)",
+        }}
         initial={
           reduceMotion
             ? {}
@@ -182,25 +248,12 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
         whileHover={reduceMotion ? {} : { y: -2 }}
         whileTap={{ scale: 0.97 }}
       >
-        {/* Accent dot */}
         <span
-          className="h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: project.accent }}
-        />
-
-        {/* Name */}
-        <span className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+          className="text-[17px] font-medium tracking-[-0.02em] transition-colors duration-200"
+          style={{ color: isHovered ? color : "#0a0a0a" }}
+        >
           {project.title}
         </span>
-
-        {/* Arrow */}
-        <motion.span
-          className="text-[12px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]"
-          animate={reduceMotion ? {} : { x: isHovered ? 3 : 0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
-          {isExternal ? "↗" : "→"}
-        </motion.span>
       </motion.div>
     </Link>
   );

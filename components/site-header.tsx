@@ -50,6 +50,23 @@ export function SiteHeader() {
             )}
           </AnimatePresence>
         </div>
+
+        <nav className="flex items-center gap-6">
+          {[
+            { label: "Work", href: "/#work" },
+            { label: "Craft", href: "/craft" },
+            { label: "Art", href: "/art" },
+            { label: "Writing", href: "/#writing" },
+          ].map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </header>
   );
