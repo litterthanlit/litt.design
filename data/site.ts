@@ -5,7 +5,7 @@ export const siteSettings: SiteSettings = {
   tagline: "Web experiences, brand identity, and motion that converts clarity into momentum.",
   heroIntro:
     "A solo studio designing launch-ready websites for founder-led teams that want signal, not decoration.",
-  contactEmail: "hello@litt.design",
+  contactEmail: "nick@litt.design",
   location: "Based in Europe, working remotely",
   engagement: "Brand refreshes, launch sites, and product marketing pages",
   availability: {
@@ -56,16 +56,16 @@ export const siteSettings: SiteSettings = {
   ],
   socialLinks: [
     {
+      label: "X",
+      href: "https://x.com/litterthanli7",
+    },
+    {
       label: "LinkedIn",
-      href: "https://www.linkedin.com",
+      href: "https://www.linkedin.com/in/nick-conversionflow/",
     },
     {
-      label: "Dribbble",
-      href: "https://dribbble.com",
-    },
-    {
-      label: "GitHub",
-      href: "https://github.com",
+      label: "Contra",
+      href: "https://contra.com/nick_georgiev_0qdgnw7z/work?r=nick_georgiev_0qdgnw7z",
     },
   ],
 };

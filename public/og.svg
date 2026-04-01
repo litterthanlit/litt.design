@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" rx="36" fill="#EFEAE4"/>
+  <rect x="76" y="72" width="1048" height="486" rx="28" fill="url(#bg)"/>
+  <path d="M312 172h62v256c0 25 10 36 34 36h33v52h-46c-75 0-113-36-113-109V172Zm160 0h62v344h-62z" fill="#F6F2ED"/>
+  <text x="86" y="52" fill="#5F5A53" font-family="Arial, sans-serif" font-size="22" letter-spacing="4">litt.design</text>
+  <text x="86" y="594" fill="#5F5A53" font-family="Arial, sans-serif" font-size="20" letter-spacing="3">Web experiences, brand identity, and motion that moves business.</text>
+  <defs>
+    <linearGradient id="bg" x1="108" y1="104" x2="1068" y2="540" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#141414"/>
+      <stop offset="0.4" stop-color="#6F4C3D"/>
+      <stop offset="1" stop-color="#D9C9BC"/>
+    </linearGradient>
+  </defs>
+</svg>

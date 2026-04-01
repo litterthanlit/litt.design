@@ -1,21 +1,17 @@
-import { BookshelfSceneLoader } from "@/components/bookshelf-scene-loader";
+import { WorkSection } from "@/components/work-section";
+import { WritingSection } from "@/components/writing-section";
+import { Footer, ThankYouOrb } from "@/components/footer";
 import { projects } from "@/data/projects";
+import { writings } from "@/data/writing";
 import { siteSettings } from "@/data/site";
 
 export default function HomePage() {
   return (
-    <main className="flex h-screen flex-col items-center">
-      {/* Logo */}
-      <div className="pt-10">
-        <p className="font-display text-sm font-medium tracking-[-0.04em] text-ink">
-          {siteSettings.brandName}
-        </p>
-      </div>
-
-      {/* 3D Bookshelf — centered */}
-      <div className="flex-1 w-full max-w-4xl">
-        <BookshelfSceneLoader projects={projects} />
-      </div>
+    <main>
+      <WorkSection projects={projects} />
+      <WritingSection entries={writings} />
+      <Footer settings={siteSettings} />
+      <ThankYouOrb />
     </main>
   );
 }
