@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Project } from "@/data/types";
@@ -162,30 +162,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
               Art
             </motion.span>
             <div className="flex flex-wrap gap-2">
-              <Link href="/art">
-                <motion.div
-                  className="group flex items-center rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-all duration-200 hover:border-[#C2452D30] hover:bg-[#C2452D0A]"
-                  initial={
-                    reduceMotion
-                      ? {}
-                      : { opacity: 0, y: 12, filter: "blur(4px)" }
-                  }
-                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 120,
-                    damping: 28,
-                    delay: 0.25,
-                  }}
-                  whileHover={reduceMotion ? {} : { y: -2 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <span className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a] transition-colors duration-200 group-hover:text-[#C2452D]">
-                    litt.works
-                  </span>
-                </motion.div>
-              </Link>
+              <ArtPill reduceMotion={reduceMotion ?? false} />
             </div>
           </div>
         </div>
@@ -211,10 +188,126 @@ type ProjectPillProps = {
   reduceMotion: boolean;
 };
 
+const SHADOW_COLORS = [
+  [180, 120, 255],  // lavender
+  [100, 200, 255],  // sky
+  [120, 255, 180],  // mint
+  [255, 180, 120],  // peach
+  [200, 160, 255],  // lilac
+];
+
+function useColorCycleShadow(active: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!active || !ref.current) {
+      if (ref.current) ref.current.style.boxShadow = "none";
+      cancelAnimationFrame(rafRef.current);
+      return;
+    }
+
+    const el = ref.current;
+    const start = performance.now();
+
+    function tick(now: number) {
+      const t = (now - start) / 1000;
+      const cycleLen = SHADOW_COLORS.length;
+      const progress = (t * 0.4) % cycleLen; // slow cycle
+      const idx = Math.floor(progress);
+      const blend = progress - idx;
+      const a = SHADOW_COLORS[idx % cycleLen];
+      const b = SHADOW_COLORS[(idx + 1) % cycleLen];
+      const r = Math.round(a[0] + (b[0] - a[0]) * blend);
+      const g = Math.round(a[1] + (b[1] - a[1]) * blend);
+      const bv = Math.round(a[2] + (b[2] - a[2]) * blend);
+
+      el.style.boxShadow = `0 4px 20px rgba(${r},${g},${bv},0.2), 0 8px 40px rgba(${r},${g},${bv},0.1), inset 0 1px 0 rgba(255,255,255,0.06)`;
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [active]);
+
+  return ref;
+}
+
+function GlassPill({
+  children,
+  isHovered,
+  reduceMotion,
+  delay,
+}: {
+  children: React.ReactNode;
+  isHovered: boolean;
+  reduceMotion: boolean;
+  delay: number;
+}) {
+  const shadowRef = useColorCycleShadow(isHovered && !reduceMotion);
+
+  return (
+    <motion.div
+      ref={shadowRef}
+      className="relative flex items-center overflow-hidden rounded-full border px-5 py-2.5"
+      style={{
+        borderColor: isHovered
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(0,0,0,0.08)",
+        background: isHovered
+          ? "rgba(0,0,0,0.75)"
+          : "transparent",
+        backdropFilter: isHovered ? "blur(20px) saturate(1.4)" : "blur(0px)",
+        WebkitBackdropFilter: isHovered ? "blur(20px) saturate(1.4)" : "blur(0px)",
+        transition: "border-color 0.3s, background 0.3s, backdrop-filter 0.3s",
+      }}
+      initial={
+        reduceMotion
+          ? {}
+          : { opacity: 0, y: 12, filter: "blur(4px)" }
+      }
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{
+        type: "spring",
+        stiffness: 120,
+        damping: 28,
+        delay,
+      }}
+      whileHover={reduceMotion ? {} : { y: -2 }}
+      whileTap={{ scale: 0.97 }}
+    >
+      {/* Glare sweep on hover */}
+      <motion.span
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{
+          background:
+            "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)",
+        }}
+        initial={{ x: "-100%" }}
+        animate={isHovered ? { x: "100%" } : { x: "-100%" }}
+        transition={
+          isHovered
+            ? { type: "spring", stiffness: 80, damping: 20, mass: 0.6 }
+            : { duration: 0 }
+        }
+      />
+
+      <span className="relative z-10">
+        <span
+          className="text-[17px] font-medium tracking-[-0.02em] transition-colors duration-300"
+          style={{ color: isHovered ? "#ffffff" : "#0a0a0a" }}
+        >
+          {children}
+        </span>
+      </span>
+    </motion.div>
+  );
+}
+
 function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: ProjectPillProps) {
   const isExternal = !!project.externalUrl;
   const href = isExternal ? project.externalUrl! : `/work/${project.slug}`;
-  const color = PILL_COLORS[project.slug] ?? "#2D3436";
 
   const linkProps = isExternal
     ? { href, target: "_blank" as const, rel: "noopener noreferrer" }
@@ -226,35 +319,29 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
     >
-      <motion.div
-        className="flex items-center rounded-full border border-[rgba(0,0,0,0.08)] px-5 py-2.5 transition-all duration-200"
-        style={{
-          backgroundColor: isHovered ? `${color}0A` : "transparent",
-          borderColor: isHovered ? `${color}30` : "rgba(0,0,0,0.08)",
-        }}
-        initial={
-          reduceMotion
-            ? {}
-            : { opacity: 0, y: 12, filter: "blur(4px)" }
-        }
-        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        viewport={{ once: true, margin: "-40px" }}
-        transition={{
-          type: "spring",
-          stiffness: 120,
-          damping: 28,
-          delay: index * 0.05,
-        }}
-        whileHover={reduceMotion ? {} : { y: -2 }}
-        whileTap={{ scale: 0.97 }}
+      <GlassPill
+        isHovered={isHovered}
+        reduceMotion={reduceMotion}
+        delay={index * 0.05}
       >
-        <span
-          className="text-[17px] font-medium tracking-[-0.02em] transition-colors duration-200"
-          style={{ color: isHovered ? color : "#0a0a0a" }}
-        >
-          {project.title}
-        </span>
-      </motion.div>
+        {project.title}
+      </GlassPill>
+    </Link>
+  );
+}
+
+function ArtPill({ reduceMotion }: { reduceMotion: boolean }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <Link
+      href="/art"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <GlassPill isHovered={hovered} reduceMotion={reduceMotion} delay={0.25}>
+        litt.works
+      </GlassPill>
     </Link>
   );
 }

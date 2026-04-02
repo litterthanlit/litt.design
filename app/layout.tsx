@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -37,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${GeistSans.variable} ${GeistMono.variable} bg-canvas text-ink antialiased`}>
+      <body className={`${GeistMono.variable} bg-canvas text-ink antialiased`}>
         <div className="grain" aria-hidden="true" />
         <SiteHeader />
         {children}
