@@ -93,6 +93,19 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
             {project.year}
           </span>
         </motion.div>
+
+        {project.externalUrl && (
+          <motion.div {...useFadeUp(0.16)}>
+            <a
+              href={project.externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#E8F0FE] px-6 py-3 text-[15px] font-medium text-[#1a56db] transition-colors hover:bg-[#d4e4fc]"
+            >
+              Visit Project <span className="text-[12px]">↗</span>
+            </a>
+          </motion.div>
+        )}
       </section>
 
       {/* Stack */}
