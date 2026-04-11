@@ -37,7 +37,7 @@ export function Footer({ settings }: FooterProps) {
           The craft is in what I leave out.
         </p>
         <p className="mt-2 text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
-          Life is play.
+          More Play.
         </p>
         <p className="mt-4 text-[13px] leading-[1.7] text-[#a3a3a3]">
           {settings.location} &middot; {settings.availability.label}
@@ -160,10 +160,10 @@ const REPEL_RADIUS = 0.3;     // influence radius in normalized space
 // OKLCH palettes: [lightness, chroma, hue°]
 // Interpolation uses nearest-hue in OKLCH space for natural transitions
 const COLOR_PALETTES = [
-  { center: [0.90, 0.18, 130], edge: [0.92, 0.12, 130], glow: [0.70, 0.25, 145] },   // vivid lime
-  { center: [0.82, 0.14, 230], edge: [0.88, 0.10, 230], glow: [0.60, 0.22, 250] },   // electric blue
-  { center: [0.75, 0.20, 300], edge: [0.82, 0.14, 300], glow: [0.50, 0.28, 310] },   // vivid violet
-  { center: [0.80, 0.18, 350], edge: [0.85, 0.12, 350], glow: [0.55, 0.25, 360] },   // hot pink
+  { center: [0.78, 0.22, 130], edge: [0.82, 0.16, 130], glow: [0.60, 0.28, 145] },   // vivid lime
+  { center: [0.65, 0.18, 230], edge: [0.72, 0.14, 230], glow: [0.48, 0.24, 250] },   // electric blue
+  { center: [0.60, 0.24, 300], edge: [0.68, 0.18, 300], glow: [0.42, 0.30, 310] },   // vivid violet
+  { center: [0.68, 0.22, 350], edge: [0.74, 0.16, 350], glow: [0.45, 0.28, 360] },   // hot pink
 ];
 
 const CYCLE_DURATION = 8;
@@ -224,10 +224,18 @@ export function ThankYouOrb() {
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const size = canvas.clientWidth;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
+    let size = canvas.clientWidth || 360;
+
+    function resizeCanvas() {
+      size = canvas!.clientWidth || 360;
+      canvas!.width = size * dpr;
+      canvas!.height = size * dpr;
+      ctx!.setTransform(1, 0, 0, 1, 0, 0);
+      ctx!.scale(dpr, dpr);
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
     const half = size / 2;
     const startTime = performance.now();
@@ -268,8 +276,10 @@ export function ThankYouOrb() {
         el.style.background = `radial-gradient(circle, rgba(${glow[0]},${glow[1]},${glow[2]},${op}) 0%, transparent 65%)`;
       });
 
-      // Clear
-      ctx!.clearRect(0, 0, size, size);
+      // Clear — use current size
+      const currentSize = canvas!.clientWidth || 360;
+      const currentHalf = currentSize / 2;
+      ctx!.clearRect(0, 0, currentSize, currentSize);
 
       // Draw each dot with spring-based cursor interaction
       for (let i = 0; i < DOTS.length; i++) {
@@ -321,9 +331,9 @@ export function ThankYouOrb() {
         const breath = dot.size + Math.sin(t * dot.speed * 0.5 + dot.phase) * 0.003;
 
         // Convert normalized to px
-        const px = (fx * 0.5 + 0.5) * size;
-        const py = (fy * 0.5 + 0.5) * size;
-        const pr = Math.max(1, breath * half);
+        const px = (fx * 0.5 + 0.5) * currentSize;
+        const py = (fy * 0.5 + 0.5) * currentSize;
+        const pr = Math.max(1, breath * currentHalf);
         const bloomR = pr * 2.5;
 
         const c = [
@@ -348,7 +358,10 @@ export function ThankYouOrb() {
     }
 
     rafRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafRef.current);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("resize", resizeCanvas);
+    };
   }, []);
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {

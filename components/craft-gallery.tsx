@@ -10,6 +10,19 @@ import {
   useReducedMotion,
 } from "framer-motion";
 
+// Seeded random for deterministic droplet configs
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
+
+const DROPLET_CONFIGS = Array.from({ length: 5 }, (_, i) => ({
+  width: 10 + seededRandom(i * 3) * 8,
+  height: 10 + seededRandom(i * 3 + 1) * 8,
+  yOffset: -20 - seededRandom(i * 3 + 2) * 16,
+  xOffset: (seededRandom(i * 5) - 0.5) * 20,
+}));
+
 /* ─────────────────────────────────────────────
    Gallery shell
    ───────────────────────────────────────────── */
@@ -18,7 +31,7 @@ export function CraftGallery() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <main className="pt-24 pb-32 md:pt-32">
+    <main className="pt-36 pb-32 md:pt-44">
       <div className="section-shell">
         <motion.p
           className="eyebrow mb-4"
@@ -31,8 +44,8 @@ export function CraftGallery() {
         </motion.p>
         <motion.p
           className="mb-16 max-w-md text-[15px] leading-[1.6] text-[#737373]"
-          initial={reduceMotion ? {} : { opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(4px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true }}
           transition={{ type: "spring", stiffness: 80, damping: 30, delay: 0.05 }}
         >
@@ -129,16 +142,16 @@ function DemoCard({
 }
 
 /* ─────────────────────────────────────────────
-   1 · Spring Button
+   1 · Spring Button — bouncy press with shadow lift
    ───────────────────────────────────────────── */
 
 function SpringButton() {
   return (
     <motion.button
       className="rounded-full bg-[#0a0a0a] px-7 py-3 text-[13px] font-medium text-white"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.88 }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      whileHover={{ scale: 1.05, y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
+      whileTap={{ scale: 0.85 }}
+      transition={{ type: "spring", stiffness: 400, damping: 12 }}
     >
       Press me
     </motion.button>
@@ -146,23 +159,23 @@ function SpringButton() {
 }
 
 /* ─────────────────────────────────────────────
-   2 · Magnetic Hover Button
+   2 · Magnetic Hover — elastic cursor follow
    ───────────────────────────────────────────── */
 
 function MagneticButton() {
   const ref = useRef<HTMLButtonElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 200, damping: 15 });
-  const springY = useSpring(y, { stiffness: 200, damping: 15 });
+  const springX = useSpring(x, { stiffness: 200, damping: 12 });
+  const springY = useSpring(y, { stiffness: 200, damping: 12 });
 
   function handleMove(e: React.PointerEvent) {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const dx = e.clientX - (rect.left + rect.width / 2);
     const dy = e.clientY - (rect.top + rect.height / 2);
-    x.set(dx * 0.3);
-    y.set(dy * 0.3);
+    x.set(dx * 0.4);
+    y.set(dy * 0.4);
   }
 
   function handleLeave() {
@@ -177,7 +190,9 @@ function MagneticButton() {
       style={{ x: springX, y: springY }}
       onPointerMove={handleMove}
       onPointerLeave={handleLeave}
+      whileHover={{ y: -2 }}
       whileTap={{ scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 300, damping: 15 }}
     >
       Hover me
     </motion.button>
@@ -185,7 +200,7 @@ function MagneticButton() {
 }
 
 /* ─────────────────────────────────────────────
-   3 · Liquid Button (SVG gooey filter)
+   3 · Liquid Button — gooey SVG filter with spring droplets
    ───────────────────────────────────────────── */
 
 function LiquidButton() {
@@ -207,37 +222,39 @@ function LiquidButton() {
           </filter>
         </defs>
       </svg>
-      <div style={{ filter: "url(#gooey-btn)" }}>
+      <div style={{ filter: "url(#gooey-btn)", isolation: "isolate", contain: "layout paint" }}>
         <motion.button
-          className="relative rounded-full bg-[#0a0a0a] px-7 py-3 text-[13px] font-medium text-white"
+          className="relative z-10 rounded-full bg-[#0a0a0a] px-7 py-3 text-[13px] font-medium text-white"
           onHoverStart={() => setHovered(true)}
           onHoverEnd={() => setHovered(false)}
+          whileHover={{ y: -2 }}
           whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           Liquid
           <AnimatePresence>
             {hovered && (
               <>
-                {[...Array(5)].map((_, i) => (
+                {DROPLET_CONFIGS.map((cfg, i) => (
                   <motion.span
                     key={i}
                     className="absolute rounded-full bg-[#0a0a0a]"
                     style={{
-                      width: 10 + Math.random() * 8,
-                      height: 10 + Math.random() * 8,
+                      width: cfg.width,
+                      height: cfg.height,
                       left: `${20 + i * 15}%`,
                       top: "50%",
                     }}
                     initial={{ y: 0, opacity: 1 }}
                     animate={{
-                      y: [0, -20 - Math.random() * 16, 0],
-                      x: (Math.random() - 0.5) * 20,
+                      y: [0, cfg.yOffset, 0],
+                      x: cfg.xOffset,
                     }}
                     exit={{ opacity: 0, scale: 0 }}
                     transition={{
                       type: "spring",
                       stiffness: 300,
-                      damping: 12,
+                      damping: 9,
                       delay: i * 0.04,
                     }}
                   />
@@ -252,17 +269,17 @@ function LiquidButton() {
 }
 
 /* ─────────────────────────────────────────────
-   4 · 3D Tilt Card
+   4 · 3D Tilt Card — perspective with glare and dynamic shadow
    ───────────────────────────────────────────── */
 
 function TiltCard() {
   const ref = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
-  const springRX = useSpring(rotateX, { stiffness: 200, damping: 20 });
-  const springRY = useSpring(rotateY, { stiffness: 200, damping: 20 });
-  const glareX = useTransform(springRY, [-15, 15], [0, 100]);
-  const glareY = useTransform(springRX, [15, -15], [0, 100]);
+  const springRX = useSpring(rotateX, { stiffness: 200, damping: 18 });
+  const springRY = useSpring(rotateY, { stiffness: 200, damping: 18 });
+
 
   function handleMove(e: React.PointerEvent) {
     if (!ref.current) return;
@@ -271,6 +288,11 @@ function TiltCard() {
     const py = (e.clientY - rect.top) / rect.height - 0.5;
     rotateY.set(px * 30);
     rotateX.set(-py * 30);
+    if (glareRef.current) {
+      const gx = (px + 0.5) * 100;
+      const gy = (py + 0.5) * 100;
+      glareRef.current.style.background = `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.25), transparent 60%)`;
+    }
   }
 
   function handleLeave() {
@@ -290,17 +312,10 @@ function TiltCard() {
       }}
       onPointerMove={handleMove}
       onPointerLeave={handleLeave}
+      whileHover={{ scale: 1.04 }}
+      transition={{ type: "spring", stiffness: 200, damping: 20 }}
     >
-      <motion.div
-        className="absolute inset-0 rounded-xl"
-        style={{
-          background: useTransform(
-            [glareX, glareY],
-            ([gx, gy]) =>
-              `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.15), transparent 60%)`
-          ),
-        }}
-      />
+      <div ref={glareRef} className="absolute inset-0 rounded-xl" />
       <div className="flex h-full items-center justify-center">
         <span className="text-[12px] font-medium tracking-wide text-white/60">
           Move cursor
@@ -311,20 +326,21 @@ function TiltCard() {
 }
 
 /* ─────────────────────────────────────────────
-   5 · Jelly Press Card
+   5 · Jelly Press — squish with wobble
    ───────────────────────────────────────────── */
 
 function JellyCard() {
   return (
     <motion.div
       className="flex h-28 w-40 cursor-pointer items-center justify-center rounded-xl border border-[rgba(0,0,0,0.08)] bg-[#fafafa]"
-      whileHover={{ scale: 1.04 }}
+      whileHover={{ scale: 1.04, y: -2 }}
       whileTap={{
-        scale: 0.92,
-        rotateZ: -2,
+        scale: 0.88,
+        rotateZ: -3,
+        skewX: 4,
         borderRadius: "20px",
       }}
-      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+      transition={{ type: "spring", stiffness: 500, damping: 12 }}
     >
       <span className="text-[12px] text-[#737373]">Squish me</span>
     </motion.div>
@@ -332,7 +348,7 @@ function JellyCard() {
 }
 
 /* ─────────────────────────────────────────────
-   6 · Drag & Snap
+   6 · Drag & Snap — oscillating snap-back with rotation
    ───────────────────────────────────────────── */
 
 function DragSnap() {
@@ -341,10 +357,11 @@ function DragSnap() {
       className="flex h-16 w-16 cursor-grab items-center justify-center rounded-2xl bg-[#0a0a0a] active:cursor-grabbing"
       drag
       dragConstraints={{ top: -60, right: 60, bottom: 60, left: -60 }}
-      dragElastic={0.2}
-      dragTransition={{ bounceStiffness: 300, bounceDamping: 15 }}
-      whileDrag={{ scale: 1.1, boxShadow: "0 12px 40px rgba(0,0,0,0.15)" }}
+      dragElastic={0.25}
+      dragTransition={{ bounceStiffness: 300, bounceDamping: 10 }}
+      whileDrag={{ scale: 1.12, rotate: 5, boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
       whileTap={{ scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 300, damping: 15 }}
     >
       <span className="text-[10px] font-medium text-white/60">Drag</span>
     </motion.div>
@@ -352,7 +369,7 @@ function DragSnap() {
 }
 
 /* ─────────────────────────────────────────────
-   7 · Flip Card
+   7 · Flip Card — spring flip with mid-flip scale pulse
    ───────────────────────────────────────────── */
 
 function FlipCard() {
@@ -366,11 +383,13 @@ function FlipCard() {
     >
       <motion.div
         className="relative h-28 w-40"
-        animate={{ rotateY: flipped ? 180 : 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+        animate={{
+          rotateY: flipped ? 180 : 0,
+          scale: [null, 1.03, 1],
+        }}
+        transition={{ type: "spring", stiffness: 200, damping: 22 }}
         style={{ transformStyle: "preserve-3d" }}
       >
-        {/* Front */}
         <div
           className="absolute inset-0 flex items-center justify-center rounded-xl bg-[#0a0a0a]"
           style={{ backfaceVisibility: "hidden" }}
@@ -379,7 +398,6 @@ function FlipCard() {
             Click to flip
           </span>
         </div>
-        {/* Back */}
         <div
           className="absolute inset-0 flex items-center justify-center rounded-xl border border-[rgba(0,0,0,0.08)] bg-white"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
@@ -392,7 +410,7 @@ function FlipCard() {
 }
 
 /* ─────────────────────────────────────────────
-   8 · Gravity Drop
+   8 · Gravity Drop — squash on impact, bounce back
    ───────────────────────────────────────────── */
 
 function GravityDrop() {
@@ -401,7 +419,7 @@ function GravityDrop() {
 
   function drop() {
     const id = counter.current++;
-    const x = (Math.random() - 0.5) * 80;
+    const x = (seededRandom(id) - 0.5) * 80;
     setBalls((b) => [...b.slice(-11), { id, x }]);
   }
 
@@ -417,15 +435,26 @@ function GravityDrop() {
             key={ball.id}
             className="absolute top-2 h-4 w-4 rounded-full bg-[#0a0a0a]"
             style={{ left: `calc(50% + ${ball.x}px)` }}
-            initial={{ y: 0, scale: 1 }}
-            animate={{ y: 120, scale: [1, 1.15, 0.9, 1] }}
+            initial={{ y: 0, scaleX: 1, scaleY: 1 }}
+            animate={{
+              y: [0, 120],
+              scaleX: [1, 1, 1.35, 0.9, 1],
+              scaleY: [1, 1, 0.65, 1.1, 1],
+            }}
             exit={{ opacity: 0, scale: 0 }}
             transition={{
-              y: { type: "spring", stiffness: 80, damping: 8 },
-              scale: {
-                times: [0, 0.6, 0.8, 1],
-                duration: 0.6,
-                delay: 0.35,
+              y: { type: "spring", stiffness: 80, damping: 7 },
+              scaleX: {
+                type: "spring",
+                stiffness: 400,
+                damping: 8,
+                delay: 0.3,
+              },
+              scaleY: {
+                type: "spring",
+                stiffness: 400,
+                damping: 8,
+                delay: 0.3,
               },
             }}
             onAnimationComplete={() =>
@@ -439,36 +468,46 @@ function GravityDrop() {
 }
 
 /* ─────────────────────────────────────────────
-   9 · Spring Counter
+   9 · Spring Counter — overshooting number with scale pulse
    ───────────────────────────────────────────── */
 
 function SpringCounter() {
   const [count, setCount] = useState(0);
+  const [pulse, setPulse] = useState(false);
   const motionCount = useMotionValue(0);
-  const springCount = useSpring(motionCount, { stiffness: 200, damping: 20 });
+  const springCount = useSpring(motionCount, { stiffness: 200, damping: 12 });
   const display = useTransform(springCount, (v) => Math.round(v));
 
   useEffect(() => {
     motionCount.set(count);
+    setPulse(true);
+    const t = setTimeout(() => setPulse(false), 200);
+    return () => clearTimeout(t);
   }, [count, motionCount]);
 
   return (
     <div className="flex items-center gap-5">
       <motion.button
         className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(0,0,0,0.12)] text-[15px] text-[#0a0a0a]"
-        whileTap={{ scale: 0.85 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        whileTap={{ scale: 0.8 }}
+        whileHover={{ y: -2 }}
+        transition={{ type: "spring", stiffness: 400, damping: 12 }}
         onClick={() => setCount((c) => c - 1)}
       >
         −
       </motion.button>
-      <motion.span className="w-10 text-center font-mono text-[28px] tabular-nums text-[#0a0a0a]">
+      <motion.span
+        className="w-10 text-center font-mono text-[28px] tabular-nums text-[#0a0a0a]"
+        animate={{ scale: pulse ? 1.15 : 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 12 }}
+      >
         {display}
       </motion.span>
       <motion.button
         className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(0,0,0,0.12)] text-[15px] text-[#0a0a0a]"
-        whileTap={{ scale: 0.85 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        whileTap={{ scale: 0.8 }}
+        whileHover={{ y: -2 }}
+        transition={{ type: "spring", stiffness: 400, damping: 12 }}
         onClick={() => setCount((c) => c + 1)}
       >
         +
@@ -478,7 +517,7 @@ function SpringCounter() {
 }
 
 /* ─────────────────────────────────────────────
-   10 · Spring Toggle
+   10 · Spring Toggle — overshoot knob with bounce
    ───────────────────────────────────────────── */
 
 function SpringToggle() {
@@ -488,21 +527,24 @@ function SpringToggle() {
     <motion.button
       className="flex h-8 w-14 cursor-pointer items-center rounded-full p-1"
       style={{ backgroundColor: on ? "#0a0a0a" : "#e5e5e5" }}
-      animate={{ backgroundColor: on ? "#0a0a0a" : "#e5e5e5" }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      animate={{
+        backgroundColor: on ? "#0a0a0a" : "#e5e5e5",
+        scale: [null, 1.04, 1],
+      }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       onClick={() => setOn((v) => !v)}
     >
       <motion.div
         className="h-6 w-6 rounded-full bg-white shadow-sm"
         animate={{ x: on ? 22 : 0 }}
-        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+        transition={{ type: "spring", stiffness: 500, damping: 18 }}
       />
     </motion.button>
   );
 }
 
 /* ─────────────────────────────────────────────
-   11 · Gooey Blobs (SVG filter)
+   11 · Gooey Blobs — varied mass + rotation
    ───────────────────────────────────────────── */
 
 function GooeyBlobs() {
@@ -519,11 +561,18 @@ function GooeyBlobs() {
     setActive((a) => (a + 1) % 3);
   }, []);
 
-  // Layouts: spread, cluster, line
   const layouts = [
     positions,
     positions.map((p) => ({ x: p.x * 0.3, y: p.y * 0.3 })),
     positions.map((_, i) => ({ x: (i - 2) * 22, y: 0 })),
+  ];
+
+  const blobConfigs = [
+    { mass: 0.5, rotate: 45 },
+    { mass: 1.2, rotate: -30 },
+    { mass: 0.8, rotate: 60 },
+    { mass: 1.5, rotate: -15 },
+    { mass: 0.6, rotate: 90 },
   ];
 
   return (
@@ -547,14 +596,23 @@ function GooeyBlobs() {
       </svg>
       <div
         className="relative flex h-24 w-32 items-center justify-center"
-        style={{ filter: "url(#gooey-blobs)" }}
+        style={{ filter: "url(#gooey-blobs)", isolation: "isolate", contain: "layout paint" }}
       >
         {layouts[active].map((pos, i) => (
           <motion.div
             key={i}
             className="absolute h-7 w-7 rounded-full bg-[#0a0a0a]"
-            animate={{ x: pos.x, y: pos.y }}
-            transition={{ type: "spring", stiffness: 120, damping: 14 }}
+            animate={{
+              x: pos.x,
+              y: pos.y,
+              rotate: blobConfigs[i].rotate * (active + 1),
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 14,
+              mass: blobConfigs[i].mass,
+            }}
           />
         ))}
       </div>
@@ -563,7 +621,7 @@ function GooeyBlobs() {
 }
 
 /* ─────────────────────────────────────────────
-   12 · Wave Text
+   12 · Wave Text — bouncy oscillating characters
    ───────────────────────────────────────────── */
 
 function WaveText() {
@@ -575,8 +633,8 @@ function WaveText() {
         <motion.span
           key={i}
           className="inline-block text-[22px] font-medium text-[#0a0a0a]"
-          whileHover={{ y: -12, scale: 1.2 }}
-          transition={{ type: "spring", stiffness: 500, damping: 12 }}
+          whileHover={{ y: -16, scale: 1.25 }}
+          transition={{ type: "spring", stiffness: 500, damping: 8 }}
         >
           {char === " " ? "\u00A0" : char}
         </motion.span>
@@ -586,7 +644,7 @@ function WaveText() {
 }
 
 /* ─────────────────────────────────────────────
-   13 · Ripple Button
+   13 · Ripple Button — spring-based ripple expansion
    ───────────────────────────────────────────── */
 
 function RippleButton() {
@@ -607,6 +665,7 @@ function RippleButton() {
   return (
     <motion.button
       className="relative overflow-hidden rounded-full bg-[#0a0a0a] px-7 py-3 text-[13px] font-medium text-white"
+      whileHover={{ y: -2 }}
       whileTap={{ scale: 0.96 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
       onClick={handleClick}
@@ -628,7 +687,7 @@ function RippleButton() {
             initial={{ scale: 0, opacity: 0.6 }}
             animate={{ scale: 16, opacity: 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ type: "spring", stiffness: 80, damping: 20 }}
             onAnimationComplete={() =>
               setRipples((r) => r.filter((item) => item.id !== ripple.id))
             }
@@ -640,7 +699,7 @@ function RippleButton() {
 }
 
 /* ─────────────────────────────────────────────
-   14 · Morph Button
+   14 · Morph Button — shape morph with wobble
    ───────────────────────────────────────────── */
 
 function MorphButton() {
@@ -653,28 +712,30 @@ function MorphButton() {
         width: morphed ? 48 : 140,
         height: morphed ? 48 : 44,
         borderRadius: morphed ? 24 : 999,
+        scale: morphed ? [1, 1.08, 1] : 1,
       }}
-      transition={{ type: "spring", stiffness: 400, damping: 22 }}
+      whileHover={{ y: -2 }}
+      transition={{ type: "spring", stiffness: 400, damping: 14 }}
       onClick={() => setMorphed((m) => !m)}
     >
       <AnimatePresence mode="wait">
         {morphed ? (
           <motion.span
             key="check"
-            initial={{ scale: 0, rotate: -90 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 90 }}
-            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            initial={{ scale: 0, rotate: -90, filter: "blur(4px)" }}
+            animate={{ scale: 1, rotate: 0, filter: "blur(0px)" }}
+            exit={{ scale: 0, rotate: 90, filter: "blur(4px)" }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
             ✓
           </motion.span>
         ) : (
           <motion.span
             key="label"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
+            initial={{ opacity: 0, filter: "blur(4px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(4px)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
             Submit
           </motion.span>

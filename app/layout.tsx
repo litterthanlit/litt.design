@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
+import { DitherBackground } from "@/components/dither-background";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${GeistMono.variable} bg-canvas text-ink antialiased`}>
+        <DitherBackground />
         <div className="grain" aria-hidden="true" />
         <SiteHeader />
         {children}

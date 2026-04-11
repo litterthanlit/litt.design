@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProjectDetail } from "@/components/project-detail";
+import { DirectionalTransition } from "@/components/view-transitions";
 import { projects } from "@/data/projects";
 
 type PageProps = {
@@ -45,5 +46,9 @@ export default async function ProjectPage({ params }: PageProps) {
   const nextProject =
     projects[(projects.findIndex((entry) => entry.slug === project.slug) + 1) % projects.length];
 
-  return <ProjectDetail project={project} nextProject={nextProject} />;
+  return (
+    <DirectionalTransition>
+      <ProjectDetail project={project} nextProject={nextProject} />
+    </DirectionalTransition>
+  );
 }

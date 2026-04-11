@@ -1,4 +1,5 @@
 import { ArtPage } from "@/components/art-page";
+import { DirectionalTransition } from "@/components/view-transitions";
 
 export const metadata = {
   title: "Art",
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function Art() {
-  return <ArtPage />;
+  return (
+    <DirectionalTransition>
+      <ArtPage />
+    </DirectionalTransition>
+  );
 }
