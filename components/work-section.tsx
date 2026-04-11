@@ -162,7 +162,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
             </motion.span>
             <div className="flex flex-wrap gap-2">
               {projects
-                .filter((p) => ["ergon", "wavr", "good-md"].includes(p.slug))
+                .filter((p) => ["wavr", "good-md"].includes(p.slug))
                 .map((project, index) => (
                   <ProjectPill
                     key={project.slug}
@@ -362,15 +362,10 @@ function GlassPill({
 }
 
 function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: ProjectPillProps) {
-  const isExternal = !!project.externalUrl;
-  const href = isExternal ? project.externalUrl! : `/work/${project.slug}`;
-
   return (
     <Link
-      href={href}
-      {...(isExternal
-        ? { target: "_blank" as const, rel: "noopener noreferrer" }
-        : { transitionTypes: ["nav-forward"] } as any)}
+      href={`/work/${project.slug}`}
+      {...{ transitionTypes: ["nav-forward"] } as any}
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
     >
