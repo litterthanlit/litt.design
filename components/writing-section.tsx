@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import type { WritingEntry } from "@/data/writing";
 
@@ -26,7 +27,6 @@ export function WritingSection({ entries }: WritingSectionProps) {
         {entries.map((entry, i) => (
           <motion.div
             key={entry.slug}
-            className="group flex items-baseline justify-between border-b border-[rgba(0,0,0,0.06)] py-3.5"
             initial={
               reduceMotion
                 ? {}
@@ -41,25 +41,33 @@ export function WritingSection({ entries }: WritingSectionProps) {
               delay: i * 0.04,
             }}
           >
-            <span className="text-[15px] tracking-[-0.01em] text-[#0a0a0a] transition-colors duration-150 group-hover:text-[#525252]">
-              {entry.title}
-            </span>
-            <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
-              {entry.date}
-            </span>
+            {entry.body ? (
+              <Link
+                href={`/writing/${entry.slug}`}
+                {...{ transitionTypes: ["nav-forward"] } as any}
+                className="group flex items-baseline justify-between border-b border-[rgba(0,0,0,0.06)] py-3.5"
+              >
+                <span className="text-[15px] tracking-[-0.01em] text-[#0a0a0a] transition-colors duration-150 group-hover:text-[#525252]">
+                  {entry.title}
+                </span>
+                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+                  {entry.date}
+                </span>
+              </Link>
+            ) : (
+              <div className="flex items-baseline justify-between border-b border-[rgba(0,0,0,0.06)] py-3.5">
+                <span className="text-[15px] tracking-[-0.01em] text-[#a3a3a3]">
+                  {entry.title}
+                </span>
+                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+                  {entry.date}
+                </span>
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
 
-      <motion.p
-        className="mt-6 text-[12px] italic text-[#a3a3a3]"
-        initial={reduceMotion ? {} : { opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3 }}
-      >
-        Coming soon
-      </motion.p>
     </section>
   );
 }

@@ -69,7 +69,9 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #E17055 0%, #fab1a0 40%, #ffeaa7 100%)",
+      preview: "/previews/wavr.jpg",
     },
+    externalUrl: "https://wavr-v1.vercel.app/",
     heroFrames: [
       { id: "wavr-1", background: "linear-gradient(180deg, #E17055, #fab1a0)", focus: 0.3 },
       { id: "wavr-2", background: "linear-gradient(180deg, #fab1a0, #ffeaa7)", focus: 0.5 },
@@ -107,7 +109,7 @@ export const projects: Project[] = [
   },
   {
     slug: "good-md",
-    title: "Good MD",
+    title: "Houston",
     category: "Desktop App",
     description:
       "A native Markdown reader built with Tauri. Opens and renders .md and .mdx files with syntax highlighting, GFM support, and a clean tabbed reading interface. Lightweight, fast, local-first.",
@@ -121,7 +123,9 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #00B894 0%, #55efc4 50%, #dfe6e9 100%)",
+      preview: "/previews/good-md.png",
     },
+    externalUrl: "https://houston-rose.vercel.app/",
     heroFrames: [
       { id: "gmd-1", background: "linear-gradient(180deg, #00B894, #55efc4)", focus: 0.3 },
       { id: "gmd-2", background: "linear-gradient(180deg, #55efc4, #dfe6e9)", focus: 0.5 },
@@ -173,7 +177,9 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
+      preview: "/previews/studio-os.png",
     },
+    externalUrl: "https://studio-os.io/",
     heroFrames: [
       { id: "sos-1", background: "linear-gradient(180deg, #2D3436, #636e72)", focus: 0.3 },
       { id: "sos-2", background: "linear-gradient(180deg, #636e72, #b2bec3)", focus: 0.5 },
@@ -225,6 +231,7 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #1A1A1A 0%, #4a4a4a 50%, #8a8a8a 100%)",
+      preview: "/previews/vceezy.png",
     },
     heroFrames: [
       { id: "vc-1", background: "linear-gradient(180deg, #1A1A1A, #4a4a4a)", focus: 0.3 },

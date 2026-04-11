@@ -10,14 +10,14 @@ export function SiteHeader() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <header className="relative z-50">
+    <header className="relative z-50" style={{ viewTransitionName: "site-header" }}>
       <div className="section-shell flex items-center justify-between py-5">
         <div
           className="relative"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          <Link href="/" aria-label="Home">
+          <Link href="/" {...{ transitionTypes: ["nav-back"] } as any} aria-label="Home">
             <Image
               src="/logo.gif"
               alt="litt.design"
@@ -53,14 +53,14 @@ export function SiteHeader() {
 
         <nav className="flex items-center gap-6">
           {[
-            { label: "Work", href: "/#work" },
-            { label: "Craft", href: "/craft" },
-            { label: "Art", href: "/art" },
-            { label: "Writing", href: "/#writing" },
+            { label: "Work", href: "/#work", external: false },
+            { label: "Art", href: "/art", external: false },
+            { label: "Writing", href: "/#writing", external: false },
           ].map((item) => (
             <Link
               key={item.label}
               href={item.href}
+              {...(item.href.startsWith("/#") ? {} : { transitionTypes: ["nav-forward"] }) as any}
               className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
             >
               {item.label}

@@ -1,4 +1,5 @@
 import { CraftGallery } from "@/components/craft-gallery";
+import { DirectionalTransition } from "@/components/view-transitions";
 
 export const metadata = {
   title: "Craft",
@@ -7,5 +8,9 @@ export const metadata = {
 };
 
 export default function CraftPage() {
-  return <CraftGallery />;
+  return (
+    <DirectionalTransition>
+      <CraftGallery />
+    </DirectionalTransition>
+  );
 }

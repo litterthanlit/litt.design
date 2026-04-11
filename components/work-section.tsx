@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, ViewTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Project } from "@/data/types";
@@ -43,6 +44,47 @@ export function WorkSection({ projects }: WorkSectionProps) {
       >
         {/* Floating preview card */}
         <AnimatePresence>
+          {hoveredSlug === "litt-works" && !reduceMotion && (
+            <motion.div
+              key="litt-works"
+              className="pointer-events-none absolute right-0 z-10 hidden w-[340px] lg:block"
+              style={{ top: cursorY - 100 }}
+              initial={{ opacity: 0, x: 16, scale: 0.96, filter: "blur(8px)" }}
+              animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, x: 10, scale: 0.97, filter: "blur(4px)" }}
+              transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.8 }}
+            >
+              <div className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+                <div className="grid grid-cols-2 gap-0.5">
+                  <div className="relative h-24">
+                    <Image src="/art/pieces/chaos.jpg" alt="Chaos" fill className="object-cover" />
+                  </div>
+                  <div className="relative h-24">
+                    <Image src="/art/pieces/in-the-fire.jpg" alt="In the Fire" fill className="object-cover" />
+                  </div>
+                  <div className="relative h-24">
+                    <Image src="/art/pieces/shattered.jpg" alt="Shattered" fill className="object-cover" />
+                  </div>
+                  <div className="relative h-24">
+                    <Image src="/art/pieces/unfiltered-projections.jpg" alt="Unfiltered Projections" fill className="object-cover" />
+                  </div>
+                </div>
+                <div className="space-y-2 p-5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
+                      Digital Art
+                    </span>
+                    <span className="font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+                      2024–2026
+                    </span>
+                  </div>
+                  <p className="text-[13px] leading-[1.6] text-[#525252]">
+                    Abstract digital art — prints, visual experiments, and long-form pieces.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
           {hoveredProject && !reduceMotion && (
             <motion.div
               key={hoveredProject.slug}
@@ -54,10 +96,21 @@ export function WorkSection({ projects }: WorkSectionProps) {
               transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.8 }}
             >
               <div className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-                <div
-                  className="h-32"
-                  style={{ background: hoveredProject.coverMedia.background }}
-                />
+                {hoveredProject.coverMedia.preview ? (
+                  <div className="relative h-40 overflow-hidden">
+                    <Image
+                      src={hoveredProject.coverMedia.preview}
+                      alt={hoveredProject.title}
+                      fill
+                      className="object-cover object-top"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="h-32"
+                    style={{ background: hoveredProject.coverMedia.background }}
+                  />
+                )}
                 <div className="space-y-3 p-5">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
@@ -162,7 +215,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
               Art
             </motion.span>
             <div className="flex flex-wrap gap-2">
-              <ArtPill reduceMotion={reduceMotion ?? false} />
+              <ArtPill reduceMotion={reduceMotion ?? false} onHover={setHoveredSlug} />
             </div>
           </div>
         </div>
@@ -189,10 +242,10 @@ type ProjectPillProps = {
 };
 
 const SHADOW_COLORS = [
-  [180, 120, 255],  // lavender
+  [255, 160, 80],   // orange
+  [255, 120, 100],  // coral
   [100, 200, 255],  // sky
   [120, 255, 180],  // mint
-  [255, 180, 120],  // peach
   [200, 160, 255],  // lilac
 ];
 
@@ -252,14 +305,17 @@ function GlassPill({
       className="relative flex items-center overflow-hidden rounded-full border px-5 py-2.5"
       style={{
         borderColor: isHovered
-          ? "rgba(255,255,255,0.08)"
-          : "rgba(0,0,0,0.08)",
+          ? "rgba(255,255,255,0.7)"
+          : "rgba(255,255,255,0.5)",
         background: isHovered
-          ? "rgba(0,0,0,0.75)"
-          : "transparent",
-        backdropFilter: isHovered ? "blur(20px) saturate(1.4)" : "blur(0px)",
-        WebkitBackdropFilter: isHovered ? "blur(20px) saturate(1.4)" : "blur(0px)",
-        transition: "border-color 0.3s, background 0.3s, backdrop-filter 0.3s",
+          ? "rgba(255,255,255,0.7)"
+          : "rgba(255,255,255,0.45)",
+        backdropFilter: isHovered ? "blur(40px) saturate(1.8)" : "blur(12px) saturate(1.2)",
+        WebkitBackdropFilter: isHovered ? "blur(40px) saturate(1.8)" : "blur(12px) saturate(1.2)",
+        boxShadow: isHovered
+          ? "0 2px 12px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)"
+          : "0 1px 3px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.6)",
+        transition: "border-color 0.3s, background 0.3s, box-shadow 0.3s, backdrop-filter 0.3s",
       }}
       initial={
         reduceMotion
@@ -282,7 +338,7 @@ function GlassPill({
         className="pointer-events-none absolute inset-0 rounded-full"
         style={{
           background:
-            "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)",
+            "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)",
         }}
         initial={{ x: "-100%" }}
         animate={isHovered ? { x: "100%" } : { x: "-100%" }}
@@ -295,8 +351,8 @@ function GlassPill({
 
       <span className="relative z-10">
         <span
-          className="text-[17px] font-medium tracking-[-0.02em] transition-colors duration-300"
-          style={{ color: isHovered ? "#ffffff" : "#0a0a0a" }}
+          className="text-[17px] font-normal tracking-[-0.02em] text-[#0a0a0a] transition-all duration-300"
+          style={{ filter: isHovered ? "blur(0px)" : "blur(2px)" }}
         >
           {children}
         </span>
@@ -309,13 +365,12 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
   const isExternal = !!project.externalUrl;
   const href = isExternal ? project.externalUrl! : `/work/${project.slug}`;
 
-  const linkProps = isExternal
-    ? { href, target: "_blank" as const, rel: "noopener noreferrer" }
-    : { href };
-
   return (
     <Link
-      {...linkProps}
+      href={href}
+      {...(isExternal
+        ? { target: "_blank" as const, rel: "noopener noreferrer" }
+        : { transitionTypes: ["nav-forward"] } as any)}
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
     >
@@ -324,20 +379,23 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
         reduceMotion={reduceMotion}
         delay={index * 0.05}
       >
-        {project.title}
+        <ViewTransition name={`project-title-${project.slug}`} share="text-morph" default="none">
+          <span>{project.title}</span>
+        </ViewTransition>
       </GlassPill>
     </Link>
   );
 }
 
-function ArtPill({ reduceMotion }: { reduceMotion: boolean }) {
+function ArtPill({ reduceMotion, onHover }: { reduceMotion: boolean; onHover: (slug: string | null) => void }) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <Link
       href="/art"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      {...{ transitionTypes: ["nav-forward"] } as any}
+      onMouseEnter={() => { setHovered(true); onHover("litt-works"); }}
+      onMouseLeave={() => { setHovered(false); onHover(null); }}
     >
       <GlassPill isHovered={hovered} reduceMotion={reduceMotion} delay={0.25}>
         litt.works

@@ -29,6 +29,7 @@ export type Project = {
   accent: string;
   coverMedia: {
     background: string;
+    preview?: string;
   };
   heroFrames: HeroFrame[];
   storyBlocks: StoryBlock[];
