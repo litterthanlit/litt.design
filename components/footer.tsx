@@ -30,13 +30,13 @@ export function Footer({ settings }: FooterProps) {
     <footer className="section-shell border-t border-[rgba(0,0,0,0.06)] py-16 md:py-24">
       {/* Bio */}
       <motion.div className="max-w-xl" {...fadeUp(0)}>
-        <p className="text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
+        <p className="text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
           I build tools for creators.
         </p>
-        <p className="mt-2 text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
+        <p className="mt-2 text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
           The craft is in what I leave out.
         </p>
-        <p className="mt-2 text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
+        <p className="mt-2 text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
           More Play.
         </p>
         <p className="mt-4 text-[13px] leading-[1.7] text-[#a3a3a3]">

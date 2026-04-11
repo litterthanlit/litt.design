@@ -68,9 +68,9 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
       <section className="max-w-2xl space-y-6">
         <ViewTransition name={`project-title-${project.slug}`} share="text-morph" default="none">
           <motion.h1
-            className="text-[clamp(2rem,5vw,3.5rem)] font-medium leading-[1] tracking-[-0.04em] text-[#0a0a0a]"
-            initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
-            whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
+            className="text-[clamp(1.6rem,4vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.03em] text-[#0a0a0a] pb-1"
+            initial={reduceMotion ? {} : { opacity: 0, y: 12, filter: "blur(4px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true }}
             transition={{ type: "spring", stiffness: 80, damping: 30 }}
           >
@@ -86,7 +86,7 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
         </motion.p>
 
         <motion.div className="flex flex-wrap gap-2" {...useFadeUp(0.12)}>
-          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] text-[#a3a3a3]">
+          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] font-medium text-[#a3a3a3]">
             {project.category}
           </span>
           <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
@@ -104,7 +104,7 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
           {project.stack.map((tech, i) => (
             <motion.span
               key={tech}
-              className="rounded-full border border-[rgba(0,0,0,0.08)] px-4 py-1.5 font-mono text-[12px] text-[#737373]"
+              className="rounded-full border border-[rgba(0,0,0,0.08)] px-4 py-1.5 font-mono text-[12px] font-medium text-[#737373]"
               initial={
                 reduceMotion
                   ? {}
