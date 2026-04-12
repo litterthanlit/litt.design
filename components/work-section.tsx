@@ -351,7 +351,7 @@ function GlassPill({
 
       <span className="relative z-10">
         <span
-          className="text-[17px] font-normal tracking-[-0.02em] text-[#0a0a0a] transition-all duration-300"
+          className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a] transition-all duration-300"
           style={{ filter: isHovered ? "blur(0px)" : "blur(2px)" }}
         >
           {children}
