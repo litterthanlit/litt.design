@@ -34,7 +34,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
         viewport={{ once: true }}
         transition={{ type: "spring", stiffness: 80, damping: 30 }}
       >
-        Selected Work
+        Projects
       </motion.p>
 
       <div
@@ -147,77 +147,22 @@ export function WorkSection({ projects }: WorkSectionProps) {
           )}
         </AnimatePresence>
 
-        {/* Project pills — grouped by tier */}
-        <div className="space-y-6">
-          {/* Tools */}
-          <div>
-            <motion.span
-              className="mb-2.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-[#0a0a0a]"
-              initial={reduceMotion ? {} : { opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.05 }}
-            >
-              Tools
-            </motion.span>
-            <div className="flex flex-wrap gap-2">
-              {projects
-                .filter((p) => ["wavr", "good-md"].includes(p.slug))
-                .map((project, index) => (
-                  <ProjectPill
-                    key={project.slug}
-                    project={project}
-                    index={index}
-                    isHovered={hoveredSlug === project.slug}
-                    onHover={setHoveredSlug}
-                    reduceMotion={reduceMotion ?? false}
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* Products */}
-          <div>
-            <motion.span
-              className="mb-2.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-[#0a0a0a]"
-              initial={reduceMotion ? {} : { opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 }}
-            >
-              Products
-            </motion.span>
-            <div className="flex flex-wrap gap-2">
-              {projects
-                .filter((p) => ["studio-os", "vceezy"].includes(p.slug))
-                .map((project, index) => (
-                  <ProjectPill
-                    key={project.slug}
-                    project={project}
-                    index={index + 3}
-                    isHovered={hoveredSlug === project.slug}
-                    onHover={setHoveredSlug}
-                    reduceMotion={reduceMotion ?? false}
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* Art */}
-          <div>
-            <motion.span
-              className="mb-2.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-[#0a0a0a]"
-              initial={reduceMotion ? {} : { opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.25 }}
-            >
-              Art
-            </motion.span>
-            <div className="flex flex-wrap gap-2">
-              <ArtPill reduceMotion={reduceMotion ?? false} onHover={setHoveredSlug} />
-            </div>
-          </div>
+        {/* Project pills */}
+        <div className="flex flex-col items-start gap-3">
+          {projects
+            .filter((p) => ["wavr", "good-md", "studio-os", "vceezy"].includes(p.slug))
+            .sort((a, b) => b.title.length - a.title.length)
+            .map((project, index) => (
+              <ProjectPill
+                key={project.slug}
+                project={project}
+                index={index}
+                isHovered={hoveredSlug === project.slug}
+                onHover={setHoveredSlug}
+                reduceMotion={reduceMotion ?? false}
+              />
+            ))}
+          <ArtPill reduceMotion={reduceMotion ?? false} onHover={setHoveredSlug} />
         </div>
       </div>
     </section>
@@ -369,32 +314,46 @@ function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: Proje
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
     >
-      <GlassPill
-        isHovered={isHovered}
-        reduceMotion={reduceMotion}
-        delay={index * 0.05}
+      <motion.div
+        className="border-b border-[rgba(0,0,0,0.06)] py-4"
+        initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(2px)" }}
+        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        viewport={{ once: true }}
+        transition={{ type: "spring", stiffness: 120, damping: 28, delay: index * 0.04 }}
       >
-        <ViewTransition name={`project-title-${project.slug}`} share="text-morph" default="none">
-          <span>{project.title}</span>
-        </ViewTransition>
-      </GlassPill>
+        <h3 className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+          {project.title}
+        </h3>
+        <p className="mt-1.5 text-[14px] leading-[1.6] text-[#737373]">
+          {project.oneLineOutcome}
+        </p>
+      </motion.div>
     </Link>
   );
 }
 
 function ArtPill({ reduceMotion, onHover }: { reduceMotion: boolean; onHover: (slug: string | null) => void }) {
-  const [hovered, setHovered] = useState(false);
-
   return (
     <Link
       href="/art"
       {...{ transitionTypes: ["nav-forward"] } as any}
-      onMouseEnter={() => { setHovered(true); onHover("litt-works"); }}
-      onMouseLeave={() => { setHovered(false); onHover(null); }}
+      onMouseEnter={() => onHover("litt-works")}
+      onMouseLeave={() => onHover(null)}
     >
-      <GlassPill isHovered={hovered} reduceMotion={reduceMotion} delay={0.25}>
-        litt.works
-      </GlassPill>
+      <motion.div
+        className="border-b border-[rgba(0,0,0,0.06)] py-4"
+        initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(2px)" }}
+        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        viewport={{ once: true }}
+        transition={{ type: "spring", stiffness: 120, damping: 28, delay: 0.2 }}
+      >
+        <h3 className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+          litt.works
+        </h3>
+        <p className="mt-1.5 text-[14px] leading-[1.6] text-[#737373]">
+          Abstract digital art — prints, visual experiments, and long-form pieces.
+        </p>
+      </motion.div>
     </Link>
   );
 }
