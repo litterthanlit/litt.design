@@ -164,11 +164,11 @@ export const projects: Project[] = [
   {
     slug: "studio-os",
     title: "Studio OS",
-    category: "AI Product",
+    category: "Design Tool",
     description:
-      "An AI-powered creative workspace for designers. Briefing dashboard, six specialized AI agents, and an ASCII-inspired visual identity — a command center for solo design practice.",
+      "A design tool that turns references into taste-driven UI. Drop moodboards, compile taste directives, and work in a canvas that respects structure. Copy HTML or publish when you're ready.",
     oneLineOutcome:
-      "A designer's command center with AI agents that handle the busywork so you can focus on craft.",
+      "A design tool built around taste. References in, shipped UI out.",
     client: "Personal Project",
     year: "2025–2026",
     services: ["Product Strategy", "UI Design", "AI Integration"],
