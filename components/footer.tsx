@@ -45,62 +45,24 @@ export function Footer({ settings }: FooterProps) {
       </motion.div>
 
       {/* Socials */}
-      <motion.div className="mt-10 flex flex-wrap gap-2" {...fadeUp(0.08)}>
-        {settings.socialLinks.map((link, i) => (
-          <motion.a
+      <motion.div className="mt-8 flex flex-wrap gap-x-6 gap-y-2" {...fadeUp(0.08)}>
+        {settings.socialLinks.map((link) => (
+          <a
             key={link.label}
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-2 rounded-full border border-[rgba(0,0,0,0.08)] px-4 py-2 text-[13px] text-[#737373] transition-colors duration-150 hover:border-[rgba(0,0,0,0.2)] hover:text-[#0a0a0a]"
-            whileHover={reduceMotion ? {} : { y: -2 }}
-            whileTap={{ scale: 0.97 }}
-            initial={
-              reduceMotion
-                ? {}
-                : { opacity: 0, y: 12, filter: "blur(2px)" }
-            }
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 25,
-              delay: 0.12 + i * 0.04,
-            }}
+            className="text-[13px] text-[#a3a3a3] transition-colors duration-150 hover:text-[#0a0a0a]"
           >
             {link.label}
-            <span className="text-[11px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
-              ↗
-            </span>
-          </motion.a>
+          </a>
         ))}
-
-        {/* Email */}
-        <motion.a
+        <a
           href={`mailto:${settings.contactEmail}`}
-          className="group flex items-center gap-2 rounded-full border border-[rgba(0,0,0,0.08)] px-4 py-2 text-[13px] text-[#737373] transition-colors duration-150 hover:border-[rgba(0,0,0,0.2)] hover:text-[#0a0a0a]"
-          whileHover={reduceMotion ? {} : { y: -2 }}
-          whileTap={{ scale: 0.97 }}
-          initial={
-            reduceMotion
-              ? {}
-              : { opacity: 0, y: 12, filter: "blur(2px)" }
-          }
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          viewport={{ once: true }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 25,
-            delay: 0.12 + settings.socialLinks.length * 0.04,
-          }}
+          className="text-[13px] text-[#a3a3a3] transition-colors duration-150 hover:text-[#0a0a0a]"
         >
           {settings.contactEmail}
-          <span className="text-[11px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
-            ↗
-          </span>
-        </motion.a>
+        </a>
       </motion.div>
     </footer>
   );
