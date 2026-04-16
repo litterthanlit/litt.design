@@ -72,6 +72,10 @@ export const projects: Project[] = [
       preview: "/previews/wavr.jpg",
     },
     externalUrl: "https://wavr-v1.vercel.app/",
+    screens: [
+      { label: "Landing", description: "Homepage with gradient types and feature overview", src: "/previews/wavr/home.png" },
+      { label: "Editor", description: "Visual gradient editor with parameter controls", src: "/previews/wavr.jpg" },
+    ],
     heroFrames: [
       { id: "wavr-1", background: "linear-gradient(180deg, #E17055, #fab1a0)", focus: 0.3 },
       { id: "wavr-2", background: "linear-gradient(180deg, #fab1a0, #ffeaa7)", focus: 0.5 },
@@ -180,6 +184,10 @@ export const projects: Project[] = [
       preview: "/previews/studio-os.png",
     },
     externalUrl: "https://studio-os.io/",
+    screens: [
+      { label: "Homepage", description: "Product landing with taste engine and canvas preview", src: "/previews/studio-os/home.png" },
+      { label: "Preview", description: "Studio OS editor and inspector", src: "/previews/studio-os.png" },
+    ],
     heroFrames: [
       { id: "sos-1", background: "linear-gradient(180deg, #2D3436, #636e72)", focus: 0.3 },
       { id: "sos-2", background: "linear-gradient(180deg, #636e72, #b2bec3)", focus: 0.5 },
