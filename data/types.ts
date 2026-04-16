@@ -31,6 +31,11 @@ export type Project = {
     background: string;
     preview?: string;
   };
+  screens?: {
+    label: string;
+    description: string;
+    src: string;
+  }[];
   heroFrames: HeroFrame[];
   storyBlocks: StoryBlock[];
   metrics?: Metric[];

@@ -34,35 +34,7 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
 
   return (
     <main className="section-shell flex min-h-screen flex-col gap-16 pb-20 pt-36 md:pt-44">
-      {/* Thumbnail */}
-      {project.coverMedia.preview ? (
-        <motion.div
-          className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)]"
-          initial={reduceMotion ? {} : { opacity: 0, scale: 0.97, filter: "blur(8px)" }}
-          whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 60, damping: 25 }}
-        >
-          <div className="relative aspect-[16/9]">
-            <Image
-              src={project.coverMedia.preview}
-              alt={project.title}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-        </motion.div>
-      ) : (
-        <motion.div
-          className="aspect-[16/9] overflow-hidden rounded-xl"
-          style={{ background: project.coverMedia.background }}
-          initial={reduceMotion ? {} : { opacity: 0, scale: 0.97, filter: "blur(8px)" }}
-          whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 60, damping: 25 }}
-        />
-      )}
+      {/* Thumbnail — hidden until better previews are ready */}
 
       {/* Title + description */}
       <section className="max-w-2xl space-y-6">
@@ -107,6 +79,33 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
           </motion.div>
         )}
       </section>
+
+      {/* Story */}
+      {project.storyBlocks.length > 0 && (
+        <section className="max-w-2xl space-y-10">
+          {project.storyBlocks.map((block, i) => (
+            <motion.div
+              key={block.label}
+              initial={reduceMotion ? {} : { opacity: 0, y: 16, filter: "blur(4px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ type: "spring", stiffness: 80, damping: 28, delay: i * 0.04 }}
+            >
+              <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#a3a3a3]">
+                {block.label}
+              </p>
+              <h2 className="mt-2 text-[18px] font-medium leading-[1.3] tracking-[-0.02em] text-[#0a0a0a]">
+                {block.heading}
+              </h2>
+              <p className="mt-2 text-[14px] leading-[1.7] text-[#737373]">
+                {block.body}
+              </p>
+            </motion.div>
+          ))}
+        </section>
+      )}
+
+      {/* Screens — hidden until better previews are ready */}
 
       {/* Stack */}
       <section>
