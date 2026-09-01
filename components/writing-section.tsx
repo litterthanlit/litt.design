@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { quietFade } from "@/lib/motion";
 import type { WritingEntry } from "@/data/writing";
 
 type WritingSectionProps = {
@@ -13,38 +14,17 @@ export function WritingSection({ entries }: WritingSectionProps) {
 
   return (
     <section id="writing" className="section-shell py-16 md:py-24">
-      <motion.p
-        className="eyebrow mb-8"
-        initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
-        whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
-        viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 80, damping: 30 }}
-      >
+      <motion.p className="eyebrow mb-8" {...quietFade(reduceMotion)}>
         Writing
       </motion.p>
 
       <div className="space-y-0">
-        {entries.map((entry, i) => (
-          <motion.div
-            key={entry.slug}
-            initial={
-              reduceMotion
-                ? {}
-                : { opacity: 0, y: 10, filter: "blur(2px)" }
-            }
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true, margin: "-20px" }}
-            transition={{
-              type: "spring",
-              stiffness: 120,
-              damping: 28,
-              delay: i * 0.04,
-            }}
-          >
+        {entries.map((entry, index) => (
+          <motion.div key={entry.slug} {...quietFade(reduceMotion, index * 0.03)}>
             {entry.body ? (
               <Link
                 href={`/writing/${entry.slug}`}
-                {...{ transitionTypes: ["nav-forward"] } as any}
+                {...({ transitionTypes: ["nav-forward"] } as { transitionTypes: string[] })}
                 className="group flex items-baseline justify-between border-b border-[rgba(0,0,0,0.06)] py-3.5"
               >
                 <span className="text-[15px] tracking-[-0.01em] text-[#0a0a0a] transition-colors duration-150 group-hover:text-[#525252]">
@@ -67,7 +47,6 @@ export function WritingSection({ entries }: WritingSectionProps) {
           </motion.div>
         ))}
       </div>
-
     </section>
   );
 }

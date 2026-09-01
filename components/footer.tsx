@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { quietFade } from "@/lib/motion";
 import type { SiteSettings } from "@/data/types";
 
 type FooterProps = {
@@ -11,25 +12,10 @@ type FooterProps = {
 export function Footer({ settings }: FooterProps) {
   const reduceMotion = useReducedMotion();
 
-  const fadeUp = (delay: number) =>
-    reduceMotion
-      ? {}
-      : {
-          initial: { opacity: 0, y: 20, filter: "blur(4px)" } as const,
-          whileInView: { opacity: 1, y: 0, filter: "blur(0px)" } as const,
-          viewport: { once: true, margin: "-80px" } as const,
-          transition: {
-            type: "spring" as const,
-            stiffness: 100,
-            damping: 30,
-            delay,
-          },
-        };
-
   return (
     <footer className="section-shell border-t border-[rgba(0,0,0,0.06)] py-16 md:py-24">
       {/* Bio */}
-      <motion.div className="max-w-xl" {...fadeUp(0)}>
+      <motion.div className="max-w-xl" {...quietFade(reduceMotion)}>
         <p className="text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
           I build tools for creators.
         </p>
@@ -45,7 +31,7 @@ export function Footer({ settings }: FooterProps) {
       </motion.div>
 
       {/* Socials */}
-      <motion.div className="mt-8 flex flex-wrap gap-x-6 gap-y-2" {...fadeUp(0.08)}>
+      <motion.div className="mt-8 flex flex-wrap gap-x-6 gap-y-2" {...quietFade(reduceMotion, 0.06)}>
         {settings.socialLinks.map((link) => (
           <a
             key={link.label}

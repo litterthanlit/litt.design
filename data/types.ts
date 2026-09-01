@@ -36,6 +36,7 @@ export type Project = {
     description: string;
     src: string;
   }[];
+  spacing?: "tight" | "medium" | "spaced";
   heroFrames: HeroFrame[];
   storyBlocks: StoryBlock[];
   metrics?: Metric[];

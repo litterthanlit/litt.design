@@ -166,7 +166,7 @@ export function DitherBackground() {
       style={{
         width: "100vw",
         height: "100vh",
-        opacity: 0.35,
+        opacity: 0.14,
         imageRendering: "pixelated",
       }}
       aria-hidden="true"

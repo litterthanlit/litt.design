@@ -72,9 +72,10 @@ export const projects: Project[] = [
       preview: "/previews/wavr.jpg",
     },
     externalUrl: "https://wavr-v1.vercel.app/",
+    spacing: "spaced",
     screens: [
-      { label: "Landing", description: "Homepage with gradient types and feature overview", src: "/previews/wavr/home.png" },
       { label: "Editor", description: "Visual gradient editor with parameter controls", src: "/previews/wavr.jpg" },
+      { label: "Landing", description: "Homepage with gradient types and feature overview", src: "/previews/wavr/home.png" },
     ],
     heroFrames: [
       { id: "wavr-1", background: "linear-gradient(180deg, #E17055, #fab1a0)", focus: 0.3 },
@@ -130,6 +131,10 @@ export const projects: Project[] = [
       preview: "/previews/good-md.png",
     },
     externalUrl: "https://houston-rose.vercel.app/",
+    spacing: "medium",
+    screens: [
+      { label: "Reader", description: "Native Markdown reader with outline sync", src: "/previews/good-md.png" },
+    ],
     heroFrames: [
       { id: "gmd-1", background: "linear-gradient(180deg, #00B894, #55efc4)", focus: 0.3 },
       { id: "gmd-2", background: "linear-gradient(180deg, #55efc4, #dfe6e9)", focus: 0.5 },
@@ -184,9 +189,9 @@ export const projects: Project[] = [
       preview: "/previews/studio-os.png",
     },
     externalUrl: "https://studio-os.io/",
+    spacing: "tight",
     screens: [
-      { label: "Homepage", description: "Product landing with taste engine and canvas preview", src: "/previews/studio-os/home.png" },
-      { label: "Preview", description: "Studio OS editor and inspector", src: "/previews/studio-os.png" },
+      { label: "Homepage", description: "Product landing with taste engine and canvas preview", src: "/previews/studio-os.png" },
     ],
     heroFrames: [
       { id: "sos-1", background: "linear-gradient(180deg, #2D3436, #636e72)", focus: 0.3 },
@@ -241,6 +246,10 @@ export const projects: Project[] = [
         "linear-gradient(135deg, #1A1A1A 0%, #4a4a4a 50%, #8a8a8a 100%)",
       preview: "/previews/vceezy.png",
     },
+    spacing: "medium",
+    screens: [
+      { label: "Player", description: "Token-gated music player and collection", src: "/previews/vceezy.png" },
+    ],
     heroFrames: [
       { id: "vc-1", background: "linear-gradient(180deg, #1A1A1A, #4a4a4a)", focus: 0.3 },
       { id: "vc-2", background: "linear-gradient(180deg, #4a4a4a, #8a8a8a)", focus: 0.5 },
@@ -277,3 +286,30 @@ export const projects: Project[] = [
     ],
   },
 ];
+
+export const homepageProjectSlugs = ["wavr", "good-md", "studio-os", "vceezy"] as const;
+
+export function getHomepageProjects(): Project[] {
+  return homepageProjectSlugs.flatMap((slug) => {
+    const project = projects.find((entry) => entry.slug === slug);
+    return project ? [project] : [];
+  });
+}
+
+export function getProjectImages(project: Project): NonNullable<Project["screens"]> {
+  if (project.screens && project.screens.length > 0) {
+    return project.screens;
+  }
+
+  if (project.coverMedia.preview) {
+    return [
+      {
+        label: project.title,
+        description: project.oneLineOutcome,
+        src: project.coverMedia.preview,
+      },
+    ];
+  }
+
+  return [];
+}
