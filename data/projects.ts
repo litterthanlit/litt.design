@@ -18,6 +18,7 @@ export const projects: Project[] = [
       background:
         "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
       preview: "/previews/studio-os.png",
+      position: "top",
     },
     externalUrl: "https://studio-os.io/",
     screens: [
@@ -71,6 +72,7 @@ export const projects: Project[] = [
       background:
         "linear-gradient(135deg, #00B894 0%, #55efc4 50%, #dfe6e9 100%)",
       preview: "/previews/good-md.png",
+      position: "left center",
     },
     externalUrl: "https://houston-rose.vercel.app/",
     heroFrames: [

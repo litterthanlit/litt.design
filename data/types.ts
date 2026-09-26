@@ -30,6 +30,8 @@ export type Project = {
   coverMedia: {
     background: string;
     preview?: string;
+    // CSS object-position for the card crop, e.g. "top" or "left center"
+    position?: string;
   };
   screens?: {
     label: string;

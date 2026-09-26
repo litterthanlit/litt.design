@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
 import { DitherBackground } from "@/components/dither-background";
@@ -36,8 +37,8 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${GeistMono.variable} bg-canvas text-ink antialiased`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className="bg-canvas text-ink antialiased">
         <DitherBackground />
         <div className="grain" aria-hidden="true" />
         <SiteHeader />
