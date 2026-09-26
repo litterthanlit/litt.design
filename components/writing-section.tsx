@@ -13,7 +13,7 @@ export function WritingSection({ entries }: WritingSectionProps) {
 
   return (
     <section id="writing" className="section-shell py-16 md:py-24">
-      <motion.p
+      <motion.h2
         className="eyebrow mb-8"
         initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
         whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
@@ -21,7 +21,7 @@ export function WritingSection({ entries }: WritingSectionProps) {
         transition={{ type: "spring", stiffness: 80, damping: 30 }}
       >
         Writing
-      </motion.p>
+      </motion.h2>
 
       <div className="space-y-0">
         {entries.map((entry, i) => (
@@ -50,7 +50,7 @@ export function WritingSection({ entries }: WritingSectionProps) {
                 <span className="text-[15px] tracking-[-0.01em] text-[#0a0a0a] transition-colors duration-150 group-hover:text-[#525252]">
                   {entry.title}
                 </span>
-                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#737373]">
                   {entry.date}
                 </span>
               </Link>
@@ -58,8 +58,9 @@ export function WritingSection({ entries }: WritingSectionProps) {
               <div className="flex items-baseline justify-between border-b border-[rgba(0,0,0,0.06)] py-3.5">
                 <span className="text-[15px] tracking-[-0.01em] text-[#a3a3a3]">
                   {entry.title}
+                  <span className="sr-only"> (draft, not yet published)</span>
                 </span>
-                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#737373]">
                   {entry.date}
                 </span>
               </div>

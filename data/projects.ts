@@ -2,55 +2,56 @@ import type { Project } from "@/data/types";
 
 export const projects: Project[] = [
   {
-    slug: "ergon",
-    title: "Ergon",
-    category: "Creative Tool",
+    slug: "studio-os",
+    title: "Studio OS",
+    category: "Design Tool",
     description:
-      "A browser-based creative coding studio for generative art. Write code templates, tweak parameters in real time, and export visual output — Processing meets a polished desktop IDE.",
+      "A design tool that turns references into taste-driven UI. Drop moodboards, compile taste directives, and work in a canvas that respects structure. Copy HTML or publish when you're ready.",
     oneLineOutcome:
-      "A creative coding studio that makes generative art accessible to designers and developers alike.",
+      "A design tool built around taste. References in, shipped UI out.",
     client: "Personal Project",
-    year: "2026",
-    services: ["Product Design", "Front-End Development", "WebGL"],
-    stack: ["Next.js", "TypeScript", "WebGL", "CodeMirror", "Zustand"],
-    accent: "#6C5CE7",
+    year: "2025–2026",
+    services: ["Product Strategy", "UI Design", "AI Integration"],
+    stack: ["Next.js", "TypeScript", "Tailwind", "AI Agents"],
+    accent: "#2D3436",
     coverMedia: {
       background:
-        "linear-gradient(135deg, #6C5CE7 0%, #a29bfe 50%, #dfe6e9 100%)",
+        "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
+      preview: "/previews/studio-os.png",
     },
+    externalUrl: "https://studio-os.io/",
+    screens: [
+      { label: "Homepage", description: "Product landing with taste engine and canvas preview", src: "/previews/studio-os/home.png" },
+      { label: "Preview", description: "Studio OS editor and inspector", src: "/previews/studio-os.png" },
+    ],
     heroFrames: [
-      { id: "ergon-1", background: "linear-gradient(180deg, #6C5CE7, #a29bfe)", focus: 0.3 },
-      { id: "ergon-2", background: "linear-gradient(180deg, #a29bfe, #dfe6e9)", focus: 0.5 },
-      { id: "ergon-3", background: "linear-gradient(180deg, #6C5CE7, #74b9ff)", focus: 0.7 },
-      { id: "ergon-4", background: "linear-gradient(180deg, #a29bfe, #6C5CE7)", focus: 0.4 },
-      { id: "ergon-5", background: "linear-gradient(180deg, #dfe6e9, #a29bfe)", focus: 0.6 },
+      { id: "sos-1", background: "linear-gradient(180deg, #2D3436, #636e72)", focus: 0.3 },
+      { id: "sos-2", background: "linear-gradient(180deg, #636e72, #b2bec3)", focus: 0.5 },
+      { id: "sos-3", background: "linear-gradient(180deg, #2D3436, #dfe6e9)", focus: 0.7 },
+      { id: "sos-4", background: "linear-gradient(180deg, #b2bec3, #2D3436)", focus: 0.4 },
+      { id: "sos-5", background: "linear-gradient(180deg, #636e72, #2D3436)", focus: 0.6 },
     ],
     storyBlocks: [
       {
         label: "Challenge",
-        heading: "Creative coding needs better tools",
-        body: "Existing creative coding environments feel dated or require too much boilerplate. Designers want to experiment with generative visuals without wrestling with build systems.",
+        heading: "AI output has no taste",
+        body: "Generative UI tools produce competent, forgettable layouts. The references that shape a designer's eye — moodboards, screenshots, type specimens — never make it into the prompt.",
       },
       {
         label: "Approach",
-        heading: "Code-first, parameter-driven",
-        body: "Built a studio with live code editing, a template system, and a parameter panel that exposes every tweakable value. Changes render instantly on canvas.",
+        heading: "References in, directives out",
+        body: "Drop in a moodboard and Studio OS compiles it into taste directives: type, spacing, colour, and composition rules that every generated screen has to follow.",
       },
       {
         label: "Execution",
-        heading: "One loop from idea to export",
-        body: "CodeMirror editor with custom completions, a Zustand store driving the render pipeline, and one-click export to PNG, SVG, or video.",
+        heading: "A canvas that respects structure",
+        body: "Generated UI lands on a canvas as real, editable layout — not a flat image. Adjust it in the inspector, then copy clean HTML or publish when it's ready.",
       },
       {
         label: "Result",
-        heading: "Ship generative work faster",
-        body: "A polished studio that collapses the distance between writing code and seeing output, with templates that get you from zero to interesting in seconds.",
+        heading: "Taste you can reuse",
+        body: "Direction stops living only in your head. The same directives shape every screen, so the output looks like it came from one designer with one point of view.",
       },
-    ],
-    metrics: [
-      { label: "Templates", value: "12+" },
-      { label: "Export Formats", value: "3" },
-      { label: "Render Latency", value: "<16ms" },
     ],
   },
   {
@@ -163,64 +164,6 @@ export const projects: Project[] = [
       { label: "Bundle Size", value: "~4MB" },
       { label: "Startup Time", value: "<200ms" },
       { label: "Formats", value: "md/mdx" },
-    ],
-  },
-  {
-    slug: "studio-os",
-    title: "Studio OS",
-    category: "Design Tool",
-    description:
-      "A design tool that turns references into taste-driven UI. Drop moodboards, compile taste directives, and work in a canvas that respects structure. Copy HTML or publish when you're ready.",
-    oneLineOutcome:
-      "A design tool built around taste. References in, shipped UI out.",
-    client: "Personal Project",
-    year: "2025–2026",
-    services: ["Product Strategy", "UI Design", "AI Integration"],
-    stack: ["Next.js", "TypeScript", "Tailwind", "AI Agents"],
-    accent: "#2D3436",
-    coverMedia: {
-      background:
-        "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
-      preview: "/previews/studio-os.png",
-    },
-    externalUrl: "https://studio-os.io/",
-    screens: [
-      { label: "Homepage", description: "Product landing with taste engine and canvas preview", src: "/previews/studio-os/home.png" },
-      { label: "Preview", description: "Studio OS editor and inspector", src: "/previews/studio-os.png" },
-    ],
-    heroFrames: [
-      { id: "sos-1", background: "linear-gradient(180deg, #2D3436, #636e72)", focus: 0.3 },
-      { id: "sos-2", background: "linear-gradient(180deg, #636e72, #b2bec3)", focus: 0.5 },
-      { id: "sos-3", background: "linear-gradient(180deg, #2D3436, #dfe6e9)", focus: 0.7 },
-      { id: "sos-4", background: "linear-gradient(180deg, #b2bec3, #2D3436)", focus: 0.4 },
-      { id: "sos-5", background: "linear-gradient(180deg, #636e72, #2D3436)", focus: 0.6 },
-    ],
-    storyBlocks: [
-      {
-        label: "Challenge",
-        heading: "Solo designers drown in admin",
-        body: "Running a one-person studio means context-switching between design, content scheduling, client management, and strategic planning. The creative work suffers.",
-      },
-      {
-        label: "Approach",
-        heading: "Six agents, one dashboard",
-        body: "Each AI agent owns a specific domain — content orchestration, typography curation, distraction shielding, automation. The briefing dashboard surfaces what matters today.",
-      },
-      {
-        label: "Execution",
-        heading: "ASCII-inspired, editorially restrained",
-        body: "Jack Butcher-inspired visual language with sharp corners, Geist typography, and a monochrome palette. The interface feels like a briefing document, not an app.",
-      },
-      {
-        label: "Result",
-        heading: "Focus hours, not admin hours",
-        body: "A workspace that absorbs the operational overhead of solo practice and gives you back the hours for the work that actually matters.",
-      },
-    ],
-    metrics: [
-      { label: "AI Agents", value: "6" },
-      { label: "Iterations", value: "v6" },
-      { label: "Status", value: "MVP" },
     ],
   },
   {

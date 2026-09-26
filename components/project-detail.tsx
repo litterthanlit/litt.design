@@ -31,6 +31,7 @@ function useFadeUp(delay = 0) {
 
 export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
   const reduceMotion = useReducedMotion();
+  const visitFade = useFadeUp(0.16);
 
   return (
     <main className="section-shell flex min-h-screen flex-col gap-16 pb-20 pt-36 md:pt-44">
@@ -67,7 +68,7 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
         </motion.div>
 
         {project.externalUrl && (
-          <motion.div {...useFadeUp(0.16)}>
+          <motion.div {...visitFade}>
             <a
               href={project.externalUrl}
               target="_blank"

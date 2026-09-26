@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, ViewTransition } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -27,7 +27,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
   return (
     <section id="work" className="section-shell py-20 md:py-32">
       {/* Eyebrow */}
-      <motion.p
+      <motion.h2
         className="eyebrow mb-10"
         initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
         whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
@@ -35,7 +35,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
         transition={{ type: "spring", stiffness: 80, damping: 30 }}
       >
         Projects
-      </motion.p>
+      </motion.h2>
 
       <div
         ref={containerRef}
@@ -148,16 +148,12 @@ export function WorkSection({ projects }: WorkSectionProps) {
         </AnimatePresence>
 
         {/* Project pills */}
-        <div className="flex flex-col items-start gap-3">
-          {projects
-            .filter((p) => ["wavr", "good-md", "studio-os", "vceezy"].includes(p.slug))
-            .sort((a, b) => b.title.length - a.title.length)
-            .map((project, index) => (
+        <div className="flex max-w-xl flex-col items-stretch gap-3">
+          {projects.map((project, index) => (
               <ProjectPill
                 key={project.slug}
                 project={project}
                 index={index}
-                isHovered={hoveredSlug === project.slug}
                 onHover={setHoveredSlug}
                 reduceMotion={reduceMotion ?? false}
               />
@@ -169,150 +165,23 @@ export function WorkSection({ projects }: WorkSectionProps) {
   );
 }
 
-// Individual pill colors — muted, tasteful, no neon
-const PILL_COLORS: Record<string, string> = {
-  ergon: "#2D3436",     // charcoal
-  wavr: "#4A6741",      // sage green
-  "good-md": "#6B5B73", // muted plum
-  "studio-os": "#1a56db", // deep blue
-  vceezy: "#1A1A1A",    // obsidian
-};
-
 type ProjectPillProps = {
   project: Project;
   index: number;
-  isHovered: boolean;
   onHover: (slug: string | null) => void;
   reduceMotion: boolean;
 };
 
-const SHADOW_COLORS = [
-  [255, 160, 80],   // orange
-  [255, 120, 100],  // coral
-  [100, 200, 255],  // sky
-  [120, 255, 180],  // mint
-  [200, 160, 255],  // lilac
-];
-
-function useColorCycleShadow(active: boolean) {
-  const ref = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (!active || !ref.current) {
-      if (ref.current) ref.current.style.boxShadow = "none";
-      cancelAnimationFrame(rafRef.current);
-      return;
-    }
-
-    const el = ref.current;
-    const start = performance.now();
-
-    function tick(now: number) {
-      const t = (now - start) / 1000;
-      const cycleLen = SHADOW_COLORS.length;
-      const progress = (t * 0.4) % cycleLen; // slow cycle
-      const idx = Math.floor(progress);
-      const blend = progress - idx;
-      const a = SHADOW_COLORS[idx % cycleLen];
-      const b = SHADOW_COLORS[(idx + 1) % cycleLen];
-      const r = Math.round(a[0] + (b[0] - a[0]) * blend);
-      const g = Math.round(a[1] + (b[1] - a[1]) * blend);
-      const bv = Math.round(a[2] + (b[2] - a[2]) * blend);
-
-      el.style.boxShadow = `0 4px 20px rgba(${r},${g},${bv},0.2), 0 8px 40px rgba(${r},${g},${bv},0.1), inset 0 1px 0 rgba(255,255,255,0.06)`;
-      rafRef.current = requestAnimationFrame(tick);
-    }
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [active]);
-
-  return ref;
-}
-
-function GlassPill({
-  children,
-  isHovered,
-  reduceMotion,
-  delay,
-}: {
-  children: React.ReactNode;
-  isHovered: boolean;
-  reduceMotion: boolean;
-  delay: number;
-}) {
-  const shadowRef = useColorCycleShadow(isHovered && !reduceMotion);
-
-  return (
-    <motion.div
-      ref={shadowRef}
-      className="relative flex items-center overflow-hidden rounded-full border px-5 py-2.5"
-      style={{
-        borderColor: isHovered
-          ? "rgba(255,255,255,0.7)"
-          : "rgba(255,255,255,0.5)",
-        background: isHovered
-          ? "rgba(255,255,255,0.7)"
-          : "rgba(255,255,255,0.45)",
-        backdropFilter: isHovered ? "blur(40px) saturate(1.8)" : "blur(12px) saturate(1.2)",
-        WebkitBackdropFilter: isHovered ? "blur(40px) saturate(1.8)" : "blur(12px) saturate(1.2)",
-        boxShadow: isHovered
-          ? "0 2px 12px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)"
-          : "0 1px 3px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.6)",
-        transition: "border-color 0.3s, background 0.3s, box-shadow 0.3s, backdrop-filter 0.3s",
-      }}
-      initial={
-        reduceMotion
-          ? {}
-          : { opacity: 0, y: 12, filter: "blur(4px)" }
-      }
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{
-        type: "spring",
-        stiffness: 120,
-        damping: 28,
-        delay,
-      }}
-      whileHover={reduceMotion ? {} : { y: -2 }}
-      whileTap={{ scale: 0.97 }}
-    >
-      {/* Glare sweep on hover */}
-      <motion.span
-        className="pointer-events-none absolute inset-0 rounded-full"
-        style={{
-          background:
-            "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)",
-        }}
-        initial={{ x: "-100%" }}
-        animate={isHovered ? { x: "100%" } : { x: "-100%" }}
-        transition={
-          isHovered
-            ? { type: "spring", stiffness: 80, damping: 20, mass: 0.6 }
-            : { duration: 0 }
-        }
-      />
-
-      <span className="relative z-10">
-        <span
-          className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a] transition-all duration-300"
-          style={{ filter: isHovered ? "blur(0px)" : "blur(2px)" }}
-        >
-          {children}
-        </span>
-      </span>
-    </motion.div>
-  );
-}
-
-function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: ProjectPillProps) {
+function ProjectPill({ project, index, onHover, reduceMotion }: ProjectPillProps) {
   return (
     <Link
       href={`/work/${project.slug}`}
       {...{ transitionTypes: ["nav-forward"] } as any}
       onMouseEnter={() => onHover(project.slug)}
       onMouseLeave={() => onHover(null)}
+      onFocus={() => onHover(project.slug)}
+      onBlur={() => onHover(null)}
+      className="block w-full rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0a0a0a]"
     >
       <motion.div
         className="border-b border-[rgba(0,0,0,0.06)] py-4"
@@ -339,6 +208,9 @@ function ArtPill({ reduceMotion, onHover }: { reduceMotion: boolean; onHover: (s
       {...{ transitionTypes: ["nav-forward"] } as any}
       onMouseEnter={() => onHover("litt-works")}
       onMouseLeave={() => onHover(null)}
+      onFocus={() => onHover("litt-works")}
+      onBlur={() => onHover(null)}
+      className="block w-full rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0a0a0a]"
     >
       <motion.div
         className="border-b border-[rgba(0,0,0,0.06)] py-4"

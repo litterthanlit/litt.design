@@ -39,7 +39,7 @@ export function Footer({ settings }: FooterProps) {
         <p className="mt-2 text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
           More Play.
         </p>
-        <p className="mt-4 text-[13px] leading-[1.7] text-[#a3a3a3]">
+        <p className="mt-4 text-[13px] leading-[1.7] text-[#737373]">
           {settings.location} &middot; {settings.availability.label}
         </p>
       </motion.div>
@@ -52,14 +52,14 @@ export function Footer({ settings }: FooterProps) {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[13px] text-[#a3a3a3] transition-colors duration-150 hover:text-[#0a0a0a]"
+            className="text-[13px] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
           >
             {link.label}
           </a>
         ))}
         <a
           href={`mailto:${settings.contactEmail}`}
-          className="text-[13px] text-[#a3a3a3] transition-colors duration-150 hover:text-[#0a0a0a]"
+          className="text-[13px] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
         >
           {settings.contactEmail}
         </a>

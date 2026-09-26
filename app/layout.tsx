@@ -12,11 +12,11 @@ export const metadata: Metadata = {
     template: "%s | litt.design",
   },
   description:
-    "Web design, development, brand systems, and motion direction for founders who need a launch-ready site with a point of view.",
+    "Nick is a designer and developer building sites, products, and tools for creators — simple, usable, and considered.",
   openGraph: {
     title: "litt.design",
     description:
-      "Web experiences, brand identity, and motion that moves business.",
+      "Sites, products, and tools for creators. The craft is in what I leave out.",
     type: "website",
     url: "https://litt.design",
     images: ["/og.svg"],
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "litt.design",
     description:
-      "Web experiences, brand identity, and motion that moves business.",
+      "Sites, products, and tools for creators. The craft is in what I leave out.",
     images: ["/og.svg"],
   },
 };
