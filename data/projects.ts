@@ -55,64 +55,6 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "wavr",
-    title: "Wavr",
-    category: "Creative Tool",
-    description:
-      "An interactive animated gradient editor. Create moving mesh gradients and visual effects through a visual editor, then export as CSS, PNG, or video. Raw WebGL shaders, no abstraction layer.",
-    oneLineOutcome:
-      "A visual gradient editor that turns shader code into exportable motion graphics.",
-    client: "Personal Project",
-    year: "2026",
-    services: ["Product Design", "WebGL Development", "Shader Programming"],
-    stack: ["Next.js", "WebGL 2", "GLSL", "Zustand", "Tailwind"],
-    accent: "#E17055",
-    coverMedia: {
-      background:
-        "linear-gradient(135deg, #E17055 0%, #fab1a0 40%, #ffeaa7 100%)",
-      preview: "/previews/wavr.jpg",
-    },
-    externalUrl: "https://wavr-v1.vercel.app/",
-    screens: [
-      { label: "Landing", description: "Homepage with gradient types and feature overview", src: "/previews/wavr/home.png" },
-      { label: "Editor", description: "Visual gradient editor with parameter controls", src: "/previews/wavr.jpg" },
-    ],
-    heroFrames: [
-      { id: "wavr-1", background: "linear-gradient(180deg, #E17055, #fab1a0)", focus: 0.3 },
-      { id: "wavr-2", background: "linear-gradient(180deg, #fab1a0, #ffeaa7)", focus: 0.5 },
-      { id: "wavr-3", background: "linear-gradient(180deg, #E17055, #fdcb6e)", focus: 0.7 },
-      { id: "wavr-4", background: "linear-gradient(180deg, #ffeaa7, #E17055)", focus: 0.4 },
-      { id: "wavr-5", background: "linear-gradient(180deg, #fab1a0, #fdcb6e)", focus: 0.6 },
-    ],
-    storyBlocks: [
-      {
-        label: "Challenge",
-        heading: "Gradient tools are static",
-        body: "CSS gradient generators produce flat output. Designers want animated, organic gradients but shader programming has a steep learning curve.",
-      },
-      {
-        label: "Approach",
-        heading: "Visual controls over raw GLSL",
-        body: "Exposed every shader uniform through intuitive UI controls — sliders for speed, complexity, distortion. The fragment shader does the heavy lifting; the interface hides the math.",
-      },
-      {
-        label: "Execution",
-        heading: "Single-shader architecture",
-        body: "One fragment shader handles all gradient modes, noise, particles, bloom, and post-processing. No recompilation when switching modes — just uniform swaps.",
-      },
-      {
-        label: "Result",
-        heading: "Export-ready motion gradients",
-        body: "Designers create living gradients and export as CSS, PNG, or WebM video in seconds. Mouse-reactive effects make every gradient feel interactive.",
-      },
-    ],
-    metrics: [
-      { label: "Gradient Modes", value: "5" },
-      { label: "Effects", value: "6" },
-      { label: "Export Formats", value: "3" },
-    ],
-  },
-  {
     slug: "good-md",
     title: "Houston",
     category: "Desktop App",
@@ -217,6 +159,64 @@ export const projects: Project[] = [
       { label: "Routes", value: "7" },
       { label: "Chain", value: "Hedera" },
       { label: "Design", value: "Monochrome" },
+    ],
+  },
+  {
+    slug: "wavr",
+    title: "Wavr",
+    category: "Creative Tool",
+    description:
+      "An interactive animated gradient editor. Create moving mesh gradients and visual effects through a visual editor, then export as CSS, PNG, or video. Raw WebGL shaders, no abstraction layer.",
+    oneLineOutcome:
+      "A visual gradient editor that turns shader code into exportable motion graphics.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Product Design", "WebGL Development", "Shader Programming"],
+    stack: ["Next.js", "WebGL 2", "GLSL", "Zustand", "Tailwind"],
+    accent: "#E17055",
+    coverMedia: {
+      background:
+        "linear-gradient(135deg, #E17055 0%, #fab1a0 40%, #ffeaa7 100%)",
+      preview: "/previews/wavr.jpg",
+    },
+    externalUrl: "https://wavr-v1.vercel.app/",
+    screens: [
+      { label: "Landing", description: "Homepage with gradient types and feature overview", src: "/previews/wavr/home.png" },
+      { label: "Editor", description: "Visual gradient editor with parameter controls", src: "/previews/wavr.jpg" },
+    ],
+    heroFrames: [
+      { id: "wavr-1", background: "linear-gradient(180deg, #E17055, #fab1a0)", focus: 0.3 },
+      { id: "wavr-2", background: "linear-gradient(180deg, #fab1a0, #ffeaa7)", focus: 0.5 },
+      { id: "wavr-3", background: "linear-gradient(180deg, #E17055, #fdcb6e)", focus: 0.7 },
+      { id: "wavr-4", background: "linear-gradient(180deg, #ffeaa7, #E17055)", focus: 0.4 },
+      { id: "wavr-5", background: "linear-gradient(180deg, #fab1a0, #fdcb6e)", focus: 0.6 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "Gradient tools are static",
+        body: "CSS gradient generators produce flat output. Designers want animated, organic gradients but shader programming has a steep learning curve.",
+      },
+      {
+        label: "Approach",
+        heading: "Visual controls over raw GLSL",
+        body: "Exposed every shader uniform through intuitive UI controls — sliders for speed, complexity, distortion. The fragment shader does the heavy lifting; the interface hides the math.",
+      },
+      {
+        label: "Execution",
+        heading: "Single-shader architecture",
+        body: "One fragment shader handles all gradient modes, noise, particles, bloom, and post-processing. No recompilation when switching modes — just uniform swaps.",
+      },
+      {
+        label: "Result",
+        heading: "Export-ready motion gradients",
+        body: "Designers create living gradients and export as CSS, PNG, or WebM video in seconds. Mouse-reactive effects make every gradient feel interactive.",
+      },
+    ],
+    metrics: [
+      { label: "Gradient Modes", value: "5" },
+      { label: "Effects", value: "6" },
+      { label: "Export Formats", value: "3" },
     ],
   },
 ];

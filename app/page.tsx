@@ -1,12 +1,12 @@
 import { WorkSection } from "@/components/work-section";
+import { ContributionGraph } from "@/components/contribution-graph";
 import { WritingSection } from "@/components/writing-section";
 import { Footer, ThankYouOrb } from "@/components/footer";
 import { IntroSection } from "@/components/intro-section";
-import { NowSection } from "@/components/now-section";
 import { DirectionalTransition } from "@/components/view-transitions";
 import { projects } from "@/data/projects";
 import { writings } from "@/data/writing";
-import { nowEntries } from "@/data/now";
+import { workList } from "@/data/work";
 import { siteSettings } from "@/data/site";
 
 export default function HomePage() {
@@ -14,8 +14,8 @@ export default function HomePage() {
     <DirectionalTransition>
       <main>
         <IntroSection />
-        <WorkSection projects={projects} />
-        <NowSection entries={nowEntries} />
+        <WorkSection projects={projects} items={workList} />
+        <ContributionGraph username="litterthanlit" />
         <WritingSection entries={writings} />
         <Footer settings={siteSettings} />
         <ThankYouOrb />

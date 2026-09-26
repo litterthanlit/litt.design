@@ -3,16 +3,26 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
 import type { Project } from "@/data/types";
+import type { WorkItem } from "@/data/work";
 
 type WorkSectionProps = {
   projects: Project[];
+  items: WorkItem[];
 };
 
-export function WorkSection({ projects }: WorkSectionProps) {
+export function WorkSection({ projects, items }: WorkSectionProps) {
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
-  const [cursorY, setCursorY] = useState(0);
+  // A motion value moves the preview card without re-rendering the list
+  const cursorY = useMotionValue(0);
+  const previewTop = useTransform(cursorY, (y) => y - 100);
   const containerRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
 
@@ -21,7 +31,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
   function handlePointerMove(e: React.PointerEvent) {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    setCursorY(e.clientY - rect.top);
+    cursorY.set(e.clientY - rect.top);
   }
 
   return (
@@ -48,7 +58,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
             <motion.div
               key="litt-works"
               className="pointer-events-none absolute right-0 z-10 hidden w-[340px] lg:block"
-              style={{ top: cursorY - 100 }}
+              style={{ top: previewTop }}
               initial={{ opacity: 0, x: 16, scale: 0.96, filter: "blur(8px)" }}
               animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
               exit={{ opacity: 0, x: 10, scale: 0.97, filter: "blur(4px)" }}
@@ -89,7 +99,7 @@ export function WorkSection({ projects }: WorkSectionProps) {
             <motion.div
               key={hoveredProject.slug}
               className="pointer-events-none absolute right-0 z-10 hidden w-[340px] lg:block"
-              style={{ top: cursorY - 100 }}
+              style={{ top: previewTop }}
               initial={{ opacity: 0, x: 16, scale: 0.96, filter: "blur(8px)" }}
               animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
               exit={{ opacity: 0, x: 10, scale: 0.97, filter: "blur(4px)" }}
@@ -149,7 +159,30 @@ export function WorkSection({ projects }: WorkSectionProps) {
 
         {/* Project pills */}
         <div className="flex max-w-xl flex-col items-stretch gap-3">
-          {projects.map((project, index) => (
+          {items.map((item, index) => {
+            if (item.type === "art") {
+              return (
+                <ArtPill
+                  key="litt-works"
+                  index={index}
+                  reduceMotion={reduceMotion ?? false}
+                  onHover={setHoveredSlug}
+                />
+              );
+            }
+            if (item.type === "wip") {
+              return (
+                <WipRow
+                  key={item.title}
+                  item={item}
+                  index={index}
+                  reduceMotion={reduceMotion ?? false}
+                />
+              );
+            }
+            const project = projects.find((p) => p.slug === item.slug);
+            if (!project) return null;
+            return (
               <ProjectPill
                 key={project.slug}
                 project={project}
@@ -157,8 +190,8 @@ export function WorkSection({ projects }: WorkSectionProps) {
                 onHover={setHoveredSlug}
                 reduceMotion={reduceMotion ?? false}
               />
-            ))}
-          <ArtPill reduceMotion={reduceMotion ?? false} onHover={setHoveredSlug} />
+            );
+          })}
         </div>
       </div>
     </section>
@@ -201,7 +234,54 @@ function ProjectPill({ project, index, onHover, reduceMotion }: ProjectPillProps
   );
 }
 
-function ArtPill({ reduceMotion, onHover }: { reduceMotion: boolean; onHover: (slug: string | null) => void }) {
+function WipRow({
+  item,
+  index,
+  reduceMotion,
+}: {
+  item: Extract<WorkItem, { type: "wip" }>;
+  index: number;
+  reduceMotion: boolean;
+}) {
+  return (
+    <motion.div
+      className="border-b border-[rgba(0,0,0,0.06)] py-4"
+      initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(2px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true }}
+      transition={{ type: "spring", stiffness: 120, damping: 28, delay: index * 0.04 }}
+    >
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+          {item.title}
+        </h3>
+        <span className="inline-flex shrink-0 items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
+          <span
+            className="h-1.5 w-1.5 rounded-full bg-[#9BD62E]"
+            aria-hidden="true"
+          />
+          In progress
+          <span className="sr-only">,</span>
+          <span className="text-[#a3a3a3]" aria-hidden="true">·</span>
+          {item.kind}
+        </span>
+      </div>
+      <p className="mt-1.5 text-[14px] leading-[1.6] text-[#737373]">
+        {item.note}
+      </p>
+    </motion.div>
+  );
+}
+
+function ArtPill({
+  index,
+  reduceMotion,
+  onHover,
+}: {
+  index: number;
+  reduceMotion: boolean;
+  onHover: (slug: string | null) => void;
+}) {
   return (
     <Link
       href="/art"
@@ -217,7 +297,7 @@ function ArtPill({ reduceMotion, onHover }: { reduceMotion: boolean; onHover: (s
         initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(2px)" }}
         whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 120, damping: 28, delay: 0.2 }}
+        transition={{ type: "spring", stiffness: 120, damping: 28, delay: index * 0.04 }}
       >
         <h3 className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
           litt.works
