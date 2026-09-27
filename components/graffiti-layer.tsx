@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 
 // Press and drag on empty space to draw. Strokes sit under the content, are
 // stored per page in localStorage, and only exist for mouse and pen input so
-// touch scrolling is never hijacked.
+// touch scrolling is never hijacked. Text and elements are keep-out zones:
+// ink that lands on or near them is erased, so the drawing never overlaps them.
 
 type Point = [x: number, y: number, width: number];
 type Stroke = { color: string; points: Point[] };
+type Rect = { x: number; y: number; w: number; h: number };
 
 const COLORS = [
   { value: "#0a0a0a", label: "Ink" },
@@ -22,16 +24,73 @@ const MAX_WIDTH = 7;
 const MAX_POINTS = 20000; // total across strokes; oldest strokes drop first
 const STORAGE_PREFIX = "litt:graffiti:";
 
-// Anything a visitor reads or clicks is not "empty space"
-const SOLID =
-  "a, button, input, textarea, select, label, summary, img, picture, video, svg, canvas, iframe, " +
-  "p, h1, h2, h3, h4, h5, h6, li, dt, dd, blockquote, pre, code, figure, table, span, strong, em, time, " +
-  "header, nav, [role], [tabindex], [contenteditable], [data-no-graffiti]";
+const KEEP_OUT_PAD = 10; // breathing room around text and elements
 
-function isEmptySpace(target: EventTarget | null) {
-  if (!(target instanceof Element)) return false;
-  if (target === document.documentElement || target === document.body) return true;
-  return !target.closest(SOLID);
+// Elements that are keep-out zones as a whole box (text is handled per line)
+const BLOCKS =
+  "a, button, input, textarea, select, label, summary, img, picture, video, svg, canvas, iframe, " +
+  "figure, table, pre, blockquote, header, nav, [data-no-graffiti]";
+
+// Never start a stroke inside these, wherever the pointer is
+const INTERACTIVE = `${BLOCKS}, [role], [tabindex], [contenteditable]`;
+
+// Decorative layers (backgrounds, this canvas, the toolbar) are not content
+const IGNORE = '[aria-hidden="true"], [data-graffiti-ignore]';
+
+// Every text line and element box on the page, in drawing coordinates
+function collectKeepOut(): Rect[] {
+  const cx = window.innerWidth / 2;
+  const sy = window.scrollY;
+  const rects: Rect[] = [];
+  const add = (r: DOMRect) => {
+    if (!r.width || !r.height) return;
+    rects.push({
+      x: r.left - cx - KEEP_OUT_PAD,
+      y: r.top + sy - KEEP_OUT_PAD,
+      w: r.width + KEEP_OUT_PAD * 2,
+      h: r.height + KEEP_OUT_PAD * 2,
+    });
+  };
+
+  for (const el of document.body.querySelectorAll(BLOCKS)) {
+    if (!el.closest(IGNORE)) add(el.getBoundingClientRect());
+  }
+
+  // Line boxes of every visible text node, so text in plain divs counts too
+  const range = document.createRange();
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) =>
+      node.nodeValue?.trim() && !node.parentElement?.closest(`script, style, noscript, ${IGNORE}`)
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT,
+  });
+  while (walker.nextNode()) {
+    range.selectNodeContents(walker.currentNode);
+    for (const r of range.getClientRects()) add(r);
+  }
+  return rects;
+}
+
+function hits(rects: Rect[], x: number, y: number) {
+  return rects.some((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
+}
+
+// Cut every keep-out zone within the given band of the screen out of the ink
+function eraseKeepOut(
+  ctx: CanvasRenderingContext2D,
+  rects: Rect[],
+  cx: number,
+  scrollY: number,
+  top: number,
+  bottom: number
+) {
+  ctx.globalCompositeOperation = "destination-out";
+  for (const r of rects) {
+    const y = r.y - scrollY;
+    if (y > bottom || y + r.h < top) continue;
+    ctx.fillRect(r.x + cx, y, r.w, r.h);
+  }
+  ctx.globalCompositeOperation = "source-over";
 }
 
 function readStrokes(path: string): Stroke[] {
@@ -104,6 +163,7 @@ export function GraffitiLayer() {
   const strokesRef = useRef<Stroke[]>([]);
   const colorRef = useRef<string>(COLORS[0].value);
   const redrawRef = useRef<() => void>(() => {});
+  const relayoutRef = useRef<() => void>(() => {});
   const [enabled, setEnabled] = useState(false);
   const [color, setColor] = useState<string>(COLORS[0].value);
   const [count, setCount] = useState(0);
@@ -122,6 +182,9 @@ export function GraffitiLayer() {
     strokesRef.current = readStrokes(pathname);
     setCount(strokesRef.current.length);
     redrawRef.current();
+    // The new page's content has to lay out before its keep-out zones exist
+    const id = requestAnimationFrame(() => relayoutRef.current());
+    return () => cancelAnimationFrame(id);
   }, [pathname]);
 
   useEffect(() => {
@@ -133,6 +196,8 @@ export function GraffitiLayer() {
     const root = document.documentElement;
     let dpr = 1;
     let frame = 0;
+    let settle = 0;
+    let keepOut: Rect[] = [];
     let current: Stroke | null = null;
     let last = { x: 0, y: 0, t: 0, w: MIN_WIDTH };
 
@@ -140,7 +205,7 @@ export function GraffitiLayer() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas!.width = Math.round(window.innerWidth * dpr);
       canvas!.height = Math.round(window.innerHeight * dpr);
-      redraw();
+      relayout();
     }
 
     function redraw() {
@@ -164,8 +229,23 @@ export function GraffitiLayer() {
         }
         if (visible) drawStroke(ctx!, stroke, cx, sy);
       }
+      eraseKeepOut(ctx!, keepOut, cx, sy, 0, h);
     }
     redrawRef.current = redraw;
+
+    function relayout() {
+      keepOut = collectKeepOut();
+      redraw();
+    }
+    relayoutRef.current = relayout;
+
+    // Reveal animations and lazy images shift content while scrolling, so
+    // re-measure once scrolling settles
+    function onScroll() {
+      scheduleRedraw();
+      clearTimeout(settle);
+      settle = window.setTimeout(relayout, 150);
+    }
 
     function scheduleRedraw() {
       cancelAnimationFrame(frame);
@@ -182,15 +262,32 @@ export function GraffitiLayer() {
       const target = Math.max(MIN_WIDTH, MAX_WIDTH - speed * 2.2);
       const w = last.w + (target - last.w) * 0.35;
       current.points.push([e.clientX - window.innerWidth / 2, e.clientY + window.scrollY, w]);
+      const prevY = last.y;
       last = { x: e.clientX, y: e.clientY, t: now, w };
+      const cx = window.innerWidth / 2;
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawSegment(ctx!, current, current.points.length - 1, window.innerWidth / 2, window.scrollY);
+      drawSegment(ctx!, current, current.points.length - 1, cx, window.scrollY);
+      const pad = MAX_WIDTH * 2;
+      eraseKeepOut(
+        ctx!,
+        keepOut,
+        cx,
+        window.scrollY,
+        Math.min(prevY, e.clientY) - pad,
+        Math.max(prevY, e.clientY) + pad
+      );
+    }
+
+    function isEmptyAt(e: PointerEvent) {
+      if (e.target instanceof Element && e.target.closest(INTERACTIVE)) return false;
+      return !hits(keepOut, e.clientX - window.innerWidth / 2, e.clientY + window.scrollY);
     }
 
     function onPointerDown(e: PointerEvent) {
       if (e.pointerType === "touch" || e.button !== 0) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      if (!isEmptySpace(e.target)) return;
+      keepOut = collectKeepOut(); // measure fresh so the start check is exact
+      if (!isEmptyAt(e)) return;
       e.preventDefault(); // no text selection while drawing
       const w = (MIN_WIDTH + MAX_WIDTH) / 2;
       current = {
@@ -212,7 +309,7 @@ export function GraffitiLayer() {
         return;
       }
       if (e.pointerType === "touch") return;
-      const empty = isEmptySpace(e.target);
+      const empty = isEmptyAt(e);
       const cursor = empty ? "crosshair" : "";
       if (root.style.cursor !== cursor) root.style.cursor = cursor;
     }
@@ -225,9 +322,13 @@ export function GraffitiLayer() {
       setCount(strokesRef.current.length);
     }
 
+    // Page height changes (images loading, route changes) move content
+    const observer = new ResizeObserver(() => relayout());
+    observer.observe(document.body);
+
     resize();
     window.addEventListener("resize", resize);
-    window.addEventListener("scroll", scheduleRedraw, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
@@ -236,10 +337,13 @@ export function GraffitiLayer() {
 
     return () => {
       cancelAnimationFrame(frame);
+      clearTimeout(settle);
+      observer.disconnect();
       root.style.cursor = "";
       redrawRef.current = () => {};
+      relayoutRef.current = () => {};
       window.removeEventListener("resize", resize);
-      window.removeEventListener("scroll", scheduleRedraw);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
@@ -277,6 +381,7 @@ export function GraffitiLayer() {
         <div
           role="toolbar"
           aria-label="Graffiti"
+          data-graffiti-ignore
           className="graffiti-toolbar fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-white/70 p-1 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.16)] backdrop-blur-md"
         >
           {COLORS.map((c) => (
