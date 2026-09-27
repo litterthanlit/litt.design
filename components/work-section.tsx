@@ -13,7 +13,7 @@ type WorkSectionProps = {
 
 type Card =
   | { type: "project"; project: Project }
-  | { type: "art" };
+  | { type: "art"; href: string };
 
 type Wip = Extract<WorkItem, { type: "wip" }>;
 
@@ -31,7 +31,7 @@ export function WorkSection({ projects, items }: WorkSectionProps) {
   const wips: Wip[] = [];
   for (const item of items) {
     if (item.type === "wip") wips.push(item);
-    else if (item.type === "art") cards.push({ type: "art" });
+    else if (item.type === "art") cards.push(item);
     else {
       const project = projects.find((p) => p.slug === item.slug);
       if (project) cards.push({ type: "project", project });
@@ -53,7 +53,7 @@ export function WorkSection({ projects, items }: WorkSectionProps) {
             className={index === 0 ? "md:col-span-2" : undefined}
           >
             {card.type === "art" ? (
-              <ArtCard />
+              <ArtCard href={card.href} />
             ) : (
               <ProjectCard project={card.project} featured={index === 0} />
             )}
@@ -68,18 +68,32 @@ export function WorkSection({ projects, items }: WorkSectionProps) {
             {wips.map((wip) => (
               <li
                 key={wip.title}
-                className="border-b border-[rgba(0,0,0,0.08)] py-5 md:border-b-0 md:py-6 md:pr-8 md:[&:not(:first-child)]:border-l md:[&:not(:first-child)]:pl-6"
+                className="border-b border-[rgba(0,0,0,0.08)] md:border-b-0 md:[&:not(:first-child)]:border-l"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <p className="flex items-center gap-2.5 text-[15px] font-medium tracking-[-0.01em] text-[#0a0a0a]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#9BD62E]" aria-hidden="true" />
-                    {wip.title}
-                  </p>
-                  <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
-                    {wip.kind}
-                  </span>
-                </div>
-                <p className="mt-2 text-[13px] leading-[1.6] text-[#737373]">{wip.note}</p>
+                <a
+                  href={wip.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block h-full py-5 transition-colors duration-200 hover:bg-[rgba(0,0,0,0.02)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a] md:py-6 md:pr-8 md:[li:not(:first-child)>&]:pl-6"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="flex items-center gap-2.5 text-[15px] font-medium tracking-[-0.01em] text-[#0a0a0a]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#9BD62E]" aria-hidden="true" />
+                      {wip.title}
+                      <span
+                        className="text-[13px] text-[#737373] opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100"
+                        aria-hidden="true"
+                      >
+                        ↗
+                      </span>
+                    </p>
+                    <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
+                      {wip.kind}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[13px] leading-[1.6] text-[#737373]">{wip.note}</p>
+                  <span className="sr-only"> (opens GitHub in a new tab)</span>
+                </a>
               </li>
             ))}
           </ul>
@@ -124,10 +138,12 @@ function CardCaption({
   title,
   meta,
   description,
+  external = false,
 }: {
   title: string;
   meta: string;
   description: string;
+  external?: boolean;
 }) {
   return (
     <div className="mt-4">
@@ -138,7 +154,7 @@ function CardCaption({
             className="text-[13px] text-[#737373] opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100"
             aria-hidden="true"
           >
-            →
+            {external ? "↗" : "→"}
           </span>
         </h3>
         <span className="shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
@@ -182,11 +198,12 @@ function ProjectCard({ project, featured }: { project: Project; featured: boolea
   );
 }
 
-function ArtCard() {
+function ArtCard({ href }: { href: string }) {
   return (
-    <Link
-      href="/art"
-      {...({ transitionTypes: ["nav-forward"] } as object)}
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       className="group block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0a0a0a]"
     >
       <div className={`${FRAME.replace("bg-[#f0f0f0]", "")} grid aspect-[16/10] grid-cols-2 grid-rows-2 gap-px bg-[rgba(0,0,0,0.08)]`}>
@@ -207,7 +224,9 @@ function ArtCard() {
         title="litt.works"
         meta="Digital art · 2024–2026"
         description="Abstract digital art — prints, visual experiments, and long-form pieces."
+        external
       />
-    </Link>
+      <span className="sr-only"> (opens GitHub in a new tab)</span>
+    </a>
   );
 }
