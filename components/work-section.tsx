@@ -1,359 +1,198 @@
 "use client";
 
-import { useState, useRef, useEffect, ViewTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Project } from "@/data/types";
+import type { WorkItem } from "@/data/work";
 
 type WorkSectionProps = {
   projects: Project[];
+  items: WorkItem[];
 };
 
-export function WorkSection({ projects }: WorkSectionProps) {
-  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
-  const [cursorY, setCursorY] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const reduceMotion = useReducedMotion();
+type Card =
+  | { type: "project"; project: Project }
+  | { type: "art"; href: string };
 
-  const hoveredProject = projects.find((p) => p.slug === hoveredSlug);
+const ART_PIECES = [
+  { src: "/art/pieces/chaos.jpg", alt: "Chaos — abstract digital piece" },
+  { src: "/art/pieces/in-the-fire.jpg", alt: "In the Fire — abstract digital piece" },
+  { src: "/art/pieces/shattered.jpg", alt: "Shattered — abstract digital piece" },
+  { src: "/art/pieces/unfiltered-projections.jpg", alt: "Unfiltered Projections — abstract digital piece" },
+];
 
-  function handlePointerMove(e: React.PointerEvent) {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    setCursorY(e.clientY - rect.top);
+export function WorkSection({ projects, items }: WorkSectionProps) {
+  const reduceMotion = useReducedMotion() ?? false;
+
+  const cards: Card[] = [];
+  for (const item of items) {
+    if (item.type === "art") {
+      cards.push(item);
+    } else {
+      const project = projects.find((p) => p.slug === item.slug);
+      if (project) cards.push({ type: "project", project });
+    }
   }
 
   return (
-    <section id="work" className="section-shell py-20 md:py-32">
-      {/* Eyebrow */}
-      <motion.p
-        className="eyebrow mb-10"
-        initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
-        whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
-        viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 80, damping: 30 }}
-      >
-        Projects
-      </motion.p>
+    <section id="work" aria-labelledby="work-heading" className="section-shell py-16 md:py-24">
+      <div className="max-w-[680px]">
+        <h2 id="work-heading" className="eyebrow mb-6">
+          Selected work
+        </h2>
 
-      <div
-        ref={containerRef}
-        className="relative"
-        onPointerMove={handlePointerMove}
-      >
-        {/* Floating preview card */}
-        <AnimatePresence>
-          {hoveredSlug === "litt-works" && !reduceMotion && (
-            <motion.div
-              key="litt-works"
-              className="pointer-events-none absolute right-0 z-10 hidden w-[340px] lg:block"
-              style={{ top: cursorY - 100 }}
-              initial={{ opacity: 0, x: 16, scale: 0.96, filter: "blur(8px)" }}
-              animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, x: 10, scale: 0.97, filter: "blur(4px)" }}
-              transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.8 }}
+        <div className="grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2">
+          {cards.map((card, index) => (
+            <Reveal
+              key={card.type === "art" ? "litt-works" : card.project.slug}
+              index={index}
+              reduceMotion={reduceMotion}
             >
-              <div className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-                <div className="grid grid-cols-2 gap-0.5">
-                  <div className="relative h-24">
-                    <Image src="/art/pieces/chaos.jpg" alt="Chaos" fill className="object-cover" />
-                  </div>
-                  <div className="relative h-24">
-                    <Image src="/art/pieces/in-the-fire.jpg" alt="In the Fire" fill className="object-cover" />
-                  </div>
-                  <div className="relative h-24">
-                    <Image src="/art/pieces/shattered.jpg" alt="Shattered" fill className="object-cover" />
-                  </div>
-                  <div className="relative h-24">
-                    <Image src="/art/pieces/unfiltered-projections.jpg" alt="Unfiltered Projections" fill className="object-cover" />
-                  </div>
-                </div>
-                <div className="space-y-2 p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
-                      Digital Art
-                    </span>
-                    <span className="font-mono text-[11px] tabular-nums text-[#a3a3a3]">
-                      2024–2026
-                    </span>
-                  </div>
-                  <p className="text-[13px] leading-[1.6] text-[#525252]">
-                    Abstract digital art — prints, visual experiments, and long-form pieces.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          {hoveredProject && !reduceMotion && (
-            <motion.div
-              key={hoveredProject.slug}
-              className="pointer-events-none absolute right-0 z-10 hidden w-[340px] lg:block"
-              style={{ top: cursorY - 100 }}
-              initial={{ opacity: 0, x: 16, scale: 0.96, filter: "blur(8px)" }}
-              animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, x: 10, scale: 0.97, filter: "blur(4px)" }}
-              transition={{ type: "spring", stiffness: 300, damping: 28, mass: 0.8 }}
-            >
-              <div className="overflow-hidden rounded-xl border border-[rgba(0,0,0,0.06)] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-                {hoveredProject.coverMedia.preview ? (
-                  <div className="relative h-40 overflow-hidden">
-                    <Image
-                      src={hoveredProject.coverMedia.preview}
-                      alt={hoveredProject.title}
-                      fill
-                      className="object-cover object-top"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="h-32"
-                    style={{ background: hoveredProject.coverMedia.background }}
-                  />
-                )}
-                <div className="space-y-3 p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[#737373]">
-                      {hoveredProject.category}
-                    </span>
-                    <span className="font-mono text-[11px] tabular-nums text-[#a3a3a3]">
-                      {hoveredProject.year}
-                    </span>
-                  </div>
-                  <p className="text-[13px] leading-[1.6] text-[#525252]">
-                    {hoveredProject.oneLineOutcome}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {hoveredProject.stack.map((tech, i) => (
-                      <motion.span
-                        key={tech}
-                        className="rounded-full border border-[rgba(0,0,0,0.06)] bg-[#fafafa] px-2 py-0.5 font-mono text-[10px] text-[#737373]"
-                        initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 200,
-                          damping: 25,
-                          delay: 0.06 + i * 0.04,
-                        }}
-                      >
-                        {tech}
-                      </motion.span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Project pills */}
-        <div className="flex flex-col items-start gap-3">
-          {projects
-            .filter((p) => ["wavr", "good-md", "studio-os", "vceezy"].includes(p.slug))
-            .sort((a, b) => b.title.length - a.title.length)
-            .map((project, index) => (
-              <ProjectPill
-                key={project.slug}
-                project={project}
-                index={index}
-                isHovered={hoveredSlug === project.slug}
-                onHover={setHoveredSlug}
-                reduceMotion={reduceMotion ?? false}
-              />
-            ))}
-          <ArtPill reduceMotion={reduceMotion ?? false} onHover={setHoveredSlug} />
+              {card.type === "art" ? (
+                <ArtCard href={card.href} />
+              ) : (
+                <ProjectCard project={card.project} />
+              )}
+            </Reveal>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-// Individual pill colors — muted, tasteful, no neon
-const PILL_COLORS: Record<string, string> = {
-  ergon: "#2D3436",     // charcoal
-  wavr: "#4A6741",      // sage green
-  "good-md": "#6B5B73", // muted plum
-  "studio-os": "#1a56db", // deep blue
-  vceezy: "#1A1A1A",    // obsidian
-};
-
-type ProjectPillProps = {
-  project: Project;
-  index: number;
-  isHovered: boolean;
-  onHover: (slug: string | null) => void;
-  reduceMotion: boolean;
-};
-
-const SHADOW_COLORS = [
-  [255, 160, 80],   // orange
-  [255, 120, 100],  // coral
-  [100, 200, 255],  // sky
-  [120, 255, 180],  // mint
-  [200, 160, 255],  // lilac
-];
-
-function useColorCycleShadow(active: boolean) {
-  const ref = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (!active || !ref.current) {
-      if (ref.current) ref.current.style.boxShadow = "none";
-      cancelAnimationFrame(rafRef.current);
-      return;
-    }
-
-    const el = ref.current;
-    const start = performance.now();
-
-    function tick(now: number) {
-      const t = (now - start) / 1000;
-      const cycleLen = SHADOW_COLORS.length;
-      const progress = (t * 0.4) % cycleLen; // slow cycle
-      const idx = Math.floor(progress);
-      const blend = progress - idx;
-      const a = SHADOW_COLORS[idx % cycleLen];
-      const b = SHADOW_COLORS[(idx + 1) % cycleLen];
-      const r = Math.round(a[0] + (b[0] - a[0]) * blend);
-      const g = Math.round(a[1] + (b[1] - a[1]) * blend);
-      const bv = Math.round(a[2] + (b[2] - a[2]) * blend);
-
-      el.style.boxShadow = `0 4px 20px rgba(${r},${g},${bv},0.2), 0 8px 40px rgba(${r},${g},${bv},0.1), inset 0 1px 0 rgba(255,255,255,0.06)`;
-      rafRef.current = requestAnimationFrame(tick);
-    }
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [active]);
-
-  return ref;
-}
-
-function GlassPill({
+function Reveal({
   children,
-  isHovered,
+  index,
   reduceMotion,
-  delay,
 }: {
   children: React.ReactNode;
-  isHovered: boolean;
+  index: number;
   reduceMotion: boolean;
-  delay: number;
 }) {
-  const shadowRef = useColorCycleShadow(isHovered && !reduceMotion);
-
   return (
     <motion.div
-      ref={shadowRef}
-      className="relative flex items-center overflow-hidden rounded-full border px-5 py-2.5"
-      style={{
-        borderColor: isHovered
-          ? "rgba(255,255,255,0.7)"
-          : "rgba(255,255,255,0.5)",
-        background: isHovered
-          ? "rgba(255,255,255,0.7)"
-          : "rgba(255,255,255,0.45)",
-        backdropFilter: isHovered ? "blur(40px) saturate(1.8)" : "blur(12px) saturate(1.2)",
-        WebkitBackdropFilter: isHovered ? "blur(40px) saturate(1.8)" : "blur(12px) saturate(1.2)",
-        boxShadow: isHovered
-          ? "0 2px 12px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9)"
-          : "0 1px 3px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.6)",
-        transition: "border-color 0.3s, background 0.3s, box-shadow 0.3s, backdrop-filter 0.3s",
-      }}
-      initial={
-        reduceMotion
-          ? {}
-          : { opacity: 0, y: 12, filter: "blur(4px)" }
-      }
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{
-        type: "spring",
-        stiffness: 120,
-        damping: 28,
-        delay,
-      }}
-      whileHover={reduceMotion ? {} : { y: -2 }}
-      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: (index % 2) * 0.05 }}
     >
-      {/* Glare sweep on hover */}
-      <motion.span
-        className="pointer-events-none absolute inset-0 rounded-full"
-        style={{
-          background:
-            "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)",
-        }}
-        initial={{ x: "-100%" }}
-        animate={isHovered ? { x: "100%" } : { x: "-100%" }}
-        transition={
-          isHovered
-            ? { type: "spring", stiffness: 80, damping: 20, mass: 0.6 }
-            : { duration: 0 }
-        }
-      />
-
-      <span className="relative z-10">
-        <span
-          className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a] transition-all duration-300"
-          style={{ filter: isHovered ? "blur(0px)" : "blur(2px)" }}
-        >
-          {children}
-        </span>
-      </span>
+      {children}
     </motion.div>
   );
 }
 
-function ProjectPill({ project, index, isHovered, onHover, reduceMotion }: ProjectPillProps) {
+// Press feedback: a quick 1% shrink on click/tap (off for reduced motion)
+const LINK =
+  "group block rounded-[10px] transition-transform duration-150 ease-out focus-visible:outline-offset-4 active:scale-[0.99] motion-reduce:active:scale-100";
+
+// Shared frame: thin border, small radius, neutral fill behind the image
+const FRAME =
+  "relative aspect-[16/10] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.08)] transition-[border-color,box-shadow] duration-200 ease-out group-hover:border-[rgba(0,0,0,0.14)] group-hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.16)] group-focus-visible:border-[rgba(0,0,0,0.14)]";
+
+const IMAGE_MOTION =
+  "object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02] group-focus-visible:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100";
+
+function CardCaption({
+  title,
+  meta,
+  description,
+  status,
+  external = false,
+}: {
+  title: string;
+  meta: string;
+  description: string;
+  status?: string;
+  external?: boolean;
+}) {
+  return (
+    <div className="mt-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="flex items-center gap-1.5 text-body font-medium text-ink">
+          {status && (
+            <span
+              className="mr-0.5 h-1.5 w-1.5 shrink-0 self-center rounded-full bg-[#9BD62E]"
+              title={status}
+              aria-hidden="true"
+            />
+          )}
+          {title}
+          {status && <span className="sr-only"> ({status})</span>}
+          <span
+            className="-translate-x-1 text-body text-muted opacity-0 transition-[opacity,translate] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+            aria-hidden="true"
+          >
+            {external ? "↗" : "→"}
+          </span>
+        </h3>
+        <span className="meta shrink-0">
+          {meta}
+        </span>
+      </div>
+      <p className="mt-0.5 line-clamp-2 text-body text-muted">{description}</p>
+    </div>
+  );
+}
+
+function ProjectCard({ project }: { project: Project }) {
+  const { preview, background, position } = project.coverMedia;
+
   return (
     <Link
       href={`/work/${project.slug}`}
-      {...{ transitionTypes: ["nav-forward"] } as any}
-      onMouseEnter={() => onHover(project.slug)}
-      onMouseLeave={() => onHover(null)}
+      {...({ transitionTypes: ["nav-forward"] } as object)}
+      className={LINK}
     >
-      <motion.div
-        className="border-b border-[rgba(0,0,0,0.06)] py-4"
-        initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(2px)" }}
-        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 120, damping: 28, delay: index * 0.04 }}
-      >
-        <h3 className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
-          {project.title}
-        </h3>
-        <p className="mt-1.5 text-[14px] leading-[1.6] text-[#737373]">
-          {project.oneLineOutcome}
-        </p>
-      </motion.div>
+      <div className={`${FRAME} bg-[#f0f0f0]`}>
+        {preview ? (
+          <Image
+            src={preview}
+            alt={`${project.title} — ${project.oneLineOutcome}`}
+            fill
+            sizes="(min-width: 640px) 340px, 100vw"
+            className={IMAGE_MOTION}
+            style={{ objectPosition: position ?? "center" }}
+          />
+        ) : (
+          <div className="absolute inset-0" style={{ background }} aria-hidden="true" />
+        )}
+      </div>
+      <CardCaption
+        title={project.title}
+        meta={project.year.slice(-4)}
+        description={project.oneLineOutcome}
+        status={project.status}
+      />
     </Link>
   );
 }
 
-function ArtPill({ reduceMotion, onHover }: { reduceMotion: boolean; onHover: (slug: string | null) => void }) {
+function ArtCard({ href }: { href: string }) {
   return (
-    <Link
-      href="/art"
-      {...{ transitionTypes: ["nav-forward"] } as any}
-      onMouseEnter={() => onHover("litt-works")}
-      onMouseLeave={() => onHover(null)}
-    >
-      <motion.div
-        className="border-b border-[rgba(0,0,0,0.06)] py-4"
-        initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(2px)" }}
-        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 120, damping: 28, delay: 0.2 }}
-      >
-        <h3 className="text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
-          litt.works
-        </h3>
-        <p className="mt-1.5 text-[14px] leading-[1.6] text-[#737373]">
-          Abstract digital art — prints, visual experiments, and long-form pieces.
-        </p>
-      </motion.div>
-    </Link>
+    <a href={href} target="_blank" rel="noopener noreferrer" className={LINK}>
+      <div className={`${FRAME} grid grid-cols-2 grid-rows-2 gap-px bg-[rgba(0,0,0,0.08)]`}>
+        {ART_PIECES.map((piece) => (
+          <div key={piece.src} className="relative overflow-hidden bg-[#f0f0f0]">
+            <Image
+              src={piece.src}
+              alt={piece.alt}
+              fill
+              sizes="170px"
+              // Scans have white paper edges; zoom slightly to crop them out
+              className="scale-[1.08] object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.1] motion-reduce:transition-none"
+            />
+          </div>
+        ))}
+      </div>
+      <CardCaption
+        title="litt.works"
+        meta="2024–26"
+        description="Abstract digital art — prints, visual experiments, and long-form pieces."
+        external
+      />
+      <span className="sr-only"> (opens in a new tab)</span>
+    </a>
   );
 }

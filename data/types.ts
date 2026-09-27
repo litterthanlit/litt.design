@@ -20,6 +20,8 @@ export type Project = {
   slug: string;
   title: string;
   category: string;
+  // Shown as a small tag on the card and project page, e.g. "In progress"
+  status?: string;
   description: string;
   oneLineOutcome: string;
   client: string;
@@ -30,6 +32,8 @@ export type Project = {
   coverMedia: {
     background: string;
     preview?: string;
+    // CSS object-position for the card crop, e.g. "top" or "left center"
+    position?: string;
   };
   screens?: {
     label: string;

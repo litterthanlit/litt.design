@@ -67,7 +67,7 @@ export function DitherBackground() {
     if (!ctx) return;
 
     function resize() {
-      const dpr = 1; // keep 1:1 for ASCII look
+      // Kept 1:1 for the ASCII look; CSS scales it up with pixelated rendering
       canvas!.width = Math.ceil(window.innerWidth / CELL);
       canvas!.height = Math.ceil(window.innerHeight / CELL);
     }
@@ -76,11 +76,12 @@ export function DitherBackground() {
     window.addEventListener("resize", resize);
 
     const frameInterval = 1000 / FPS;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function animate(now: number) {
-      rafRef.current = requestAnimationFrame(animate);
+      if (!reduceMotion) rafRef.current = requestAnimationFrame(animate);
 
-      if (now - lastFrameRef.current < frameInterval) return;
+      if (!reduceMotion && now - lastFrameRef.current < frameInterval) return;
       lastFrameRef.current = now;
 
       const w = canvas!.width;
@@ -110,8 +111,14 @@ export function DitherBackground() {
       const noiseOffsetY = t * 0.04;
       const breathe = Math.sin(t * 0.15) * 0.15 + 0.5; // 0.35–0.65 pulse
 
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
+      // Each cell is drawn CELL px apart on a canvas that is only w×h px,
+      // so only the first w/CELL × h/CELL cells ever land on the canvas.
+      // Skipping the rest leaves the output identical at ~1/16 of the cost.
+      const cols = Math.ceil(w / CELL);
+      const rows = Math.ceil(h / CELL);
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
           const nx = x / w;
           const ny = y / h;
 

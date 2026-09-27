@@ -29,18 +29,22 @@ function useFadeUp(delay = 0) {
   };
 }
 
+// Plain-text tags: no pill, just weight and reduced opacity (see .meta)
+const TAG = "meta";
+
 export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
   const reduceMotion = useReducedMotion();
+  const visitFade = useFadeUp(0.16);
 
   return (
     <main className="section-shell flex min-h-screen flex-col gap-16 pb-20 pt-36 md:pt-44">
       {/* Thumbnail — hidden until better previews are ready */}
 
       {/* Title + description */}
-      <section className="max-w-2xl space-y-6">
+      <section className="max-w-2xl space-y-4">
         <ViewTransition name={`project-title-${project.slug}`} share="text-morph" default="none">
           <motion.h1
-            className="text-[clamp(1.6rem,4vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.03em] text-[#0a0a0a] pb-1"
+            className="text-intro font-medium text-ink"
             initial={reduceMotion ? {} : { opacity: 0, y: 12, filter: "blur(4px)" }}
             whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true }}
@@ -51,30 +55,39 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
         </ViewTransition>
 
         <motion.p
-          className="text-[15px] leading-[1.7] text-[#525252]"
+          className="text-body text-muted"
           {...useFadeUp(0.06)}
         >
           {project.description}
         </motion.p>
 
-        <motion.div className="flex flex-wrap gap-2" {...useFadeUp(0.12)}>
-          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] font-medium text-[#a3a3a3]">
-            {project.category}
-          </span>
-          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
-            {project.year}
-          </span>
+        <motion.div className="flex flex-wrap items-center gap-x-5 gap-y-1" {...useFadeUp(0.12)}>
+          <span className={TAG}>{project.category}</span>
+          <span className={`${TAG} tabular-nums`}>{project.year}</span>
+          {project.status && (
+            <span className={`${TAG} inline-flex items-center gap-1.5`}>
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9BD62E]" aria-hidden="true" />
+              {project.status}
+            </span>
+          )}
         </motion.div>
 
         {project.externalUrl && (
-          <motion.div {...useFadeUp(0.16)}>
+          <motion.div {...visitFade}>
             <a
               href={project.externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[#E8F0FE] px-6 py-3 text-[15px] font-medium text-[#1a56db] transition-colors hover:bg-[#d4e4fc]"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.12)] px-4 py-2 text-body font-medium text-ink transition-[background-color,border-color,scale] duration-150 ease-out hover:border-[rgba(0,0,0,0.24)] hover:bg-[rgba(0,0,0,0.03)] active:scale-[0.97] motion-reduce:active:scale-100"
             >
-              Visit Project <span className="text-[12px]">↗</span>
+              Visit {project.title}
+              <span
+                className="text-body text-muted transition-[translate,color] duration-150 ease-out group-hover:-translate-y-px group-hover:translate-x-px group-hover:text-ink"
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </motion.div>
         )}
@@ -91,13 +104,13 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
               viewport={{ once: true, margin: "-40px" }}
               transition={{ type: "spring", stiffness: 80, damping: 28, delay: i * 0.04 }}
             >
-              <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#a3a3a3]">
+              <p className="meta">
                 {block.label}
               </p>
-              <h2 className="mt-2 text-[18px] font-medium leading-[1.3] tracking-[-0.02em] text-[#0a0a0a]">
+              <h2 className="mt-1 text-body font-medium text-ink">
                 {block.heading}
               </h2>
-              <p className="mt-2 text-[14px] leading-[1.7] text-[#737373]">
+              <p className="mt-0.5 text-body text-muted">
                 {block.body}
               </p>
             </motion.div>
@@ -112,11 +125,11 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
         <motion.p className="eyebrow mb-4" {...useFadeUp(0)}>
           Stack
         </motion.p>
-        <motion.div className="flex flex-wrap gap-2" {...useFadeUp(0.06)}>
+        <motion.div className="flex flex-wrap gap-x-5 gap-y-1" {...useFadeUp(0.06)}>
           {project.stack.map((tech, i) => (
             <motion.span
               key={tech}
-              className="rounded-full border border-[rgba(0,0,0,0.08)] px-4 py-1.5 font-mono text-[12px] font-medium text-[#737373]"
+              className={TAG}
               initial={
                 reduceMotion
                   ? {}
@@ -147,14 +160,14 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
           transition={{ type: "spring", stiffness: 80, damping: 30 }}
         >
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#a3a3a3]">
+            <p className="meta">
               Next
             </p>
-            <p className="mt-1 text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+            <p className="mt-0.5 text-body font-medium text-ink">
               {nextProject.title}
             </p>
           </div>
-          <span className="text-[13px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
+          <span className="text-body text-muted transition-[color,translate] duration-200 ease-out group-hover:translate-x-1 group-hover:text-ink group-focus-visible:translate-x-1 group-focus-visible:text-ink">
             →
           </span>
         </motion.div>

@@ -12,18 +12,18 @@ export function WritingSection({ entries }: WritingSectionProps) {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section id="writing" className="section-shell py-16 md:py-24">
-      <motion.p
-        className="eyebrow mb-8"
+    <section id="writing" className="section-shell py-16 md:py-24 *:max-w-[680px]">
+      <motion.h2
+        className="eyebrow mb-4"
         initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
         whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
         viewport={{ once: true }}
         transition={{ type: "spring", stiffness: 80, damping: 30 }}
       >
         Writing
-      </motion.p>
+      </motion.h2>
 
-      <div className="space-y-0">
+      <div>
         {entries.map((entry, i) => (
           <motion.div
             key={entry.slug}
@@ -45,21 +45,28 @@ export function WritingSection({ entries }: WritingSectionProps) {
               <Link
                 href={`/writing/${entry.slug}`}
                 {...{ transitionTypes: ["nav-forward"] } as any}
-                className="group flex items-baseline justify-between border-b border-[rgba(0,0,0,0.06)] py-3.5"
+                className="group -mx-2 flex items-baseline justify-between rounded-md px-2 py-2 transition-colors duration-150 ease-out hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-offset-0 active:bg-[rgba(0,0,0,0.05)]"
               >
-                <span className="text-[15px] tracking-[-0.01em] text-[#0a0a0a] transition-colors duration-150 group-hover:text-[#525252]">
+                <span className="flex items-center gap-1.5 text-body font-medium text-ink">
                   {entry.title}
+                  <span
+                    className="-translate-x-1 text-muted opacity-0 transition-[opacity,translate] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+                    aria-hidden="true"
+                  >
+                    →
+                  </span>
                 </span>
-                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+                <span className="meta ml-4 shrink-0">
                   {entry.date}
                 </span>
               </Link>
             ) : (
-              <div className="flex items-baseline justify-between border-b border-[rgba(0,0,0,0.06)] py-3.5">
-                <span className="text-[15px] tracking-[-0.01em] text-[#a3a3a3]">
+              <div className="flex items-baseline justify-between py-2">
+                <span className="text-body text-muted">
                   {entry.title}
+                  <span className="sr-only"> (draft, not yet published)</span>
                 </span>
-                <span className="ml-4 shrink-0 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+                <span className="meta ml-4 shrink-0">
                   {entry.date}
                 </span>
               </div>

@@ -27,39 +27,33 @@ export function Footer({ settings }: FooterProps) {
         };
 
   return (
-    <footer className="section-shell border-t border-[rgba(0,0,0,0.06)] py-16 md:py-24">
+    <footer className="section-shell py-16 md:py-20">
       {/* Bio */}
       <motion.div className="max-w-xl" {...fadeUp(0)}>
-        <p className="text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
-          I build tools for creators.
-        </p>
-        <p className="mt-2 text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
-          The craft is in what I leave out.
-        </p>
-        <p className="mt-2 text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
-          More Play.
-        </p>
-        <p className="mt-4 text-[13px] leading-[1.7] text-[#a3a3a3]">
+        <p className="text-body font-medium text-ink">I build tools for creators.</p>
+        <p className="text-body text-ink">The craft is in what I leave out.</p>
+        <p className="text-body text-ink">More play.</p>
+        <p className="meta mt-4">
           {settings.location} &middot; {settings.availability.label}
         </p>
       </motion.div>
 
       {/* Socials */}
-      <motion.div className="mt-8 flex flex-wrap gap-x-6 gap-y-2" {...fadeUp(0.08)}>
+      <motion.div className="mt-6 flex flex-wrap gap-x-5 gap-y-1" {...fadeUp(0.08)}>
         {settings.socialLinks.map((link) => (
           <a
             key={link.label}
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[13px] text-[#a3a3a3] transition-colors duration-150 hover:text-[#0a0a0a]"
+            className="link text-body"
           >
             {link.label}
           </a>
         ))}
         <a
           href={`mailto:${settings.contactEmail}`}
-          className="text-[13px] text-[#a3a3a3] transition-colors duration-150 hover:text-[#0a0a0a]"
+          className="link text-body"
         >
           {settings.contactEmail}
         </a>
@@ -185,7 +179,7 @@ export function ThankYouOrb() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let size = canvas.clientWidth || 360;
 
     function resizeCanvas() {
@@ -199,11 +193,17 @@ export function ThankYouOrb() {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
-    const half = size / 2;
     const startTime = performance.now();
     let lastTime = startTime;
+    let lastGlow = 0;
+    let running = false;
 
     function animate(now: number) {
+      // Slow drift reads the same at 30fps and halves the canvas work
+      if (running && now - lastTime < 1000 / 30 - 1) {
+        rafRef.current = requestAnimationFrame(animate);
+        return;
+      }
       const t = (now - startTime) / 1000;
       const dt = Math.min((now - lastTime) / 1000, 0.033); // cap at ~30fps delta to avoid explosions
       lastTime = now;
@@ -226,16 +226,24 @@ export function ThankYouOrb() {
       const edge = oklchToRgb(edgeOklch[0], edgeOklch[1], edgeOklch[2]);
       const glow = oklchToRgb(glowOklch[0], glowOklch[1], glowOklch[2]);
 
+      // The palette shifts over seconds, so the large glow layers
+      // only need repainting ~15 times a second, not every frame.
+      const updateGlow = now - lastGlow > 66;
+      if (updateGlow) lastGlow = now;
+
       // Text: white with a glow matching the current palette
-      if (textRef.current) {
+      if (updateGlow && textRef.current) {
         textRef.current.style.color = `rgba(255,255,255,0.95)`;
         textRef.current.style.textShadow = `0 0 20px rgba(${glow[0]},${glow[1]},${glow[2]},0.6), 0 0 40px rgba(${glow[0]},${glow[1]},${glow[2]},0.3)`;
       }
 
       glowRefs.current.forEach((el, idx) => {
-        if (!el) return;
-        const op = [0.15, 0.3, 0.45][idx] ?? 0.3;
-        el.style.background = `radial-gradient(circle, rgba(${glow[0]},${glow[1]},${glow[2]},${op}) 0%, transparent 65%)`;
+        if (!el || !updateGlow) return;
+        const op = [0.08, 0.14, 0.2][idx] ?? 0.14;
+        // Soft falloff baked into the gradient instead of a CSS blur filter,
+        // which forced a full re-raster of each layer on every colour change
+        const rgb = `${glow[0]},${glow[1]},${glow[2]}`;
+        el.style.background = `radial-gradient(circle, rgba(${rgb},${op}) 0%, rgba(${rgb},${op * 0.55}) 25%, rgba(${rgb},${op * 0.18}) 50%, transparent 70%)`;
       });
 
       // Clear — use current size
@@ -316,12 +324,40 @@ export function ThankYouOrb() {
         ctx!.fill();
       }
 
+      if (running) rafRef.current = requestAnimationFrame(animate);
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      lastTime = performance.now();
       rafRef.current = requestAnimationFrame(animate);
     }
 
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
+    function stop() {
+      running = false;
       cancelAnimationFrame(rafRef.current);
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // Draw a single still frame
+      rafRef.current = requestAnimationFrame(animate);
+      return () => {
+        cancelAnimationFrame(rafRef.current);
+        window.removeEventListener("resize", resizeCanvas);
+      };
+    }
+
+    // Only animate while the orb is on screen
+    const observer = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { rootMargin: "200px" },
+    );
+    observer.observe(canvas);
+
+    return () => {
+      stop();
+      observer.disconnect();
       window.removeEventListener("resize", resizeCanvas);
     };
   }, []);
@@ -344,9 +380,9 @@ export function ThankYouOrb() {
   return (
     <section className="relative flex items-center justify-center overflow-hidden py-32 md:py-48">
       {/* Bloom layers — tight around the orb */}
-      <div ref={setGlowRef(0)} className="pointer-events-none absolute h-[500px] w-[500px] rounded-full blur-[100px] md:h-[600px] md:w-[600px]" />
-      <div ref={setGlowRef(1)} className="pointer-events-none absolute h-[380px] w-[380px] rounded-full blur-[50px] md:h-[460px] md:w-[460px]" />
-      <div ref={setGlowRef(2)} className="pointer-events-none absolute h-[280px] w-[280px] rounded-full blur-[25px] md:h-[360px] md:w-[360px]" />
+      <div ref={setGlowRef(0)} className="pointer-events-none absolute h-[700px] w-[700px] rounded-full md:h-[800px] md:w-[800px]" />
+      <div ref={setGlowRef(1)} className="pointer-events-none absolute h-[480px] w-[480px] rounded-full md:h-[560px] md:w-[560px]" />
+      <div ref={setGlowRef(2)} className="pointer-events-none absolute h-[330px] w-[330px] rounded-full md:h-[410px] md:w-[410px]" />
 
       {/* Interactive dot orb */}
       <div

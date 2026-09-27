@@ -16,6 +16,8 @@ export function SiteHeader() {
           className="relative"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
+          onFocus={() => setShowTooltip(true)}
+          onBlur={() => setShowTooltip(false)}
         >
           <Link href="/" {...{ transitionTypes: ["nav-back"] } as any} aria-label="Home">
             <Image
@@ -52,20 +54,21 @@ export function SiteHeader() {
         </div>
 
         <nav className="flex items-center gap-6">
-          {[
-            { label: "Work", href: "/#work", external: false },
-            { label: "Art", href: "/art", external: false },
-            { label: "Writing", href: "/#writing", external: false },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              {...(item.href.startsWith("/#") ? {} : { transitionTypes: ["nav-forward"] }) as any}
-              className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
-            >
-              {item.label}
-            </Link>
-          ))}
+          <Link href="/#work" className="link text-body">
+            Work
+          </Link>
+          <a
+            href="https://gallery-inky-xi.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link text-body"
+          >
+            Art
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          <Link href="/#writing" className="link text-body">
+            Writing
+          </Link>
         </nav>
       </div>
     </header>
