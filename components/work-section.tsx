@@ -15,12 +15,6 @@ type Card =
   | { type: "project"; project: Project }
   | { type: "art"; href: string };
 
-const ART_PIECES = [
-  { src: "/art/pieces/chaos.jpg", alt: "Chaos — abstract digital piece" },
-  { src: "/art/pieces/in-the-fire.jpg", alt: "In the Fire — abstract digital piece" },
-  { src: "/art/pieces/shattered.jpg", alt: "Shattered — abstract digital piece" },
-  { src: "/art/pieces/unfiltered-projections.jpg", alt: "Unfiltered Projections — abstract digital piece" },
-];
 
 export function WorkSection({ projects, items }: WorkSectionProps) {
   const reduceMotion = useReducedMotion() ?? false;
@@ -172,19 +166,14 @@ function ProjectCard({ project }: { project: Project }) {
 function ArtCard({ href }: { href: string }) {
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={LINK}>
-      <div className={`${FRAME} grid grid-cols-2 grid-rows-2 gap-px bg-[rgba(0,0,0,0.08)]`}>
-        {ART_PIECES.map((piece) => (
-          <div key={piece.src} className="relative overflow-hidden bg-[#f0f0f0]">
-            <Image
-              src={piece.src}
-              alt={piece.alt}
-              fill
-              sizes="170px"
-              // Scans have white paper edges; zoom slightly to crop them out
-              className="scale-[1.08] object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.1] motion-reduce:transition-none"
-            />
-          </div>
-        ))}
+      <div className={`${FRAME} bg-[#f0f0f0]`}>
+        <Image
+          src="/previews/litt-works-orb.jpg"
+          alt="litt.works gallery in Orb view — artworks arranged on a slowly drifting sphere"
+          fill
+          sizes="(min-width: 640px) 340px, 100vw"
+          className={IMAGE_MOTION}
+        />
       </div>
       <CardCaption
         title="litt.works"
