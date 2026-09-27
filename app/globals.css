@@ -11,6 +11,18 @@
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-sans);
   --font-body: var(--font-sans);
+
+  /* Type scale: three sizes. Hierarchy comes from colour and weight,
+     not size — titles are ink/medium, supporting text is muted. */
+  --text-intro: 1.125rem; /* 18px — the intro statement */
+  --text-intro--line-height: 1.6;
+  --text-intro--letter-spacing: -0.015em;
+  --text-body: 0.875rem; /* 14px — titles, descriptions, labels, links */
+  --text-body--line-height: 1.6;
+  --text-body--letter-spacing: -0.006em;
+  --text-meta: 0.75rem; /* 12px — dates, years, tags */
+  --text-meta--line-height: 1.4;
+  --text-meta--letter-spacing: -0.005em;
 }
 
 :root {
@@ -46,9 +58,12 @@ body::before {
   filter: blur(60px);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* In the base layer so utility classes (text-muted etc.) can override it */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 ::selection {
@@ -63,13 +78,23 @@ a {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23000000' fill-opacity='0.08'%3E%3Ccircle cx='12' cy='24' r='1'/%3E%3Ccircle cx='42' cy='67' r='1'/%3E%3Ccircle cx='87' cy='16' r='1'/%3E%3Ccircle cx='129' cy='44' r='1'/%3E%3Ccircle cx='145' cy='102' r='1'/%3E%3Ccircle cx='28' cy='134' r='1'/%3E%3Ccircle cx='76' cy='118' r='1'/%3E%3Ccircle cx='112' cy='150' r='1'/%3E%3C/g%3E%3C/svg%3E");
 }
 
+/* Section label: body size, muted, sentence case */
 .eyebrow {
-  font-size: 0.72rem;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  letter-spacing: var(--text-body--letter-spacing);
+  font-weight: 400;
   color: var(--color-muted);
-  font-family: var(--font-mono), monospace;
+}
+
+/* Metadata: small, semibold, 55% ink (~4.6:1 contrast on the canvas) */
+.meta {
+  font-size: var(--text-meta);
+  line-height: var(--text-meta--line-height);
+  letter-spacing: var(--text-meta--letter-spacing);
+  font-weight: 600;
+  color: rgb(10 10 10 / 0.55);
+  font-variant-numeric: tabular-nums;
 }
 
 .section-shell {

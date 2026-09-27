@@ -38,7 +38,7 @@ export function WorkSection({ projects, items }: WorkSectionProps) {
   return (
     <section id="work" aria-labelledby="work-heading" className="section-shell py-16 md:py-24">
       <div className="max-w-[680px]">
-        <h2 id="work-heading" className="eyebrow mb-8">
+        <h2 id="work-heading" className="eyebrow mb-6">
           Selected work
         </h2>
 
@@ -109,7 +109,7 @@ function CardCaption({
   return (
     <div className="mt-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="flex items-center gap-1.5 text-[14px] font-medium tracking-[-0.01em] text-[#0a0a0a]">
+        <h3 className="flex items-center gap-1.5 text-body font-medium text-ink">
           {status && (
             <span
               className="mr-0.5 h-1.5 w-1.5 shrink-0 self-center rounded-full bg-[#9BD62E]"
@@ -120,17 +120,17 @@ function CardCaption({
           {title}
           {status && <span className="sr-only"> ({status})</span>}
           <span
-            className="text-[12px] text-[#737373] opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100"
+            className="text-body text-muted opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100"
             aria-hidden="true"
           >
             {external ? "↗" : "→"}
           </span>
         </h3>
-        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] text-[#737373]">
+        <span className="meta shrink-0">
           {meta}
         </span>
       </div>
-      <p className="mt-1 line-clamp-2 text-[13px] leading-[1.55] text-[#737373]">{description}</p>
+      <p className="mt-0.5 line-clamp-2 text-body text-muted">{description}</p>
     </div>
   );
 }

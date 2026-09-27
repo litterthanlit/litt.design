@@ -29,9 +29,8 @@ function useFadeUp(delay = 0) {
   };
 }
 
-// Plain-text tags: no pill, just weight and reduced opacity.
-// 55% ink keeps ~4.6:1 contrast on the canvas (WCAG AA).
-const TAG = "text-[12px] font-semibold tracking-[-0.005em] text-[#0a0a0a]/55";
+// Plain-text tags: no pill, just weight and reduced opacity (see .meta)
+const TAG = "meta";
 
 export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
   const reduceMotion = useReducedMotion();
@@ -42,10 +41,10 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
       {/* Thumbnail — hidden until better previews are ready */}
 
       {/* Title + description */}
-      <section className="max-w-2xl space-y-6">
+      <section className="max-w-2xl space-y-4">
         <ViewTransition name={`project-title-${project.slug}`} share="text-morph" default="none">
           <motion.h1
-            className="text-[clamp(1.6rem,4vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.03em] text-[#0a0a0a] pb-1"
+            className="text-intro font-medium text-ink"
             initial={reduceMotion ? {} : { opacity: 0, y: 12, filter: "blur(4px)" }}
             whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true }}
@@ -56,7 +55,7 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
         </ViewTransition>
 
         <motion.p
-          className="text-[15px] leading-[1.7] text-[#525252]"
+          className="text-body text-muted"
           {...useFadeUp(0.06)}
         >
           {project.description}
@@ -79,11 +78,11 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
               href={project.externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.12)] px-4 py-2 text-[13px] font-medium text-[#0a0a0a] transition-colors duration-200 hover:border-[rgba(0,0,0,0.24)] hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.12)] px-4 py-2 text-body font-medium text-ink transition-colors duration-200 hover:border-[rgba(0,0,0,0.24)] hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
             >
               Visit {project.title}
               <span
-                className="text-[12px] text-[#737373] transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px"
+                className="text-body text-muted transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px"
                 aria-hidden="true"
               >
                 ↗
@@ -105,13 +104,13 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
               viewport={{ once: true, margin: "-40px" }}
               transition={{ type: "spring", stiffness: 80, damping: 28, delay: i * 0.04 }}
             >
-              <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#a3a3a3]">
+              <p className="meta">
                 {block.label}
               </p>
-              <h2 className="mt-2 text-[18px] font-medium leading-[1.3] tracking-[-0.02em] text-[#0a0a0a]">
+              <h2 className="mt-1 text-body font-medium text-ink">
                 {block.heading}
               </h2>
-              <p className="mt-2 text-[14px] leading-[1.7] text-[#737373]">
+              <p className="mt-0.5 text-body text-muted">
                 {block.body}
               </p>
             </motion.div>
@@ -161,14 +160,14 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
           transition={{ type: "spring", stiffness: 80, damping: 30 }}
         >
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#a3a3a3]">
+            <p className="meta">
               Next
             </p>
-            <p className="mt-1 text-[17px] font-medium tracking-[-0.02em] text-[#0a0a0a]">
+            <p className="mt-0.5 text-body font-medium text-ink">
               {nextProject.title}
             </p>
           </div>
-          <span className="text-[13px] text-[#a3a3a3] transition-colors duration-150 group-hover:text-[#0a0a0a]">
+          <span className="text-body text-muted transition-colors duration-150 group-hover:text-ink">
             →
           </span>
         </motion.div>

@@ -52,19 +52,19 @@ export function SiteHeader() {
         </div>
 
         <nav className="flex items-center gap-6">
-          <Link href="/#work" className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]">
+          <Link href="/#work" className="text-body text-muted transition-colors duration-150 hover:text-ink">
             Work
           </Link>
           <a
             href="https://gallery-inky-xi.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
+            className="text-body text-muted transition-colors duration-150 hover:text-ink"
           >
             Art
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
-          <Link href="/#writing" className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]">
+          <Link href="/#writing" className="text-body text-muted transition-colors duration-150 hover:text-ink">
             Writing
           </Link>
         </nav>

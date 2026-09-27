@@ -26,15 +26,21 @@ export function IntroSection() {
           />
         </motion.div>
 
-        <motion.h1
-          className="max-w-[520px] text-[18px] font-normal leading-[1.6] tracking-[-0.015em] text-[#0a0a0a]"
+        <motion.div
+          className="max-w-[520px]"
           initial={reduceMotion ? {} : { opacity: 0, y: 12, filter: "blur(4px)" }}
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true }}
           transition={{ type: "spring", stiffness: 80, damping: 30, delay: 0.06 }}
         >
+          <h1 className="text-body font-medium text-ink">
+            Nick Georgiev
+            <span className="font-normal text-muted"> · Designer &amp; engineer</span>
+          </h1>
+          <p className="mt-3 text-intro text-ink">
           Hi, I&apos;m Nick. I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
-        </motion.h1>
+          </p>
+        </motion.div>
       </div>
     </section>
   );

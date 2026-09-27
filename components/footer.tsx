@@ -27,39 +27,33 @@ export function Footer({ settings }: FooterProps) {
         };
 
   return (
-    <footer className="section-shell border-t border-[rgba(0,0,0,0.06)] py-16 md:py-24">
+    <footer className="section-shell py-16 md:py-20">
       {/* Bio */}
       <motion.div className="max-w-xl" {...fadeUp(0)}>
-        <p className="text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
-          I build tools for creators.
-        </p>
-        <p className="mt-2 text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
-          The craft is in what I leave out.
-        </p>
-        <p className="mt-2 text-[20px] font-normal leading-[1.5] tracking-[-0.02em] text-[#0a0a0a]">
-          More Play.
-        </p>
-        <p className="mt-4 text-[13px] leading-[1.7] text-[#737373]">
+        <p className="text-body font-medium text-ink">I build tools for creators.</p>
+        <p className="text-body text-ink">The craft is in what I leave out.</p>
+        <p className="text-body text-ink">More play.</p>
+        <p className="meta mt-4">
           {settings.location} &middot; {settings.availability.label}
         </p>
       </motion.div>
 
       {/* Socials */}
-      <motion.div className="mt-8 flex flex-wrap gap-x-6 gap-y-2" {...fadeUp(0.08)}>
+      <motion.div className="mt-6 flex flex-wrap gap-x-5 gap-y-1" {...fadeUp(0.08)}>
         {settings.socialLinks.map((link) => (
           <a
             key={link.label}
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[13px] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
+            className="text-body text-muted transition-colors duration-150 hover:text-ink"
           >
             {link.label}
           </a>
         ))}
         <a
           href={`mailto:${settings.contactEmail}`}
-          className="text-[13px] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
+          className="text-body text-muted transition-colors duration-150 hover:text-ink"
         >
           {settings.contactEmail}
         </a>

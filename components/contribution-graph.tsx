@@ -34,7 +34,7 @@ export async function ContributionGraph({ username }: { username: string }) {
     >
       {/* Capped width keeps the squares near GitHub's own ~10px size */}
       <div className="max-w-[680px]">
-        <div className="mb-8 flex items-baseline justify-between gap-4">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
           <h2 id="activity-heading" className="eyebrow">
             Building in public
           </h2>
@@ -42,13 +42,13 @@ export async function ContributionGraph({ username }: { username: string }) {
             href={`https://github.com/${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[13px] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
+            className="text-body text-muted transition-colors duration-150 hover:text-ink"
           >
             GitHub ↗
           </a>
         </div>
 
-        <p className="mb-5 text-[15px] font-medium tracking-[-0.01em] text-[#0a0a0a]">
+        <p className="mb-5 text-body font-medium text-ink">
           {totalLabel} contributions in the last year
         </p>
 
@@ -66,7 +66,7 @@ export async function ContributionGraph({ username }: { username: string }) {
                   i < firstMobileWeek ? "hidden md:flex" : "flex"
                 }`}
               >
-                <span className="mb-2 h-3 overflow-visible whitespace-nowrap font-mono text-[10px] leading-none text-[#737373]">
+                <span className="mb-2 h-3 overflow-visible whitespace-nowrap text-meta leading-none text-muted">
                   {monthStart ? MONTHS[Number(monthStart.date.slice(5, 7)) - 1] : ""}
                 </span>
                 <div className="grid grid-rows-7 gap-[2px]">
@@ -89,7 +89,7 @@ export async function ContributionGraph({ username }: { username: string }) {
           })}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-4 font-mono text-[11px] text-[#737373]">
+        <div className="mt-4 flex items-center justify-between gap-4 text-meta text-muted">
           <span className="md:hidden">Last 6 months</span>
           <span className="hidden md:inline">Last 12 months</span>
           <span className="flex items-center gap-1.5" aria-hidden="true">
