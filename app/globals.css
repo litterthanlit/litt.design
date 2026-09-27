@@ -253,3 +253,21 @@ body::before {
     animation-delay: 0s !important;
   }
 }
+
+/* Graffiti toolbar: rises in once the first stroke lands */
+.graffiti-toolbar {
+  animation: graffiti-in 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes graffiti-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .graffiti-toolbar {
+    animation: none;
+  }
+}
