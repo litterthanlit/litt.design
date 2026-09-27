@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE, lastModified: LAST_MODIFIED },
     { url: `${BASE}/art`, lastModified: LAST_MODIFIED },
+    { url: `${BASE}/art2`, lastModified: LAST_MODIFIED },
     ...projects.map((project) => ({
       url: `${BASE}/work/${project.slug}`,
       lastModified: LAST_MODIFIED,

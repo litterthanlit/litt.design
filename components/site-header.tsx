@@ -57,14 +57,9 @@ export function SiteHeader() {
           <Link href="/#work" className="link text-body">
             Work
           </Link>
-          <a
-            href="https://gallery-inky-xi.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link text-body"
-          >
+          {/* /art is a separate app on this domain: plain <a>, not <Link> */}
+          <a href="/art" className="link text-body">
             Art
-            <span className="sr-only"> (opens in a new tab)</span>
           </a>
           <Link href="/#writing" className="link text-body">
             Writing
