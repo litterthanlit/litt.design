@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
 import { DitherBackground } from "@/components/dither-background";
+import { GraffitiLayer } from "@/components/graffiti-layer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -40,6 +41,7 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="bg-canvas text-ink antialiased">
         <DitherBackground />
+        <GraffitiLayer />
         <div className="grain" aria-hidden="true" />
         <SiteHeader />
         {children}
