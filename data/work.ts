@@ -3,7 +3,7 @@
 export type WorkItem =
   // A project from data/projects.ts (links to its /work/<slug> page)
   | { type: "project"; slug: string }
-  // The litt.works digital art card
+  // The litt.works digital art card (/art is served by the gallery app)
   | { type: "art"; href: string };
 
 export const workList: WorkItem[] = [
@@ -13,6 +13,6 @@ export const workList: WorkItem[] = [
   { type: "project", slug: "studio-os" },
   { type: "project", slug: "good-md" },
   { type: "project", slug: "vceezy" },
-  { type: "art", href: "https://gallery-inky-xi.vercel.app/" },
+  { type: "art", href: "/art" },
   { type: "project", slug: "wavr" },
 ];

@@ -165,7 +165,8 @@ function ProjectCard({ project }: { project: Project }) {
 
 function ArtCard({ href }: { href: string }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={LINK}>
+    // /art is a separate app on this domain, so a plain <a> (not <Link>)
+    <a href={href} className={LINK}>
       <div className={`${FRAME} bg-[#f0f0f0]`}>
         <Image
           src="/previews/litt-works-orb.jpg"
@@ -179,9 +180,7 @@ function ArtCard({ href }: { href: string }) {
         title="litt.works"
         meta="2024–26"
         description="Abstract digital art — prints, visual experiments, and long-form pieces."
-        external
       />
-      <span className="sr-only"> (opens in a new tab)</span>
     </a>
   );
 }
