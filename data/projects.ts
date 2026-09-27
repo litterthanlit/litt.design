@@ -63,9 +63,8 @@ export const projects: Project[] = [
     stack: ["React 19", "TypeScript", "Vite", "Tailwind CSS"],
     accent: "#FF4F1F",
     coverMedia: {
-      background: "linear-gradient(135deg, #F3F2EE 0%, #e6e4dc 100%)",
-      preview: "/previews/brand.jpg",
-      position: "left top",
+      background: "linear-gradient(135deg, #0a0a0a 0%, #1c2a30 100%)",
+      preview: "/previews/brand-v2.jpg",
     },
     externalUrl: "https://brand-five-gules.vercel.app/",
     heroFrames: [
