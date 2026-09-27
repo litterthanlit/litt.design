@@ -45,10 +45,16 @@ export function WritingSection({ entries }: WritingSectionProps) {
               <Link
                 href={`/writing/${entry.slug}`}
                 {...{ transitionTypes: ["nav-forward"] } as any}
-                className="group -mx-2 flex items-baseline justify-between rounded-md px-2 py-2 transition-colors duration-150 hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-2 focus-visible:outline-[#0a0a0a]"
+                className="group -mx-2 flex items-baseline justify-between rounded-md px-2 py-2 transition-colors duration-150 ease-out hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-offset-0 active:bg-[rgba(0,0,0,0.05)]"
               >
-                <span className="text-body font-medium text-ink">
+                <span className="flex items-center gap-1.5 text-body font-medium text-ink">
                   {entry.title}
+                  <span
+                    className="-translate-x-1 text-muted opacity-0 transition-[opacity,translate] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+                    aria-hidden="true"
+                  >
+                    →
+                  </span>
                 </span>
                 <span className="meta ml-4 shrink-0">
                   {entry.date}

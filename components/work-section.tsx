@@ -83,15 +83,16 @@ function Reveal({
   );
 }
 
+// Press feedback: a quick 1% shrink on click/tap (off for reduced motion)
 const LINK =
-  "group block rounded-[10px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0a0a0a]";
+  "group block rounded-[10px] transition-transform duration-150 ease-out focus-visible:outline-offset-4 active:scale-[0.99] motion-reduce:active:scale-100";
 
 // Shared frame: thin border, small radius, neutral fill behind the image
 const FRAME =
-  "relative aspect-[16/10] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.08)] transition-[border-color,box-shadow] duration-300 group-hover:border-[rgba(0,0,0,0.14)] group-hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.16)]";
+  "relative aspect-[16/10] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.08)] transition-[border-color,box-shadow] duration-200 ease-out group-hover:border-[rgba(0,0,0,0.14)] group-hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.16)] group-focus-visible:border-[rgba(0,0,0,0.14)]";
 
 const IMAGE_MOTION =
-  "object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100";
+  "object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02] group-focus-visible:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100";
 
 function CardCaption({
   title,
@@ -120,7 +121,7 @@ function CardCaption({
           {title}
           {status && <span className="sr-only"> ({status})</span>}
           <span
-            className="text-body text-muted opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100"
+            className="-translate-x-1 text-body text-muted opacity-0 transition-[opacity,translate] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
             aria-hidden="true"
           >
             {external ? "↗" : "→"}

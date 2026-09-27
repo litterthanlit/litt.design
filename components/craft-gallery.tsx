@@ -473,16 +473,12 @@ function GravityDrop() {
 
 function SpringCounter() {
   const [count, setCount] = useState(0);
-  const [pulse, setPulse] = useState(false);
   const motionCount = useMotionValue(0);
   const springCount = useSpring(motionCount, { stiffness: 200, damping: 12 });
   const display = useTransform(springCount, (v) => Math.round(v));
 
   useEffect(() => {
     motionCount.set(count);
-    setPulse(true);
-    const t = setTimeout(() => setPulse(false), 200);
-    return () => clearTimeout(t);
   }, [count, motionCount]);
 
   return (
@@ -497,8 +493,11 @@ function SpringCounter() {
         −
       </motion.button>
       <motion.span
+        // Keyed on count so each change replays the pulse — no extra state
+        key={count}
         className="w-10 text-center font-mono text-[28px] tabular-nums text-[#0a0a0a]"
-        animate={{ scale: pulse ? 1.15 : 1 }}
+        initial={{ scale: count === 0 ? 1 : 1.15 }}
+        animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 12 }}
       >
         {display}

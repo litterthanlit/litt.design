@@ -42,7 +42,7 @@ export async function ContributionGraph({ username }: { username: string }) {
             href={`https://github.com/${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-body text-muted transition-colors duration-150 hover:text-ink"
+            className="link text-body"
           >
             GitHub ↗
           </a>
@@ -76,7 +76,7 @@ export async function ContributionGraph({ username }: { username: string }) {
                       title={`${day.count === 0 ? "No" : day.count} contribution${
                         day.count === 1 ? "" : "s"
                       } on ${formatDay(day.date)}`}
-                      className="aspect-square w-full rounded-[2px]"
+                      className="aspect-square w-full rounded-[2px] transition-shadow duration-100 hover:shadow-[0_0_0_1px_rgba(10,10,10,0.5)]"
                       style={{
                         gridRow: new Date(`${day.date}T00:00:00Z`).getUTCDay() + 1,
                         background: LEVEL_COLORS[day.level],

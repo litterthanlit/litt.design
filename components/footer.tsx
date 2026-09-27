@@ -46,14 +46,14 @@ export function Footer({ settings }: FooterProps) {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-body text-muted transition-colors duration-150 hover:text-ink"
+            className="link text-body"
           >
             {link.label}
           </a>
         ))}
         <a
           href={`mailto:${settings.contactEmail}`}
-          className="text-body text-muted transition-colors duration-150 hover:text-ink"
+          className="link text-body"
         >
           {settings.contactEmail}
         </a>

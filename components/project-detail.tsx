@@ -78,11 +78,11 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
               href={project.externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.12)] px-4 py-2 text-body font-medium text-ink transition-colors duration-200 hover:border-[rgba(0,0,0,0.24)] hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.12)] px-4 py-2 text-body font-medium text-ink transition-[background-color,border-color,scale] duration-150 ease-out hover:border-[rgba(0,0,0,0.24)] hover:bg-[rgba(0,0,0,0.03)] active:scale-[0.97] motion-reduce:active:scale-100"
             >
               Visit {project.title}
               <span
-                className="text-body text-muted transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px"
+                className="text-body text-muted transition-[translate,color] duration-150 ease-out group-hover:-translate-y-px group-hover:translate-x-px group-hover:text-ink"
                 aria-hidden="true"
               >
                 ↗
@@ -167,7 +167,7 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
               {nextProject.title}
             </p>
           </div>
-          <span className="text-body text-muted transition-colors duration-150 group-hover:text-ink">
+          <span className="text-body text-muted transition-[color,translate] duration-200 ease-out group-hover:translate-x-1 group-hover:text-ink group-focus-visible:translate-x-1 group-focus-visible:text-ink">
             →
           </span>
         </motion.div>

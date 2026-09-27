@@ -16,6 +16,8 @@ export function SiteHeader() {
           className="relative"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
+          onFocus={() => setShowTooltip(true)}
+          onBlur={() => setShowTooltip(false)}
         >
           <Link href="/" {...{ transitionTypes: ["nav-back"] } as any} aria-label="Home">
             <Image
@@ -52,19 +54,19 @@ export function SiteHeader() {
         </div>
 
         <nav className="flex items-center gap-6">
-          <Link href="/#work" className="text-body text-muted transition-colors duration-150 hover:text-ink">
+          <Link href="/#work" className="link text-body">
             Work
           </Link>
           <a
             href="https://gallery-inky-xi.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-body text-muted transition-colors duration-150 hover:text-ink"
+            className="link text-body"
           >
             Art
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
-          <Link href="/#writing" className="text-body text-muted transition-colors duration-150 hover:text-ink">
+          <Link href="/#writing" className="link text-body">
             Writing
           </Link>
         </nav>

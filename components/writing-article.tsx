@@ -27,7 +27,7 @@ export function WritingArticle({ entry }: { entry: WritingEntry }) {
       <Link
         href="/#writing"
         {...{ transitionTypes: ["nav-back"] } as any}
-        className="mt-16 inline-block text-body text-muted transition-colors duration-150 hover:text-ink"
+        className="link mt-16 inline-block text-body"
       >
         Back
       </Link>
