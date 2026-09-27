@@ -59,12 +59,18 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
         </motion.p>
 
         <motion.div className="flex flex-wrap gap-2" {...useFadeUp(0.12)}>
-          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] font-medium text-[#a3a3a3]">
+          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] font-medium text-[#737373]">
             {project.category}
           </span>
-          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] tabular-nums text-[#a3a3a3]">
+          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] tabular-nums text-[#737373]">
             {project.year}
           </span>
+          {project.status && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] text-[#737373]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9BD62E]" aria-hidden="true" />
+              {project.status}
+            </span>
+          )}
         </motion.div>
 
         {project.externalUrl && (
@@ -73,9 +79,16 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
               href={project.externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[#E8F0FE] px-6 py-3 text-[15px] font-medium text-[#1a56db] transition-colors hover:bg-[#d4e4fc]"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.12)] px-4 py-2 text-[13px] font-medium text-[#0a0a0a] transition-colors duration-200 hover:border-[rgba(0,0,0,0.24)] hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a0a0a]"
             >
-              Visit Project <span className="text-[12px]">↗</span>
+              Visit {project.title}
+              <span
+                className="text-[12px] text-[#737373] transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px"
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </motion.div>
         )}

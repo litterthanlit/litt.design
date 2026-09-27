@@ -2,6 +2,148 @@ import type { Project } from "@/data/types";
 
 export const projects: Project[] = [
   {
+    slug: "carson",
+    title: "Carson",
+    category: "Creative Tool",
+    status: "In progress",
+    description:
+      "A browser-based poster editor for messy, manual, David Carson-inspired compositions. Slice, scatter, xerox and re-roll a clean layout until it breaks in the right places — then undo your way back.",
+    oneLineOutcome:
+      "A poster editor that teaches Carson's layouts by letting you wreck one.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Product Design", "Front-End Development", "Typography"],
+    stack: ["React 19", "Fabric.js", "TypeScript", "Vite"],
+    accent: "#E0364F",
+    coverMedia: {
+      background: "linear-gradient(135deg, #1f1f1f 0%, #3a3a3a 100%)",
+      preview: "/previews/carson.jpg",
+    },
+    externalUrl: "https://carson-navy.vercel.app/",
+    heroFrames: [
+      { id: "carson-1", background: "linear-gradient(180deg, #1f1f1f, #E0364F)", focus: 0.3 },
+      { id: "carson-2", background: "linear-gradient(180deg, #E0364F, #1f1f1f)", focus: 0.5 },
+      { id: "carson-3", background: "linear-gradient(180deg, #1f1f1f, #E0364F)", focus: 0.7 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "You can't learn Carson from a grid",
+        body: "David Carson's layouts look accidental, but every break is a decision. Studying the physical copies made it obvious: the only way to understand how the type moves is to move it yourself.",
+      },
+      {
+        label: "Approach",
+        heading: "Start boring, then wreck it",
+        body: "Every poster begins finished and dull. Scramble the structure, scatter the headline, run it through the copier, re-roll the accident — and undo it. Precision and play become the same gesture.",
+      },
+      {
+        label: "Execution",
+        heading: "A real editor under the chaos",
+        body: "Text, image, shape and fragment layers on a canvas. Slice into strips or columns, xerox and photocopy-noise treatments that keep text editable underneath, poster presets, PNG export and full undo/redo.",
+      },
+      {
+        label: "Result",
+        heading: "Controlled accidents",
+        body: "A tribute that works as a teaching tool: seeded randomness you can walk back, so every broken layout is one you chose.",
+      },
+    ],
+  },
+  {
+    slug: "brand",
+    title: "Brand",
+    category: "Generative Tools",
+    status: "In progress",
+    description:
+      "Twenty tiny generative tools for brand assets — patterns, badges, gradients, dithers and kinetic type. Everything runs in the browser: no accounts, nothing uploaded, every result is a shareable link.",
+    oneLineOutcome:
+      "Tiny in-browser tools for making patterns, type and textures for brands.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Product Design", "Generative Design", "Front-End Development"],
+    stack: ["React 19", "TypeScript", "Vite", "Tailwind CSS"],
+    accent: "#FF4F1F",
+    coverMedia: {
+      background: "linear-gradient(135deg, #F3F2EE 0%, #e6e4dc 100%)",
+      preview: "/previews/brand.jpg",
+      position: "left top",
+    },
+    externalUrl: "https://brand-five-gules.vercel.app/",
+    heroFrames: [
+      { id: "brand-1", background: "linear-gradient(180deg, #F3F2EE, #FF4F1F)", focus: 0.3 },
+      { id: "brand-2", background: "linear-gradient(180deg, #FF4F1F, #F3F2EE)", focus: 0.5 },
+      { id: "brand-3", background: "linear-gradient(180deg, #F3F2EE, #FF4F1F)", focus: 0.7 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "Brand assets shouldn't need a pipeline",
+        body: "Studios like Basement build their own small tools to make identity work feel alive. Most teams get a static style guide instead. This started as a study of those tools.",
+      },
+      {
+        label: "Approach",
+        heading: "One file, one tool",
+        body: "Each generator is a single definition with its own parameters: halftones, mesh gradients, flow fields, bar type, long exposure, photograms. Randomize with per-parameter locks, then step back through history.",
+      },
+      {
+        label: "Execution",
+        heading: "Exports that match the preview",
+        body: "A shared type layer and finish layer (grain, dust, vignette), five formats from 1:1 to 3:1, and export to SVG, PNG at up to 4×, or seamless WebM loops — with fonts embedded so nothing shifts.",
+      },
+      {
+        label: "Result",
+        heading: "20 tools, zero sign-up",
+        body: "The full state of every piece lives in its URL, so a result is shareable the moment you make it.",
+      },
+    ],
+  },
+  {
+    slug: "hypher",
+    title: "Hypher",
+    category: "Product",
+    status: "In progress",
+    description:
+      "Project memory under your coding agents. Dump the project as it actually is — rants, screenshots, chat exports, “don't do X” — and Hypher compiles it into one note the next agent reads, works from, and writes back to.",
+    oneLineOutcome:
+      "Switch coding agents without starting over.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Product Strategy", "Product Design", "Full-Stack Development"],
+    stack: ["Next.js", "Convex", "TypeScript", "MCP"],
+    accent: "#3B82F6",
+    coverMedia: {
+      background: "linear-gradient(135deg, #f7f8fa 0%, #e8ecf3 100%)",
+      preview: "/previews/hypher.jpg",
+    },
+    externalUrl: "https://www.hypher.app/",
+    heroFrames: [
+      { id: "hypher-1", background: "linear-gradient(180deg, #f7f8fa, #3B82F6)", focus: 0.3 },
+      { id: "hypher-2", background: "linear-gradient(180deg, #3B82F6, #f7f8fa)", focus: 0.5 },
+      { id: "hypher-3", background: "linear-gradient(180deg, #f7f8fa, #3B82F6)", focus: 0.7 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "Every new agent starts cold",
+        body: "The code lives in the repo, but the decisions don't: why something changed, what not to do, what's half-finished. Switch agents or hit a usage limit and all of it has to be retyped.",
+      },
+      {
+        label: "Approach",
+        heading: "Dump, one note, writeback",
+        body: "One field for messy input. Hypher turns it into a single bounded note per project — a decision ledger that lives for months and workstreams that live for days — and agents write back when they stop.",
+      },
+      {
+        label: "Execution",
+        heading: "Handoff that checks itself",
+        body: "Work is checkpointed as it happens and verified against the working tree on resume. Only hashes, file names and commit identity leave the machine; on a mismatch, it says what differs.",
+      },
+      {
+        label: "Result",
+        heading: "The next session starts warm",
+        body: "Pull the plug on one agent, open another, and it already knows the goal, the constraints and the next action. Nobody types a recap.",
+      },
+    ],
+  },
+  {
     slug: "studio-os",
     title: "Studio OS",
     category: "Design Tool",
@@ -17,8 +159,7 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
-      preview: "/previews/studio-os.png",
-      position: "top",
+      preview: "/previews/studio-os-cover.jpg",
     },
     externalUrl: "https://studio-os.io/",
     screens: [
@@ -57,7 +198,7 @@ export const projects: Project[] = [
   },
   {
     slug: "good-md",
-    title: "Houston",
+    title: "Houston-MD",
     category: "Desktop App",
     description:
       "A native Markdown reader built with Tauri. Opens and renders .md and .mdx files with syntax highlighting, GFM support, and a clean tabbed reading interface. Lightweight, fast, local-first.",
@@ -74,7 +215,7 @@ export const projects: Project[] = [
       preview: "/previews/good-md.png",
       position: "left center",
     },
-    externalUrl: "https://houston-rose.vercel.app/",
+    externalUrl: "https://houston-md.vercel.app/",
     heroFrames: [
       { id: "gmd-1", background: "linear-gradient(180deg, #00B894, #55efc4)", focus: 0.3 },
       { id: "gmd-2", background: "linear-gradient(180deg, #55efc4, #dfe6e9)", focus: 0.5 },
@@ -128,6 +269,7 @@ export const projects: Project[] = [
         "linear-gradient(135deg, #1A1A1A 0%, #4a4a4a 50%, #8a8a8a 100%)",
       preview: "/previews/vceezy.png",
     },
+    externalUrl: "https://vceezy.vercel.app/",
     heroFrames: [
       { id: "vc-1", background: "linear-gradient(180deg, #1A1A1A, #4a4a4a)", focus: 0.3 },
       { id: "vc-2", background: "linear-gradient(180deg, #4a4a4a, #8a8a8a)", focus: 0.5 },

@@ -20,6 +20,8 @@ export type Project = {
   slug: string;
   title: string;
   category: string;
+  // Shown as a small tag on the card and project page, e.g. "In progress"
+  status?: string;
   description: string;
   oneLineOutcome: string;
   client: string;

@@ -12,7 +12,7 @@ export function WritingSection({ entries }: WritingSectionProps) {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section id="writing" className="section-shell py-16 md:py-24">
+    <section id="writing" className="section-shell py-16 md:py-24 *:max-w-[680px]">
       <motion.h2
         className="eyebrow mb-8"
         initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}

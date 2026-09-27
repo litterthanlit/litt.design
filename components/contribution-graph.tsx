@@ -33,7 +33,7 @@ export async function ContributionGraph({ username }: { username: string }) {
       className="section-shell py-16 md:py-20"
     >
       {/* Capped width keeps the squares near GitHub's own ~10px size */}
-      <div className="max-w-[720px]">
+      <div className="max-w-[680px]">
         <div className="mb-8 flex items-baseline justify-between gap-4">
           <h2 id="activity-heading" className="eyebrow">
             Building in public
