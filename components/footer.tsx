@@ -380,9 +380,9 @@ export function ThankYouOrb() {
   return (
     <section className="relative flex items-center justify-center overflow-hidden py-32 md:py-48">
       {/* Bloom layers — tight around the orb */}
-      <div ref={setGlowRef(0)} className="pointer-events-none absolute h-[700px] w-[700px] rounded-full md:h-[800px] md:w-[800px]" />
-      <div ref={setGlowRef(1)} className="pointer-events-none absolute h-[480px] w-[480px] rounded-full md:h-[560px] md:w-[560px]" />
-      <div ref={setGlowRef(2)} className="pointer-events-none absolute h-[330px] w-[330px] rounded-full md:h-[410px] md:w-[410px]" />
+      <div ref={setGlowRef(0)} data-graffiti-ignore className="pointer-events-none absolute h-[700px] w-[700px] rounded-full md:h-[800px] md:w-[800px]" />
+      <div ref={setGlowRef(1)} data-graffiti-ignore className="pointer-events-none absolute h-[480px] w-[480px] rounded-full md:h-[560px] md:w-[560px]" />
+      <div ref={setGlowRef(2)} data-graffiti-ignore className="pointer-events-none absolute h-[330px] w-[330px] rounded-full md:h-[410px] md:w-[410px]" />
 
       {/* Interactive dot orb */}
       <div

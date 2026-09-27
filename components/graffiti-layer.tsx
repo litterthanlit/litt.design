@@ -26,16 +26,23 @@ const STORAGE_PREFIX = "litt:graffiti:";
 
 const KEEP_OUT_PAD = 10; // breathing room around text and elements
 
-// Elements that are keep-out zones as a whole box (text is handled per line)
+// Elements that are keep-out zones as a whole box (text is handled per line).
+// Anything with a background counts too — cards, panels, dots, the
+// contribution graph's squares — since those read as content even when empty.
 const BLOCKS =
   "a, button, input, textarea, select, label, summary, img, picture, video, svg, canvas, iframe, " +
-  "figure, table, pre, blockquote, header, nav, [data-no-graffiti]";
+  'figure, table, pre, blockquote, header, nav, [role="img"], [role="figure"], ' +
+  '[class*="bg-"], [style*="background"], [data-no-graffiti]';
 
-// Never start a stroke inside these, wherever the pointer is
-const INTERACTIVE = `${BLOCKS}, [role], [tabindex], [contenteditable]`;
+// Never start a stroke inside these, wherever the pointer is. Checked on
+// ancestors too, so no background selectors here (body has one).
+const INTERACTIVE =
+  "a, button, input, textarea, select, label, summary, iframe, header, nav, " +
+  "[role], [tabindex], [contenteditable], [data-no-graffiti]";
 
-// Decorative layers (backgrounds, this canvas, the toolbar) are not content
-const IGNORE = '[aria-hidden="true"], [data-graffiti-ignore]';
+// Full-page decorative layers (the dither, this canvas, the toolbar) are not
+// content. Opt-in only: aria-hidden alone also marks visible decoration.
+const IGNORE = "[data-graffiti-ignore]";
 
 // Every text line and element box on the page, in drawing coordinates
 function collectKeepOut(): Rect[] {
@@ -375,6 +382,7 @@ export function GraffitiLayer() {
         ref={canvasRef}
         className="pointer-events-none fixed inset-0 -z-[1] h-screen w-screen"
         aria-hidden="true"
+        data-graffiti-ignore
       />
 
       {count > 0 && (

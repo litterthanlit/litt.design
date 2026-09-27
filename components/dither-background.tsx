@@ -177,6 +177,7 @@ export function DitherBackground() {
         imageRendering: "pixelated",
       }}
       aria-hidden="true"
+      data-graffiti-ignore
     />
   );
 }
