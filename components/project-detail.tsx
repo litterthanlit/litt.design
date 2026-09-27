@@ -29,6 +29,10 @@ function useFadeUp(delay = 0) {
   };
 }
 
+// Plain-text tags: no pill, just weight and reduced opacity.
+// 55% ink keeps ~4.6:1 contrast on the canvas (WCAG AA).
+const TAG = "text-[12px] font-semibold tracking-[-0.005em] text-[#0a0a0a]/55";
+
 export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
   const reduceMotion = useReducedMotion();
   const visitFade = useFadeUp(0.16);
@@ -58,15 +62,11 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
           {project.description}
         </motion.p>
 
-        <motion.div className="flex flex-wrap gap-2" {...useFadeUp(0.12)}>
-          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] font-medium text-[#737373]">
-            {project.category}
-          </span>
-          <span className="rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] tabular-nums text-[#737373]">
-            {project.year}
-          </span>
+        <motion.div className="flex flex-wrap items-center gap-x-5 gap-y-1" {...useFadeUp(0.12)}>
+          <span className={TAG}>{project.category}</span>
+          <span className={`${TAG} tabular-nums`}>{project.year}</span>
           {project.status && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.08)] px-3 py-1 font-mono text-[11px] text-[#737373]">
+            <span className={`${TAG} inline-flex items-center gap-1.5`}>
               <span className="h-1.5 w-1.5 rounded-full bg-[#9BD62E]" aria-hidden="true" />
               {project.status}
             </span>
@@ -126,11 +126,11 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
         <motion.p className="eyebrow mb-4" {...useFadeUp(0)}>
           Stack
         </motion.p>
-        <motion.div className="flex flex-wrap gap-2" {...useFadeUp(0.06)}>
+        <motion.div className="flex flex-wrap gap-x-5 gap-y-1" {...useFadeUp(0.06)}>
           {project.stack.map((tech, i) => (
             <motion.span
               key={tech}
-              className="rounded-full border border-[rgba(0,0,0,0.08)] px-4 py-1.5 font-mono text-[12px] font-medium text-[#737373]"
+              className={TAG}
               initial={
                 reduceMotion
                   ? {}

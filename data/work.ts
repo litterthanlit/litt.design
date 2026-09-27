@@ -13,6 +13,6 @@ export const workList: WorkItem[] = [
   { type: "project", slug: "studio-os" },
   { type: "project", slug: "good-md" },
   { type: "project", slug: "vceezy" },
-  { type: "art", href: "https://github.com/litterthanlit/gallery" },
+  { type: "art", href: "https://gallery-inky-xi.vercel.app/" },
   { type: "project", slug: "wavr" },
 ];

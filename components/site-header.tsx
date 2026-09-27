@@ -52,20 +52,21 @@ export function SiteHeader() {
         </div>
 
         <nav className="flex items-center gap-6">
-          {[
-            { label: "Work", href: "/#work", external: false },
-            { label: "Art", href: "/art", external: false },
-            { label: "Writing", href: "/#writing", external: false },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              {...(item.href.startsWith("/#") ? {} : { transitionTypes: ["nav-forward"] }) as any}
-              className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
-            >
-              {item.label}
-            </Link>
-          ))}
+          <Link href="/#work" className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]">
+            Work
+          </Link>
+          <a
+            href="https://gallery-inky-xi.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]"
+          >
+            Art
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          <Link href="/#writing" className="text-[13px] tracking-[-0.01em] text-[#737373] transition-colors duration-150 hover:text-[#0a0a0a]">
+            Writing
+          </Link>
         </nav>
       </div>
     </header>

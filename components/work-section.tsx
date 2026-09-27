@@ -191,7 +191,7 @@ function ArtCard({ href }: { href: string }) {
         description="Abstract digital art — prints, visual experiments, and long-form pieces."
         external
       />
-      <span className="sr-only"> (opens GitHub in a new tab)</span>
+      <span className="sr-only"> (opens in a new tab)</span>
     </a>
   );
 }
