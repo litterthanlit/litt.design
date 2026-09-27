@@ -3,7 +3,9 @@ import type { WritingEntry } from "@/data/writing";
 
 export function WritingArticle({ entry }: { entry: WritingEntry }) {
   return (
-    <main className="section-shell min-h-screen max-w-2xl pb-20 pt-36 md:pt-44">
+    <main className="section-shell min-h-screen pb-20 pt-36 md:pt-44">
+      {/* ~65 characters per line at 15px: a comfortable reading measure */}
+      <article className="max-w-[560px]">
       <p className="meta">
         {entry.date}
       </p>
@@ -31,6 +33,7 @@ export function WritingArticle({ entry }: { entry: WritingEntry }) {
       >
         Back
       </Link>
+      </article>
     </main>
   );
 }
