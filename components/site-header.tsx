@@ -57,9 +57,12 @@ export function SiteHeader() {
           <Link href="/#work" className="link text-body">
             Work
           </Link>
-          {/* /art is a separate app on this domain: plain <a>, not <Link> */}
+          {/* /art and /studies are separate apps on this domain: plain <a>, not <Link> */}
           <a href="/art" className="link text-body">
             Art
+          </a>
+          <a href="/studies" className="link text-body">
+            Studies
           </a>
           <Link href="/#writing" className="link text-body">
             Writing
