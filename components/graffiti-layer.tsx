@@ -11,8 +11,10 @@ import { usePathname } from "next/navigation";
 
 // Marker points carry the line width; spray points carry how much paint landed
 type Point = [x: number, y: number, size: number];
-type Drip = [x: number, y: number, length: number, width: number];
-type Stroke = { color: string; points: Point[]; tool?: "spray"; seed?: number; drips?: Drip[] };
+// The path a drip ran: one point per simulation step, each with the trail
+// width there, so playback runs at the speed the paint actually moved
+type Run = Point[];
+type Stroke = { color: string; points: Point[]; tool?: "spray"; seed?: number; runs?: Run[] };
 type Rect = { x: number; y: number; w: number; h: number };
 type Tool = "marker" | "spray";
 
@@ -31,9 +33,11 @@ const STORAGE_PREFIX = "litt:graffiti:";
 const SPRAY_RADIUS = 20; // solid body of the spray
 const OVERSPRAY = 1.6; // speckle reaches this far past the body
 const SPRAY_RATE = 1.1; // speckles per millisecond the nozzle is held down
-const DRIP_AFTER = 350; // ms lingering in one spot before the paint runs
-const DRIP_EVERY = 600; // ms of further lingering per extra drip
-const MAX_DRIPS_PER_SPOT = 4;
+const WET_CELL = 6; // px resolution of the wet-paint field
+const POOL = 460; // wet paint a spot can hold before it runs
+const DRY_HALF_LIFE = 1400; // ms for surface paint to half set
+const RUN_STEP = 1000 / 30; // ms of simulated time per stored run point
+const MAX_RUNS_PER_POOL = 3;
 const MAX_CACHE_PIXELS = 12_000_000; // bigger spray strokes are drawn directly
 
 const KEEP_OUT_PAD = 10; // breathing room around text and elements
@@ -134,7 +138,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 // Points are stored with x relative to the viewport centre (the layout is
 // centred, so drawings stay next to the content they were drawn beside) and
 // y relative to the top of the document.
-function toScreen([x, y]: Point | Drip, cx: number, scrollY: number) {
+function toScreen([x, y]: Point, cx: number, scrollY: number) {
   return [x + cx, y - scrollY] as const;
 }
 
@@ -152,7 +156,7 @@ function strokeBounds(stroke: Stroke): Rect {
     y1 = Math.max(y1, y + r);
   };
   for (const [x, y] of stroke.points) grow(x, y, pad);
-  for (const [x, y, length, width] of stroke.drips ?? []) grow(x, y + length, width * 2);
+  for (const run of stroke.runs ?? []) for (const [x, y, w] of run) grow(x, y, w * 1.2 + 1);
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
@@ -202,7 +206,10 @@ function random(seed: number) {
   };
 }
 
-// Paint body: solid in the middle, feathered at the edge. One per colour
+// A nozzle's spray cone lands as a Gaussian: dense at the centre with a long
+// soft tail, so overlapping passes blend rather than stack hard-edged discs.
+// The sprite spans 1.5× the spray radius; one per colour
+const MIST_SPAN = 1.5;
 const mistSprites = new Map<string, HTMLCanvasElement>();
 function mist(color: string) {
   let sprite = mistSprites.get(color);
@@ -211,16 +218,53 @@ function mist(color: string) {
     sprite.width = sprite.height = 128;
     const g = sprite.getContext("2d")!;
     const gradient = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    gradient.addColorStop(0, color);
-    gradient.addColorStop(0.45, `${color}e6`);
-    gradient.addColorStop(0.7, `${color}66`);
-    gradient.addColorStop(0.85, `${color}1f`);
-    gradient.addColorStop(1, `${color}00`);
+    const sigma = 0.45 / MIST_SPAN; // σ = 0.45 × spray radius
+    for (let t = 0; t <= 1; t += 0.125) {
+      const alpha = t >= 1 ? 0 : Math.exp(-((t / sigma) ** 2) / 2);
+      const hex = Math.round(alpha * 255).toString(16).padStart(2, "0");
+      gradient.addColorStop(t, `${color}${hex}`);
+    }
     g.fillStyle = gradient;
     g.fillRect(0, 0, 128, 128);
     mistSprites.set(color, sprite);
   }
   return sprite;
+}
+
+// Wet-paint weight a puff leaves at a given squared distance from its centre,
+// matching the mist profile so drips form where the paint visibly pools
+function sprayProfile(d2: number) {
+  return Math.exp(-d2 / (2 * (SPRAY_RADIUS * 0.45) ** 2));
+}
+
+// Run a drip down the wall. Paint on a vertical surface moves as a viscous
+// film: it eases up to a terminal speed set by its weight, spends paint on the
+// trail it leaves (so it thins, slows and stops), gathers more where it runs
+// through wet paint, and wanders a little with the surface texture.
+function simulateRun(
+  x: number,
+  y: number,
+  mass: number,
+  rand: () => number,
+  pickUp: (x: number, y: number) => number
+): Run {
+  const run: Run = [];
+  const dt = RUN_STEP / 1000;
+  let m = mass;
+  let v = 0;
+  let drift = 0;
+  for (let step = 0; step < 150; step++) {
+    const width = 1.4 + 1.9 * Math.sqrt(m);
+    run.push([round1(x), round1(y), round1(width)]);
+    v += (70 * m - v) * (1 - Math.exp(-dt / 0.35));
+    const dy = v * dt;
+    drift = drift * 0.85 + (rand() - 0.5) * 0.12;
+    x += drift;
+    y += dy;
+    m += pickUp(x, y) - dy * 0.0042 * width;
+    if (m <= 0.06 || (step > 10 && v < 4)) break;
+  }
+  return run;
 }
 
 function drawSprayPoint(
@@ -234,9 +278,11 @@ function drawSprayPoint(
   const paint = stroke.points[i][2];
   const r = SPRAY_RADIUS;
   const rand = random((stroke.seed ?? 0) ^ Math.imul(i + 1, 0x9e3779b1));
-  // The body goes on bold and builds to fully opaque wherever the can lingers
+  // Paint per puff is what the nozzle let out in that moment; coverage builds
+  // up wherever puffs overlap
   ctx.globalAlpha = Math.min(0.9, paint * 0.028 + Math.min(1, paint / 4) * 0.05);
-  ctx.drawImage(mist(stroke.color), x - r, y - r, r * 2, r * 2);
+  const span = r * MIST_SPAN;
+  ctx.drawImage(mist(stroke.color), x - span, y - span, span * 2, span * 2);
   ctx.fillStyle = stroke.color;
   for (let d = 0; d < paint; d++) {
     const angle = rand() * Math.PI * 2;
@@ -252,32 +298,38 @@ function drawSprayPoint(
   ctx.globalAlpha = 1;
 }
 
-// A run of paint from `from` to `to` px below the drip's origin
-function drawDrip(
+// A drip's trail up to `shown` steps, tapering as it ran out of paint, with
+// the bead of paint that leads it
+function drawRun(
   ctx: CanvasRenderingContext2D,
-  drip: Drip,
-  from: number,
-  to: number,
+  run: Run,
   color: string,
   cx: number,
-  scrollY: number
+  scrollY: number,
+  shown = run.length - 1
 ) {
-  const [x, y] = toScreen(drip, cx, scrollY);
-  const [, , length, width] = drip;
   ctx.strokeStyle = color;
-  ctx.lineWidth = width;
+  ctx.fillStyle = color;
   ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(x, y + from);
-  ctx.lineTo(x, y + to);
-  ctx.stroke();
-  if (to >= length) {
-    // The bead of paint that collects at the bottom
+  const n = Math.min(Math.floor(shown), run.length - 1);
+  let [hx, hy] = toScreen(run[0], cx, scrollY);
+  let hw = run[0][2];
+  for (let k = 1; k <= n + 1 && k < run.length; k++) {
+    const t = k <= n ? 1 : shown - n;
+    if (t <= 0) break;
+    const [x1, y1] = toScreen(run[k], cx, scrollY);
+    const x = hx + (x1 - hx) * t;
+    const y = hy + (y1 - hy) * t;
+    ctx.lineWidth = run[k][2];
     ctx.beginPath();
-    ctx.arc(x, y + to, width * 0.95, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
+    ctx.moveTo(hx, hy);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    [hx, hy, hw] = [x, y, run[k][2]];
   }
+  ctx.beginPath();
+  ctx.arc(hx, hy, hw * 0.75 + 0.8, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawSpray(
@@ -285,12 +337,10 @@ function drawSpray(
   stroke: Stroke,
   cx: number,
   scrollY: number,
-  shown?: (drip: Drip) => number
+  shown?: (run: Run) => number | undefined
 ) {
   for (let i = 0; i < stroke.points.length; i++) drawSprayPoint(ctx, stroke, i, cx, scrollY);
-  for (const drip of stroke.drips ?? []) {
-    drawDrip(ctx, drip, 0, shown?.(drip) ?? drip[2], stroke.color, cx, scrollY);
-  }
+  for (const run of stroke.runs ?? []) drawRun(ctx, run, stroke.color, cx, scrollY, shown?.(run));
 }
 
 // Ring cursor the size of the spray, tinted with the current colour
@@ -380,13 +430,22 @@ export function GraffitiLayer() {
     let cursor = "";
     let last = { x: 0, y: 0, t: 0, w: MIN_WIDTH };
 
-    // Spray state: pointer in client space, last emission and dwell in document space
+    // Spray state: pointer in client space, last emission in document space
     let pointer = { x: 0, y: 0 };
     let nozzle = { x: 0, y: 0, t: 0 };
-    let dwell = { x: 0, y: 0, time: 0, drips: 0 };
-    let sprayFrame = 0;
-    let dripFrame = 0;
-    const growing = new Map<Drip, { stroke: Stroke; start: number; shown: number }>();
+    let loop = 0;
+    let lastTick = 0;
+
+    // Wet paint on the wall, in coarse cells. Puffs add to it, it slowly sets,
+    // and wherever it pools past what the surface can hold, it runs
+    type WetCell = { i: number; j: number; wet: number; stroke: Stroke };
+    const wetField = new Map<number, WetCell>();
+    const cellKey = (i: number, j: number) => (i + 32768) * 65536 + j;
+    const cellAt = (x: number, y: number) =>
+      wetField.get(cellKey(Math.floor(x / WET_CELL), Math.floor(y / WET_CELL)));
+
+    // Drips still running, revealed at the speed they were simulated
+    const running = new Map<Run, { stroke: Stroke; start: number }>();
 
     // Finished spray strokes are thousands of dots; render each once into its
     // own bitmap so scrolling only has to blit it
@@ -436,7 +495,7 @@ export function GraffitiLayer() {
       const offscreen = (b: Rect) => b.y - sy > h || b.y + b.h - sy < 0;
       for (const stroke of strokesRef.current) {
         if (stroke.tool === "spray") {
-          const live = stroke === current || stroke.drips?.some((d) => growing.has(d));
+          const live = stroke === current || stroke.runs?.some((r) => running.has(r));
           if (!live) {
             const { bounds, image } = cachedSpray(stroke);
             if (offscreen(bounds)) continue;
@@ -446,7 +505,11 @@ export function GraffitiLayer() {
             continue;
           }
           if (!offscreen(strokeBounds(stroke))) {
-            drawSpray(ctx!, stroke, cx, sy, (d) => growing.get(d)?.shown ?? d[2]);
+            const now = performance.now();
+            drawSpray(ctx!, stroke, cx, sy, (r) => {
+              const run = running.get(r);
+              return run && (now - run.start) / RUN_STEP;
+            });
           }
           continue;
         }
@@ -501,10 +564,10 @@ export function GraffitiLayer() {
       );
     }
 
-    // The can sprays on every frame it is held down, not only when it moves:
-    // paint per frame is fixed, so a fast sweep leaves a lighter line and a
-    // slow pass or a pause builds up solid colour
-    function sprayTick(now: number) {
+    // The can sprays at a constant rate on every frame it is held down, not
+    // only when it moves: a fast sweep spreads that paint thin and a slow pass
+    // or a pause piles it up
+    function spray(now: number) {
       if (!current || current.tool !== "spray") return;
       const cx = window.innerWidth / 2;
       const sy = window.scrollY;
@@ -513,25 +576,11 @@ export function GraffitiLayer() {
       const dt = Math.min(48, Math.max(0, now - nozzle.t));
       const dist = Math.hypot(x - nozzle.x, y - nozzle.y);
       const steps = Math.max(1, Math.ceil(dist / (SPRAY_RADIUS * 0.3)));
-
-      // Lingering on one spot pools the paint until it runs
-      if (Math.hypot(x - dwell.x, y - dwell.y) > SPRAY_RADIUS * 0.8) {
-        dwell = { x, y, time: 0, drips: 0 };
-      } else dwell.time += dt;
-
-      // Flow tapers off the longer the can lingers, so a held spot keeps a
-      // feathered edge and builds speckle instead of a hard-edged disc
-      const flow = (dt * SPRAY_RATE) / (1 + dwell.time / 150);
-      const paint = Math.max(1, Math.round(flow / steps));
+      const paint = Math.max(1, Math.round((dt * SPRAY_RATE) / steps));
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       for (let s = 1; s <= steps; s++) {
         const t = s / steps;
-        current.points.push([
-          round1(nozzle.x + (x - nozzle.x) * t),
-          round1(nozzle.y + (y - nozzle.y) * t),
-          paint,
-        ]);
-        drawSprayPoint(ctx!, current, current.points.length - 1, cx, sy);
+        puff(current, nozzle.x + (x - nozzle.x) * t, nozzle.y + (y - nozzle.y) * t, paint);
       }
       eraseKeepOut(
         ctx!,
@@ -542,59 +591,122 @@ export function GraffitiLayer() {
         Math.max(nozzle.y, y) - sy + SPRAY_RADIUS * 2
       );
       nozzle = { x, y, t: now };
-
-      if (
-        dwell.drips < MAX_DRIPS_PER_SPOT &&
-        dwell.time > DRIP_AFTER + dwell.drips * DRIP_EVERY
-      ) {
-        dwell.drips++;
-        startDrip(current, x, y);
-      }
-
-      sprayFrame = requestAnimationFrame(sprayTick);
     }
 
-    function startDrip(stroke: Stroke, x: number, y: number) {
-      const drip: Drip = [
-        round1(x + (Math.random() - 0.5) * SPRAY_RADIUS * 1.2),
-        round1(y + SPRAY_RADIUS * 0.45),
-        Math.round(30 + Math.random() * 70),
-        round1(2.6 + Math.random() * 2.2),
-      ];
-      (stroke.drips ??= []).push(drip);
-      if (reducedMotion.matches) {
-        const cx = window.innerWidth / 2;
-        const sy = window.scrollY;
-        drawDrip(ctx!, drip, 0, drip[2], stroke.color, cx, sy);
-        eraseKeepOut(ctx!, keepOut, cx, sy, drip[1] - sy, drip[1] - sy + drip[2] + 8);
+    // One burst from the nozzle: drawn, stored, and added to the wet field
+    function puff(stroke: Stroke, x: number, y: number, paint: number) {
+      stroke.points.push([round1(x), round1(y), paint]);
+      drawSprayPoint(ctx!, stroke, stroke.points.length - 1, window.innerWidth / 2, window.scrollY);
+      const r = SPRAY_RADIUS;
+      const j0 = Math.max(0, Math.floor((y - r) / WET_CELL));
+      for (let i = Math.floor((x - r) / WET_CELL); i <= Math.floor((x + r) / WET_CELL); i++) {
+        for (let j = j0; j <= Math.floor((y + r) / WET_CELL); j++) {
+          const d2 = ((i + 0.5) * WET_CELL - x) ** 2 + ((j + 0.5) * WET_CELL - y) ** 2;
+          if (d2 > r * r) continue;
+          const wet = paint * sprayProfile(d2);
+          const key = cellKey(i, j);
+          const cell = wetField.get(key);
+          if (cell) {
+            cell.wet += wet;
+            cell.stroke = stroke;
+          } else wetField.set(key, { i, j, wet, stroke });
+        }
+      }
+    }
+
+    // Let the wet paint set, and start a drip from the heaviest pool that
+    // has gone past what the surface can hold
+    function dry(dt: number) {
+      const keep = 0.5 ** (dt / DRY_HALF_LIFE);
+      const alive = new Set(strokesRef.current);
+      let heaviest: WetCell | null = null;
+      for (const [key, cell] of wetField) {
+        cell.wet *= keep;
+        // Dry, undone, cleared or left behind on another page
+        if (cell.wet < 4 || !alive.has(cell.stroke)) wetField.delete(key);
+        else if (cell.wet > POOL && (!heaviest || cell.wet > heaviest.wet)) heaviest = cell;
+      }
+      if (heaviest) startRun(heaviest);
+    }
+
+    function startRun(pool: WetCell) {
+      const { stroke } = pool;
+      const px = (pool.i + 0.5) * WET_CELL;
+      const py = (pool.j + 0.5) * WET_CELL;
+
+      // Drips form side by side along a pool, never on top of one another
+      const runs = (stroke.runs ??= []);
+      const nearby = runs.filter(
+        ([[rx, ry]]) => Math.abs(rx - px) < SPRAY_RADIUS * 1.6 && Math.abs(ry - py) < SPRAY_RADIUS * 2
+      );
+      const x =
+        nearby.length < MAX_RUNS_PER_POOL
+          ? [0, -0.6, 0.6, -1.1, 1.1]
+              .map((o) => px + (o + (Math.random() - 0.5) * 0.4) * SPRAY_RADIUS)
+              .find(
+                (x) =>
+                  // Only where the paint itself has pooled, clear of earlier drips
+                  (cellAt(x, py)?.wet ?? 0) > POOL * 0.5 &&
+                  nearby.every(([[rx]]) => Math.abs(rx - x) > SPRAY_RADIUS * 0.8)
+              )
+          : undefined;
+      if (x === undefined) {
+        // The surface around it is already streaked; the pool just sets
+        pool.wet = POOL * 0.9;
         return;
       }
-      growing.set(drip, { stroke, start: performance.now(), shown: 0 });
-      if (!dripFrame) dripFrame = requestAnimationFrame(dripTick);
+
+      // It runs from the bottom edge of the wet paint in its own column
+      const i = Math.floor(x / WET_CELL);
+      let j = pool.j;
+      while (j - pool.j < 8 && (wetField.get(cellKey(i, j + 1))?.wet ?? 0) > POOL * 0.3) j++;
+      const y = (j + 1) * WET_CELL;
+
+      // The drip takes the pooled paint with it
+      // Uneven surfaces hold uneven amounts, so drips vary a lot in length
+      const excess = (pool.wet - POOL) / POOL;
+      const mass = Math.min(1.6, 0.3 + excess * 0.8 + Math.random() ** 2 * 0.9);
+      for (const cell of wetField.values()) {
+        const d2 = ((cell.i + 0.5) * WET_CELL - x) ** 2 + ((cell.j + 0.5) * WET_CELL - y) ** 2;
+        if (d2 < SPRAY_RADIUS * SPRAY_RADIUS) cell.wet *= 0.35;
+      }
+      const run = simulateRun(x, y, mass, Math.random, (rx, ry) => {
+        const cell = cellAt(rx, ry);
+        if (!cell) return 0;
+        const take = cell.wet * 0.25;
+        cell.wet -= take;
+        return (take / POOL) * 0.5;
+      });
+      runs.push(run);
+      if (!current) writeStrokes(window.location.pathname, strokesRef.current);
+      if (reducedMotion.matches) scheduleRedraw();
+      else running.set(run, { stroke, start: performance.now() });
     }
 
-    // Drips are stored at full length; this only animates how much is shown
-    function dripTick(now: number) {
-      dripFrame = 0;
-      const cx = window.innerWidth / 2;
-      const sy = window.scrollY;
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      for (const [drip, run] of growing) {
-        // Undone, cleared or left behind on another page
-        if (!strokesRef.current.includes(run.stroke)) {
-          growing.delete(drip);
-          continue;
+    // One frame loop for the nozzle, the drying paint and the running drips;
+    // it sleeps once the can is down, the paint has set and every drip stopped
+    function tick(now: number) {
+      loop = 0;
+      const dt = Math.min(48, Math.max(0, now - lastTick));
+      lastTick = now;
+      spray(now);
+      dry(dt);
+      if (running.size) {
+        for (const [run, { stroke, start }] of running) {
+          const done = (now - start) / RUN_STEP >= run.length - 1;
+          if (done || !strokesRef.current.includes(stroke)) running.delete(run);
         }
-        const length = drip[2];
-        const t = Math.min(1, Math.max(0, now - run.start) / (400 + length * 10));
-        const shown = length * (1 - (1 - t) ** 3); // gravity wins, then it dries
-        drawDrip(ctx!, drip, run.shown, shown, run.stroke.color, cx, sy);
-        const top = drip[1] - sy;
-        eraseKeepOut(ctx!, keepOut, cx, sy, top + run.shown - 8, top + shown + 8);
-        run.shown = shown;
-        if (t === 1) growing.delete(drip);
+        redraw();
       }
-      if (growing.size) dripFrame = requestAnimationFrame(dripTick);
+      if (current?.tool === "spray" || wetField.size || running.size) {
+        loop = requestAnimationFrame(tick);
+      }
+    }
+
+    function wake() {
+      if (loop) return;
+      lastTick = performance.now();
+      loop = requestAnimationFrame(tick);
     }
 
     function isEmptyAt(e: PointerEvent) {
@@ -617,13 +729,12 @@ export function GraffitiLayer() {
           tool: "spray",
           color: colorRef.current,
           seed: (Math.random() * 2 ** 32) >>> 0,
-          points: [[round1(x), round1(y), 12]],
+          points: [],
         };
         strokesRef.current.push(current);
         pointer = { x: e.clientX, y: e.clientY };
         nozzle = { x, y, t: performance.now() };
-        dwell = { x, y, time: 0, drips: 0 };
-        drawSprayPoint(ctx!, current, 0, window.innerWidth / 2, window.scrollY);
+        puff(current, x, y, 12);
         eraseKeepOut(
           ctx!,
           keepOut,
@@ -632,7 +743,7 @@ export function GraffitiLayer() {
           e.clientY - SPRAY_RADIUS * 2,
           e.clientY + SPRAY_RADIUS * 2
         );
-        sprayFrame = requestAnimationFrame(sprayTick);
+        wake();
         return;
       }
 
@@ -666,7 +777,6 @@ export function GraffitiLayer() {
 
     function onPointerUp() {
       if (!current) return;
-      cancelAnimationFrame(sprayFrame);
       current = null;
       strokesRef.current = trim(strokesRef.current);
       writeStrokes(window.location.pathname, strokesRef.current);
@@ -688,11 +798,11 @@ export function GraffitiLayer() {
 
     return () => {
       cancelAnimationFrame(frame);
-      cancelAnimationFrame(sprayFrame);
-      cancelAnimationFrame(dripFrame);
+      cancelAnimationFrame(loop);
       clearTimeout(settle);
       observer.disconnect();
-      growing.clear();
+      wetField.clear();
+      running.clear();
       root.style.cursor = "";
       redrawRef.current = () => {};
       relayoutRef.current = () => {};
