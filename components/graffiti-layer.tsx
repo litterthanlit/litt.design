@@ -28,11 +28,12 @@ const MAX_WIDTH = 7;
 const MAX_POINTS = 20000; // total across strokes; oldest strokes drop first
 const STORAGE_PREFIX = "litt:graffiti:";
 
-const SPRAY_RADIUS = 16;
+const SPRAY_RADIUS = 20; // solid body of the spray
+const OVERSPRAY = 1.6; // speckle reaches this far past the body
 const SPRAY_RATE = 1.1; // speckles per millisecond the nozzle is held down
-const DRIP_AFTER = 500; // ms lingering in one spot before the paint runs
-const DRIP_EVERY = 900; // ms of further lingering per extra drip
-const MAX_DRIPS_PER_SPOT = 3;
+const DRIP_AFTER = 350; // ms lingering in one spot before the paint runs
+const DRIP_EVERY = 600; // ms of further lingering per extra drip
+const MAX_DRIPS_PER_SPOT = 4;
 const MAX_CACHE_PIXELS = 12_000_000; // bigger spray strokes are drawn directly
 
 const KEEP_OUT_PAD = 10; // breathing room around text and elements
@@ -139,7 +140,7 @@ function toScreen([x, y]: Point | Drip, cx: number, scrollY: number) {
 
 // Document-space box a stroke can paint into, drips included
 function strokeBounds(stroke: Stroke): Rect {
-  const pad = stroke.tool === "spray" ? SPRAY_RADIUS + 2 : MAX_WIDTH;
+  const pad = stroke.tool === "spray" ? SPRAY_RADIUS * OVERSPRAY + 2 : MAX_WIDTH;
   let x0 = Infinity;
   let y0 = Infinity;
   let x1 = -Infinity;
@@ -201,20 +202,22 @@ function random(seed: number) {
   };
 }
 
-// Soft radial blob under the speckle, one per colour
+// Paint body: solid in the middle, feathered at the edge. One per colour
 const mistSprites = new Map<string, HTMLCanvasElement>();
 function mist(color: string) {
   let sprite = mistSprites.get(color);
   if (!sprite) {
     sprite = document.createElement("canvas");
-    sprite.width = sprite.height = 64;
+    sprite.width = sprite.height = 128;
     const g = sprite.getContext("2d")!;
-    const gradient = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    const gradient = g.createRadialGradient(64, 64, 0, 64, 64, 64);
     gradient.addColorStop(0, color);
-    gradient.addColorStop(0.45, `${color}80`);
+    gradient.addColorStop(0.45, `${color}e6`);
+    gradient.addColorStop(0.7, `${color}66`);
+    gradient.addColorStop(0.85, `${color}1f`);
     gradient.addColorStop(1, `${color}00`);
     g.fillStyle = gradient;
-    g.fillRect(0, 0, 64, 64);
+    g.fillRect(0, 0, 128, 128);
     mistSprites.set(color, sprite);
   }
   return sprite;
@@ -231,16 +234,19 @@ function drawSprayPoint(
   const paint = stroke.points[i][2];
   const r = SPRAY_RADIUS;
   const rand = random((stroke.seed ?? 0) ^ Math.imul(i + 1, 0x9e3779b1));
-  // Mist builds up wherever the can lingers, like real overspray
-  ctx.globalAlpha = Math.min(0.2, paint * 0.0035);
+  // The body goes on bold and builds to fully opaque wherever the can lingers
+  ctx.globalAlpha = Math.min(0.9, paint * 0.028 + Math.min(1, paint / 4) * 0.05);
   ctx.drawImage(mist(stroke.color), x - r, y - r, r * 2, r * 2);
   ctx.fillStyle = stroke.color;
   for (let d = 0; d < paint; d++) {
     const angle = rand() * Math.PI * 2;
-    // Rayleigh falloff: a dense core that thins out towards the edge
-    const dist = Math.min(r, r * 0.4 * Math.sqrt(-2 * Math.log(1 - rand() * 0.9999)));
-    const s = 0.5 + rand() * 1.1;
-    ctx.globalAlpha = 0.35 + rand() * 0.55;
+    // Rayleigh falloff: dense through the body, thinning into an overspray halo
+    const dist = Math.min(
+      r * OVERSPRAY,
+      r * 0.62 * Math.sqrt(-2 * Math.log(1 - rand() * 0.9999))
+    );
+    const s = 0.6 + rand() * 1.4;
+    ctx.globalAlpha = 0.55 + rand() * 0.45;
     ctx.fillRect(x + Math.cos(angle) * dist - s / 2, y + Math.sin(angle) * dist - s / 2, s, s);
   }
   ctx.globalAlpha = 1;
@@ -268,7 +274,7 @@ function drawDrip(
   if (to >= length) {
     // The bead of paint that collects at the bottom
     ctx.beginPath();
-    ctx.arc(x, y + to, width * 0.8, 0, Math.PI * 2);
+    ctx.arc(x, y + to, width * 0.95, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
   }
@@ -496,7 +502,7 @@ export function GraffitiLayer() {
     }
 
     // The can sprays on every frame it is held down, not only when it moves:
-    // paint per frame is fixed, so a fast sweep leaves a light dusting and a
+    // paint per frame is fixed, so a fast sweep leaves a lighter line and a
     // slow pass or a pause builds up solid colour
     function sprayTick(now: number) {
       if (!current || current.tool !== "spray") return;
@@ -506,8 +512,17 @@ export function GraffitiLayer() {
       const y = pointer.y + sy;
       const dt = Math.min(48, Math.max(0, now - nozzle.t));
       const dist = Math.hypot(x - nozzle.x, y - nozzle.y);
-      const steps = Math.max(1, Math.ceil(dist / (SPRAY_RADIUS * 0.35)));
-      const paint = Math.max(1, Math.round((dt * SPRAY_RATE) / steps));
+      const steps = Math.max(1, Math.ceil(dist / (SPRAY_RADIUS * 0.3)));
+
+      // Lingering on one spot pools the paint until it runs
+      if (Math.hypot(x - dwell.x, y - dwell.y) > SPRAY_RADIUS * 0.8) {
+        dwell = { x, y, time: 0, drips: 0 };
+      } else dwell.time += dt;
+
+      // Flow tapers off the longer the can lingers, so a held spot keeps a
+      // feathered edge and builds speckle instead of a hard-edged disc
+      const flow = (dt * SPRAY_RATE) / (1 + dwell.time / 150);
+      const paint = Math.max(1, Math.round(flow / steps));
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       for (let s = 1; s <= steps; s++) {
         const t = s / steps;
@@ -528,18 +543,12 @@ export function GraffitiLayer() {
       );
       nozzle = { x, y, t: now };
 
-      // Hold still long enough and the paint starts to run
-      if (Math.hypot(x - dwell.x, y - dwell.y) > SPRAY_RADIUS * 0.5) {
-        dwell = { x, y, time: 0, drips: 0 };
-      } else {
-        dwell.time += dt;
-        if (
-          dwell.drips < MAX_DRIPS_PER_SPOT &&
-          dwell.time > DRIP_AFTER + dwell.drips * DRIP_EVERY
-        ) {
-          dwell.drips++;
-          startDrip(current, x, y);
-        }
+      if (
+        dwell.drips < MAX_DRIPS_PER_SPOT &&
+        dwell.time > DRIP_AFTER + dwell.drips * DRIP_EVERY
+      ) {
+        dwell.drips++;
+        startDrip(current, x, y);
       }
 
       sprayFrame = requestAnimationFrame(sprayTick);
@@ -547,10 +556,10 @@ export function GraffitiLayer() {
 
     function startDrip(stroke: Stroke, x: number, y: number) {
       const drip: Drip = [
-        round1(x + (Math.random() - 0.5) * SPRAY_RADIUS * 0.8),
-        round1(y + SPRAY_RADIUS * 0.3),
-        Math.round(26 + Math.random() * 70),
-        round1(1.6 + Math.random() * 1.4),
+        round1(x + (Math.random() - 0.5) * SPRAY_RADIUS * 1.2),
+        round1(y + SPRAY_RADIUS * 0.45),
+        Math.round(30 + Math.random() * 70),
+        round1(2.6 + Math.random() * 2.2),
       ];
       (stroke.drips ??= []).push(drip);
       if (reducedMotion.matches) {
@@ -577,7 +586,7 @@ export function GraffitiLayer() {
           continue;
         }
         const length = drip[2];
-        const t = Math.min(1, Math.max(0, now - run.start) / (500 + length * 14));
+        const t = Math.min(1, Math.max(0, now - run.start) / (400 + length * 10));
         const shown = length * (1 - (1 - t) ** 3); // gravity wins, then it dries
         drawDrip(ctx!, drip, run.shown, shown, run.stroke.color, cx, sy);
         const top = drip[1] - sy;
