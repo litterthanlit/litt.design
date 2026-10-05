@@ -14,7 +14,7 @@ type Point = [x: number, y: number, size: number];
 // The path a drip ran: one point per simulation step, each with the trail
 // width there, so playback runs at the speed the paint actually moved
 type Run = Point[];
-type Stroke = { color: string; points: Point[]; tool?: "spray"; seed?: number; runs?: Run[] };
+type Stroke = { color: string; points: Point[]; tool?: "spray"; runs?: Run[] };
 type Rect = { x: number; y: number; w: number; h: number };
 type Tool = "marker" | "spray";
 
@@ -30,15 +30,18 @@ const MAX_WIDTH = 7;
 const MAX_POINTS = 20000; // total across strokes; oldest strokes drop first
 const STORAGE_PREFIX = "litt:graffiti:";
 
-const SPRAY_RADIUS = 20; // solid body of the spray
-const OVERSPRAY = 1.6; // speckle reaches this far past the body
-const SPRAY_RATE = 1.1; // speckles per millisecond the nozzle is held down
+const SPRAY_RADIUS = 20; // nominal radius of the spray cone where it meets the wall
+const SPRAY_SIGMA = SPRAY_RADIUS * 0.45; // spread of the cone's Gaussian
+const SPRAY_REACH = SPRAY_RADIUS * 1.6; // furthest any droplet lands
+const SPRAY_RATE = 1.1; // paint per millisecond the nozzle is held down
+const DEPOSIT = 0.04; // coverage one unit of paint adds at the centre of the cone
+const TILE = 128; // css px per tile of a spray stroke's paint
+const DROPLETS = 512; // device px per side of the droplet texture (power of two)
 const WET_CELL = 6; // px resolution of the wet-paint field
 const POOL = 460; // wet paint a spot can hold before it runs
 const DRY_HALF_LIFE = 1400; // ms for surface paint to half set
 const RUN_STEP = 1000 / 30; // ms of simulated time per stored run point
 const MAX_RUNS_PER_POOL = 3;
-const MAX_CACHE_PIXELS = 12_000_000; // bigger spray strokes are drawn directly
 
 const KEEP_OUT_PAD = 10; // breathing room around text and elements
 
@@ -144,7 +147,7 @@ function toScreen([x, y]: Point, cx: number, scrollY: number) {
 
 // Document-space box a stroke can paint into, drips included
 function strokeBounds(stroke: Stroke): Rect {
-  const pad = stroke.tool === "spray" ? SPRAY_RADIUS * OVERSPRAY + 2 : MAX_WIDTH;
+  const pad = stroke.tool === "spray" ? SPRAY_REACH + 2 : MAX_WIDTH;
   let x0 = Infinity;
   let y0 = Infinity;
   let x1 = -Infinity;
@@ -193,8 +196,7 @@ function drawMarker(ctx: CanvasRenderingContext2D, stroke: Stroke, cx: number, s
   for (let i = 1; i < pts.length; i++) drawSegment(ctx, stroke, i, cx, scrollY);
 }
 
-// Seeded PRNG (mulberry32): the speckle pattern is stored as a seed, so a
-// redraw scatters every dot exactly where it first landed
+// Seeded PRNG (mulberry32), so the droplet texture is identical on every load
 function random(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -206,35 +208,199 @@ function random(seed: number) {
   };
 }
 
-// A nozzle's spray cone lands as a Gaussian: dense at the centre with a long
-// soft tail, so overlapping passes blend rather than stack hard-edged discs.
-// The sprite spans 1.5× the spray radius; one per colour
-const MIST_SPAN = 1.5;
-const mistSprites = new Map<string, HTMLCanvasElement>();
-function mist(color: string) {
-  let sprite = mistSprites.get(color);
-  if (!sprite) {
-    sprite = document.createElement("canvas");
-    sprite.width = sprite.height = 128;
-    const g = sprite.getContext("2d")!;
-    const gradient = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-    const sigma = 0.45 / MIST_SPAN; // σ = 0.45 × spray radius
-    for (let t = 0; t <= 1; t += 0.125) {
-      const alpha = t >= 1 ? 0 : Math.exp(-((t / sigma) ** 2) / 2);
-      const hex = Math.round(alpha * 255).toString(16).padStart(2, "0");
-      gradient.addColorStop(t, `${color}${hex}`);
+// Spray paint is opaque droplets, not a translucent wash. Every spray stroke
+// keeps a coverage map of how much paint has landed on each pixel, and a pixel
+// shows solid colour once its coverage passes the threshold this texture gives
+// it. Droplets of varied size each get one threshold, so they appear whole:
+// light coverage reads as grain with the wall showing through, heavy coverage
+// as solid paint, and the far edge as scattered overspray. Tiled in document
+// space, so the grain stays put on the wall.
+let dropletCache: { scale: number; field: Float32Array } | null = null;
+function droplets(scale: number) {
+  if (dropletCache?.scale === scale) return dropletCache.field;
+  const rand = random(0x5eed);
+  const n = DROPLETS;
+  const field = new Float32Array(n * n);
+  // Fine grain between droplets: light coverage leaves it speckled and only
+  // heavy coverage fills it in solid
+  for (let i = 0; i < field.length; i++) field[i] = 0.2 + rand() * 1.1;
+  const count = Math.round((n * n) / (scale * scale * 4));
+  for (let k = 0; k < count; k++) {
+    const cx = rand() * n;
+    const cy = rand() * n;
+    const r = (0.35 + rand() ** 4 * 1.1) * scale; // mostly fine, a few fat drops
+    const v = rand();
+    for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) {
+      for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
+        if ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 > r * r) continue;
+        const i = (y & (n - 1)) * n + (x & (n - 1));
+        if (v < field[i]) field[i] = v;
+      }
     }
-    g.fillStyle = gradient;
-    g.fillRect(0, 0, 128, 128);
-    mistSprites.set(color, sprite);
   }
-  return sprite;
+  dropletCache = { scale, field };
+  return field;
 }
 
-// Wet-paint weight a puff leaves at a given squared distance from its centre,
-// matching the mist profile so drips form where the paint visibly pools
+// How the cone spreads one puff of paint over css px, with each row's
+// non-zero span so deposits skip the empty corners
+type Kernel = { r: number; size: number; w: Float32Array; spans: Int32Array };
+let kernelCache: Kernel | null = null;
+function sprayKernel(): Kernel {
+  if (kernelCache) return kernelCache;
+  const r = Math.ceil(SPRAY_REACH);
+  const size = r * 2 + 1;
+  const w = new Float32Array(size * size);
+  const spans = new Int32Array(size);
+  for (let y = -r; y <= r; y++) {
+    for (let x = -r; x <= r; x++) {
+      const d2 = x * x + y * y;
+      if (d2 > SPRAY_REACH ** 2) continue;
+      w[(y + r) * size + x + r] = sprayProfile(d2);
+      spans[y + r] = Math.max(spans[y + r], Math.abs(x));
+    }
+  }
+  kernelCache = { r, size, w, spans };
+  return kernelCache;
+}
+
+// Wet-paint weight a puff leaves at a given squared distance from its centre
 function sprayProfile(d2: number) {
-  return Math.exp(-d2 / (2 * (SPRAY_RADIUS * 0.45) ** 2));
+  return Math.exp(-d2 / (2 * SPRAY_SIGMA ** 2));
+}
+
+// A spray stroke's paint, in tiles that grow wherever it reaches. Coverage
+// is smooth, so it's tracked per css px; droplets are resolved per device px
+// only when a tile is flushed. While the stroke is live each tile keeps its
+// coverage and pixels; once finished only the rendered canvas is kept
+type Tile = {
+  tx: number;
+  ty: number;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  image: ImageData | null;
+  coverage: Float32Array | null;
+  dirty: [x0: number, y0: number, x1: number, y1: number] | null; // css px
+};
+type PaintLayer = {
+  size: number; // device px per tile
+  rgb: [number, number, number];
+  tiles: Map<number, Tile>;
+  applied: number; // stroke points already deposited
+  sealed: boolean;
+};
+
+function createLayer(color: string, size: number): PaintLayer {
+  const hex = parseInt(color.slice(1, 7), 16);
+  return {
+    size,
+    rgb: [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255],
+    tiles: new Map(),
+    applied: 0,
+    sealed: false,
+  };
+}
+
+function layerTile(layer: PaintLayer, tx: number, ty: number) {
+  const key = (tx + 32768) * 65536 + (ty + 32768);
+  let tile = layer.tiles.get(key);
+  if (!tile) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = layer.size;
+    const ctx = canvas.getContext("2d")!;
+    const image = ctx.createImageData(layer.size, layer.size);
+    const [r, g, b] = layer.rgb;
+    for (let i = 0; i < image.data.length; i += 4) {
+      image.data[i] = r;
+      image.data[i + 1] = g;
+      image.data[i + 2] = b;
+    }
+    tile = { tx, ty, canvas, ctx, image, coverage: new Float32Array(TILE * TILE), dirty: null };
+    layer.tiles.set(key, tile);
+  }
+  return tile;
+}
+
+// Land one puff of paint centred on (x, y) in document space
+function deposit(layer: PaintLayer, x: number, y: number, amount: number) {
+  const k = sprayKernel();
+  const cx = Math.round(x);
+  const cy = Math.round(y);
+  const x0 = cx - k.r;
+  const y0 = cy - k.r;
+  for (let ty = Math.floor(y0 / TILE); ty <= Math.floor((cy + k.r) / TILE); ty++) {
+    for (let tx = Math.floor(x0 / TILE); tx <= Math.floor((cx + k.r) / TILE); tx++) {
+      const tile = layerTile(layer, tx, ty);
+      const coverage = tile.coverage!;
+      const ox = tx * TILE;
+      const oy = ty * TILE;
+      const ay = Math.max(y0, oy);
+      const by = Math.min(cy + k.r, oy + TILE - 1);
+      const ax = Math.max(x0, ox);
+      const bx = Math.min(cx + k.r, ox + TILE - 1);
+      for (let gy = ay; gy <= by; gy++) {
+        const span = k.spans[gy - y0];
+        const kRow = (gy - y0) * k.size - x0;
+        const tRow = (gy - oy) * TILE - ox;
+        for (let gx = Math.max(cx - span, ax); gx <= Math.min(cx + span, bx); gx++) {
+          coverage[tRow + gx] += amount * k.w[kRow + gx];
+        }
+      }
+      const d = tile.dirty;
+      tile.dirty = d
+        ? [Math.min(d[0], ax - ox), Math.min(d[1], ay - oy), Math.max(d[2], bx - ox), Math.max(d[3], by - oy)]
+        : [ax - ox, ay - oy, bx - ox, by - oy];
+    }
+  }
+}
+
+// Resolve the droplets in a tile's dirty area and push them to its canvas
+function flush(layer: PaintLayer, tile: Tile) {
+  if (!tile.dirty) return;
+  const { size } = layer;
+  const scale = size / TILE;
+  const field = droplets(scale);
+  const mask = DROPLETS - 1;
+  const coverage = tile.coverage!;
+  const data = tile.image!.data;
+  const [x0, y0, x1, y1] = tile.dirty;
+  const dx0 = Math.floor(x0 * scale);
+  const dy0 = Math.floor(y0 * scale);
+  const dx1 = Math.min(size, Math.ceil((x1 + 1) * scale));
+  const dy1 = Math.min(size, Math.ceil((y1 + 1) * scale));
+  const ox = tile.tx * size;
+  const oy = tile.ty * size;
+  for (let dy = dy0; dy < dy1; dy++) {
+    const cRow = Math.min(TILE - 1, (dy / scale) | 0) * TILE;
+    const fRow = ((oy + dy) & mask) * DROPLETS;
+    for (let dx = dx0; dx < dx1; dx++) {
+      const c = coverage[cRow + Math.min(TILE - 1, (dx / scale) | 0)];
+      // Droplets are opaque: a pixel flips to solid paint just past its
+      // threshold, with a hair of ramp to soften the pixel edge
+      data[(dy * size + dx) * 4 + 3] = (c - field[fRow + ((ox + dx) & mask)]) * 6000 + 127.5;
+    }
+  }
+  tile.ctx.putImageData(tile.image!, 0, 0, dx0, dy0, dx1 - dx0, dy1 - dy0);
+  tile.dirty = null;
+}
+
+function drawLayer(
+  ctx: CanvasRenderingContext2D,
+  layer: PaintLayer,
+  cx: number,
+  scrollY: number,
+  dpr: number,
+  height: number
+) {
+  // Place tiles on whole device pixels so neighbours meet without seams
+  const left = Math.round(cx * dpr);
+  const top = Math.round(scrollY * dpr);
+  const side = layer.size / dpr;
+  for (const tile of layer.tiles.values()) {
+    const y = (tile.ty * layer.size - top) / dpr;
+    if (y > height || y + side < 0) continue;
+    ctx.drawImage(tile.canvas, (left + tile.tx * layer.size) / dpr, y, side, side);
+  }
 }
 
 // Run a drip down the wall. Paint on a vertical surface moves as a viscous
@@ -265,37 +431,6 @@ function simulateRun(
     if (m <= 0.06 || (step > 10 && v < 4)) break;
   }
   return run;
-}
-
-function drawSprayPoint(
-  ctx: CanvasRenderingContext2D,
-  stroke: Stroke,
-  i: number,
-  cx: number,
-  scrollY: number
-) {
-  const [x, y] = toScreen(stroke.points[i], cx, scrollY);
-  const paint = stroke.points[i][2];
-  const r = SPRAY_RADIUS;
-  const rand = random((stroke.seed ?? 0) ^ Math.imul(i + 1, 0x9e3779b1));
-  // Paint per puff is what the nozzle let out in that moment; coverage builds
-  // up wherever puffs overlap
-  ctx.globalAlpha = Math.min(0.9, paint * 0.028 + Math.min(1, paint / 4) * 0.05);
-  const span = r * MIST_SPAN;
-  ctx.drawImage(mist(stroke.color), x - span, y - span, span * 2, span * 2);
-  ctx.fillStyle = stroke.color;
-  for (let d = 0; d < paint; d++) {
-    const angle = rand() * Math.PI * 2;
-    // Rayleigh falloff: dense through the body, thinning into an overspray halo
-    const dist = Math.min(
-      r * OVERSPRAY,
-      r * 0.62 * Math.sqrt(-2 * Math.log(1 - rand() * 0.9999))
-    );
-    const s = 0.6 + rand() * 1.4;
-    ctx.globalAlpha = 0.55 + rand() * 0.45;
-    ctx.fillRect(x + Math.cos(angle) * dist - s / 2, y + Math.sin(angle) * dist - s / 2, s, s);
-  }
-  ctx.globalAlpha = 1;
 }
 
 // A drip's trail up to `shown` steps, tapering as it ran out of paint, with
@@ -330,17 +465,6 @@ function drawRun(
   ctx.beginPath();
   ctx.arc(hx, hy, hw * 0.75 + 0.8, 0, Math.PI * 2);
   ctx.fill();
-}
-
-function drawSpray(
-  ctx: CanvasRenderingContext2D,
-  stroke: Stroke,
-  cx: number,
-  scrollY: number,
-  shown?: (run: Run) => number | undefined
-) {
-  for (let i = 0; i < stroke.points.length; i++) drawSprayPoint(ctx, stroke, i, cx, scrollY);
-  for (const run of stroke.runs ?? []) drawRun(ctx, run, stroke.color, cx, scrollY, shown?.(run));
 }
 
 // Ring cursor the size of the spray, tinted with the current colour
@@ -447,33 +571,43 @@ export function GraffitiLayer() {
     // Drips still running, revealed at the speed they were simulated
     const running = new Map<Run, { stroke: Stroke; start: number }>();
 
-    // Finished spray strokes are thousands of dots; render each once into its
-    // own bitmap so scrolling only has to blit it
-    const sprayCache = new WeakMap<
-      Stroke,
-      { dpr: number; bounds: Rect; image: HTMLCanvasElement | null }
-    >();
+    // Each spray stroke's rendered paint. Built from its stored puffs on
+    // first sight (so a reload paints exactly what was sprayed), added to as
+    // the can sprays, then sealed down to plain canvases once it's finished
+    const layers = new WeakMap<Stroke, PaintLayer>();
 
-    function cachedSpray(stroke: Stroke) {
-      const hit = sprayCache.get(stroke);
-      if (hit && hit.dpr === dpr) return hit;
-      const bounds = strokeBounds(stroke);
-      const w = Math.ceil(bounds.w * dpr);
-      const h = Math.ceil(bounds.h * dpr);
-      let image: HTMLCanvasElement | null = null;
-      if (w > 0 && h > 0 && w * h <= MAX_CACHE_PIXELS) {
-        image = document.createElement("canvas");
-        image.width = w;
-        image.height = h;
-        const g = image.getContext("2d");
-        if (g) {
-          g.setTransform(dpr, 0, 0, dpr, 0, 0);
-          drawSpray(g, stroke, -bounds.x, bounds.y);
-        } else image = null;
+    function paintLayer(stroke: Stroke) {
+      const size = Math.round(TILE * dpr);
+      let layer = layers.get(stroke);
+      if (!layer || layer.size !== size || (layer.sealed && layer.applied < stroke.points.length)) {
+        layer = createLayer(stroke.color, size);
+        layers.set(stroke, layer);
       }
-      const entry = { dpr, bounds, image };
-      sprayCache.set(stroke, entry);
-      return entry;
+      const pts = stroke.points;
+      while (layer.applied < pts.length) {
+        // Puffs landing on the same css px only add up, so a held can's
+        // repeats merge into one deposit
+        const x = Math.round(pts[layer.applied][0]);
+        const y = Math.round(pts[layer.applied][1]);
+        let paint = 0;
+        while (
+          layer.applied < pts.length &&
+          Math.round(pts[layer.applied][0]) === x &&
+          Math.round(pts[layer.applied][1]) === y
+        ) {
+          paint += pts[layer.applied++][2];
+        }
+        deposit(layer, x, y, paint * DEPOSIT);
+      }
+      for (const tile of layer.tiles.values()) flush(layer, tile);
+      if (stroke !== current && !layer.sealed) {
+        for (const tile of layer.tiles.values()) {
+          tile.image = null;
+          tile.coverage = null;
+        }
+        layer.sealed = true;
+      }
+      return layer;
     }
 
     function resize() {
@@ -495,21 +629,12 @@ export function GraffitiLayer() {
       const offscreen = (b: Rect) => b.y - sy > h || b.y + b.h - sy < 0;
       for (const stroke of strokesRef.current) {
         if (stroke.tool === "spray") {
-          const live = stroke === current || stroke.runs?.some((r) => running.has(r));
-          if (!live) {
-            const { bounds, image } = cachedSpray(stroke);
-            if (offscreen(bounds)) continue;
-            if (image) {
-              ctx!.drawImage(image, bounds.x + cx, bounds.y - sy, image.width / dpr, image.height / dpr);
-            } else drawSpray(ctx!, stroke, cx, sy);
-            continue;
-          }
-          if (!offscreen(strokeBounds(stroke))) {
-            const now = performance.now();
-            drawSpray(ctx!, stroke, cx, sy, (r) => {
-              const run = running.get(r);
-              return run && (now - run.start) / RUN_STEP;
-            });
+          if (offscreen(strokeBounds(stroke))) continue;
+          drawLayer(ctx!, paintLayer(stroke), cx, sy, dpr, h);
+          const now = performance.now();
+          for (const r of stroke.runs ?? []) {
+            const run = running.get(r);
+            drawRun(ctx!, r, stroke.color, cx, sy, run && (now - run.start) / RUN_STEP);
           }
           continue;
         }
@@ -577,26 +702,17 @@ export function GraffitiLayer() {
       const dist = Math.hypot(x - nozzle.x, y - nozzle.y);
       const steps = Math.max(1, Math.ceil(dist / (SPRAY_RADIUS * 0.3)));
       const paint = Math.max(1, Math.round((dt * SPRAY_RATE) / steps));
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       for (let s = 1; s <= steps; s++) {
         const t = s / steps;
         puff(current, nozzle.x + (x - nozzle.x) * t, nozzle.y + (y - nozzle.y) * t, paint);
       }
-      eraseKeepOut(
-        ctx!,
-        keepOut,
-        cx,
-        sy,
-        Math.min(nozzle.y, y) - sy - SPRAY_RADIUS * 2,
-        Math.max(nozzle.y, y) - sy + SPRAY_RADIUS * 2
-      );
       nozzle = { x, y, t: now };
     }
 
-    // One burst from the nozzle: drawn, stored, and added to the wet field
+    // One burst from the nozzle: stored (and painted on the next frame) and
+    // added to the wet field
     function puff(stroke: Stroke, x: number, y: number, paint: number) {
       stroke.points.push([round1(x), round1(y), paint]);
-      drawSprayPoint(ctx!, stroke, stroke.points.length - 1, window.innerWidth / 2, window.scrollY);
       const r = SPRAY_RADIUS;
       const j0 = Math.max(0, Math.floor((y - r) / WET_CELL));
       for (let i = Math.floor((x - r) / WET_CELL); i <= Math.floor((x + r) / WET_CELL); i++) {
@@ -689,15 +805,15 @@ export function GraffitiLayer() {
       loop = 0;
       const dt = Math.min(48, Math.max(0, now - lastTick));
       lastTick = now;
+      const spraying = current?.tool === "spray";
       spray(now);
       dry(dt);
-      if (running.size) {
-        for (const [run, { stroke, start }] of running) {
-          const done = (now - start) / RUN_STEP >= run.length - 1;
-          if (done || !strokesRef.current.includes(stroke)) running.delete(run);
-        }
-        redraw();
+      const dripping = running.size > 0; // includes drips finishing this frame
+      for (const [run, { stroke, start }] of running) {
+        const done = (now - start) / RUN_STEP >= run.length - 1;
+        if (done || !strokesRef.current.includes(stroke)) running.delete(run);
       }
+      if (spraying || dripping) redraw();
       if (current?.tool === "spray" || wetField.size || running.size) {
         loop = requestAnimationFrame(tick);
       }
@@ -728,21 +844,12 @@ export function GraffitiLayer() {
         current = {
           tool: "spray",
           color: colorRef.current,
-          seed: (Math.random() * 2 ** 32) >>> 0,
           points: [],
         };
         strokesRef.current.push(current);
         pointer = { x: e.clientX, y: e.clientY };
         nozzle = { x, y, t: performance.now() };
         puff(current, x, y, 12);
-        eraseKeepOut(
-          ctx!,
-          keepOut,
-          window.innerWidth / 2,
-          window.scrollY,
-          e.clientY - SPRAY_RADIUS * 2,
-          e.clientY + SPRAY_RADIUS * 2
-        );
         wake();
         return;
       }
@@ -777,7 +884,9 @@ export function GraffitiLayer() {
 
     function onPointerUp() {
       if (!current) return;
+      const sprayed = current.tool === "spray";
       current = null;
+      if (sprayed) scheduleRedraw(); // seals the finished stroke's paint
       strokesRef.current = trim(strokesRef.current);
       writeStrokes(window.location.pathname, strokesRef.current);
       setCount(strokesRef.current.length);
