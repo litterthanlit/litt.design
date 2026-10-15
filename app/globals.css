@@ -1,224 +1,579 @@
 @import "tailwindcss";
+@import "@fontsource/hanken-grotesk/400.css";
+@import "@fontsource/geist-mono/400.css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-canvas: #fafafa;
-  --color-panel: #f5f5f5;
-  --color-line: rgba(0, 0, 0, 0.08);
-  --color-ink: #0a0a0a;
-  --color-muted: #737373;
-  --color-accent: #C2FF4D;
-  --font-sans: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-sans);
-  --font-body: var(--font-sans);
-
-  /* Type scale: three sizes. Hierarchy comes from colour and weight,
-     not size — titles are ink/medium, supporting text is muted. */
-  --text-intro: 1.125rem; /* 18px — the intro statement */
-  --text-intro--line-height: 1.6;
-  --text-intro--letter-spacing: -0.015em;
-  --text-body: 0.875rem; /* 14px — titles, descriptions, labels, links */
-  --text-body--line-height: 1.6;
-  --text-body--letter-spacing: -0.006em;
-  --text-meta: 0.75rem; /* 12px — dates, years, tags */
-  --text-meta--line-height: 1.4;
-  --text-meta--letter-spacing: -0.005em;
+  --color-litt-canvas: var(--litt-canvas);
+  --color-litt-surface-1: var(--litt-surface-1);
+  --color-litt-surface-2: var(--litt-surface-2);
+  --color-litt-surface-3: var(--litt-surface-3);
+  --color-litt-line: var(--litt-line);
+  --color-litt-line-strong: var(--litt-line-strong);
+  --color-litt-line-control: var(--litt-line-control);
+  --color-litt-fg: var(--litt-fg);
+  --color-litt-fg-muted: var(--litt-fg-muted);
+  --color-litt-fg-subtle: var(--litt-fg-subtle);
+  --color-litt-fg-disabled: var(--litt-fg-disabled);
+  --color-litt-accent: var(--litt-accent);
+  --color-litt-accent-hover: var(--litt-accent-hover);
+  --color-litt-accent-fg: var(--litt-accent-fg);
+  --color-litt-accent-tint: var(--litt-accent-tint);
+  --color-litt-focus: var(--litt-focus);
+  --color-litt-success: var(--litt-success);
+  --color-litt-warning: var(--litt-warning);
+  --color-litt-danger: var(--litt-danger);
+  --text-litt-display: var(--litt-type-display-size);
+  --text-litt-display--line-height: var(--litt-type-display-leading);
+  --text-litt-display--letter-spacing: var(--litt-type-display-tracking);
+  --text-litt-display--font-weight: var(--litt-weight);
+  --text-litt-h1: var(--litt-type-h1-size);
+  --text-litt-h1--line-height: var(--litt-type-h1-leading);
+  --text-litt-h1--letter-spacing: var(--litt-type-h1-tracking);
+  --text-litt-h1--font-weight: var(--litt-weight);
+  --text-litt-h2: var(--litt-type-h2-size);
+  --text-litt-h2--line-height: var(--litt-type-h2-leading);
+  --text-litt-h2--letter-spacing: var(--litt-type-h2-tracking);
+  --text-litt-h2--font-weight: var(--litt-weight);
+  --text-litt-h3: var(--litt-type-h3-size);
+  --text-litt-h3--line-height: var(--litt-type-h3-leading);
+  --text-litt-h3--letter-spacing: var(--litt-type-h3-tracking);
+  --text-litt-h3--font-weight: var(--litt-weight);
+  --text-litt-h4: var(--litt-type-h4-size);
+  --text-litt-h4--line-height: var(--litt-type-h4-leading);
+  --text-litt-h4--letter-spacing: var(--litt-type-h4-tracking);
+  --text-litt-h4--font-weight: var(--litt-weight);
+  --text-litt-reading: var(--litt-type-reading-size);
+  --text-litt-reading--line-height: var(--litt-type-reading-leading);
+  --text-litt-reading--letter-spacing: var(--litt-type-reading-tracking);
+  --text-litt-body: var(--litt-type-body-size);
+  --text-litt-body--line-height: var(--litt-type-body-leading);
+  --text-litt-body--letter-spacing: var(--litt-type-body-tracking);
+  --text-litt-small: var(--litt-type-small-size);
+  --text-litt-small--line-height: var(--litt-type-small-leading);
+  --text-litt-small--letter-spacing: var(--litt-type-small-tracking);
+  --text-litt-caption: var(--litt-type-caption-size);
+  --text-litt-caption--line-height: var(--litt-type-caption-leading);
+  --text-litt-caption--letter-spacing: var(--litt-type-caption-tracking);
+  --spacing-litt-section: var(--litt-section-y);
+  --spacing-litt-gutter: var(--litt-gutter);
+  --spacing-litt-control-sm: var(--litt-control-sm);
+  --spacing-litt-control-md: var(--litt-control-md);
+  --spacing-litt-control-lg: var(--litt-control-lg);
+  --spacing-litt-control-pad-sm: var(--litt-control-pad-sm);
+  --spacing-litt-control-pad-md: var(--litt-control-pad-md);
+  --spacing-litt-control-pad-lg: var(--litt-control-pad-lg);
+  --spacing-litt-control: var(--litt-control-gap);
+  --container-litt-reading: var(--litt-container-reading);
+  --container-litt-content: var(--litt-container-content);
+  --container-litt-wide: var(--litt-container-wide);
+  --radius-litt-control: var(--litt-radius-control);
+  --radius-litt-surface: var(--litt-radius-surface);
+  --radius-litt-pill: var(--litt-radius-pill);
+  --shadow-litt-tooltip: var(--litt-shadow-tooltip);
+  --shadow-litt-float: var(--litt-shadow-float);
+  --shadow-litt-modal: var(--litt-shadow-modal);
+  --shadow-litt-glow: var(--litt-glow);
+  --inset-shadow-litt-highlight: var(--litt-highlight);
+  --ease-litt: var(--litt-ease-out);
+  --ease-litt-responsive: var(--litt-ease-responsive);
+  --ease-litt-expressive: var(--litt-ease-expressive);
+  --font-litt-sans: var(--litt-font-sans);
+  --font-litt-mono: var(--litt-font-mono);
+  --ease-litt-out: var(--litt-ease-out);
 }
 
 :root {
-  color-scheme: light;
+    --litt-font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --litt-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --litt-weight: 400;
+    --litt-type-display-size: 2.5rem;
+    --litt-type-display-leading: 1.1;
+    --litt-type-display-tracking: -0.025em;
+    --litt-type-h1-size: 2rem;
+    --litt-type-h1-leading: 1.15;
+    --litt-type-h1-tracking: -0.022em;
+    --litt-type-h2-size: 1.75rem;
+    --litt-type-h2-leading: 1.2;
+    --litt-type-h2-tracking: -0.02em;
+    --litt-type-h3-size: 1.5rem;
+    --litt-type-h3-leading: 1.25;
+    --litt-type-h3-tracking: -0.018em;
+    --litt-type-h4-size: 1.25rem;
+    --litt-type-h4-leading: 1.3;
+    --litt-type-h4-tracking: -0.012em;
+    --litt-type-reading-size: 1.0625rem;
+    --litt-type-reading-leading: 1.65;
+    --litt-type-reading-tracking: -0.006em;
+    --litt-type-body-size: 0.9375rem;
+    --litt-type-body-leading: 1.55;
+    --litt-type-body-tracking: -0.003em;
+    --litt-type-small-size: 0.8125rem;
+    --litt-type-small-leading: 1.5;
+    --litt-type-small-tracking: 0em;
+    --litt-type-caption-size: 0.75rem;
+    --litt-type-caption-leading: 1.4;
+    --litt-type-caption-tracking: 0.01em;
+    --litt-measure: 65ch;
+    --litt-space-1: 4px;
+    --litt-space-2: 8px;
+    --litt-space-3: 12px;
+    --litt-space-4: 16px;
+    --litt-space-6: 24px;
+    --litt-space-8: 32px;
+    --litt-space-12: 48px;
+    --litt-space-16: 64px;
+    --litt-space-24: 96px;
+    --litt-space-32: 128px;
+    --litt-space-40: 160px;
+    --litt-section-y: 64px;
+    --litt-gutter: 16px;
+    --litt-grid-gap: 16px;
+    --litt-container-reading: 40rem;
+    --litt-container-content: 67.5rem;
+    --litt-container-wide: 80rem;
+    --litt-header-h: 64px;
+    --litt-radius-control: 4px;
+    --litt-radius-surface: 8px;
+    --litt-radius-pill: 999px;
+    --litt-hairline: 1px;
+    --litt-control-sm: 32px;
+    --litt-control-md: 44px;
+    --litt-control-lg: 56px;
+    --litt-control-pad-sm: 12px;
+    --litt-control-pad-md: 16px;
+    --litt-control-pad-lg: 24px;
+    --litt-control-text-sm: 0.8125rem;
+    --litt-control-text-md: 0.9375rem;
+    --litt-control-text-lg: 1rem;
+    --litt-control-gap: 8px;
+    --litt-control-group-gap: 12px;
+    --litt-dur-instant: 100ms;
+    --litt-ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --litt-press-scale: 0.98;
+    --litt-spring-responsive: 200ms 0;
+    --litt-dur-responsive: 425ms;
+    --litt-ease-responsive: linear(0, 0.0609, 0.1306, 0.2509, 0.3322, 0.4472, 0.5167, 0.6085, 0.6615, 0.7293, 0.7846, 0.8154, 0.854, 0.8753, 0.9017, 0.9163, 0.9342, 0.944, 0.956, 0.9626, 0.9707, 0.977, 0.9805, 0.9847, 0.987, 0.9898, 0.9914, 0.9932, 0.9943, 0.9955, 0.9965, 0.997, 0.9977, 0.998, 0.9984, 0.9987, 0.999, 0.9991, 0.9993, 0.9994, 1);
+    --litt-spring-expressive: 350ms 0.12;
+    --litt-dur-expressive: 529ms;
+    --litt-ease-expressive: linear(0, 0.0216, 0.0673, 0.1514, 0.2238, 0.2991, 0.3741, 0.4465, 0.5149, 0.5982, 0.6541, 0.7044, 0.7492, 0.7885, 0.8229, 0.8617, 0.886, 0.9067, 0.9242, 0.939, 0.9549, 0.9644, 0.9723, 0.9787, 0.9839, 0.9881, 0.9923, 0.9947, 0.9966, 0.998, 0.9991, 0.9998, 1.0005, 1.0009, 1.0011, 1.0012, 1.0012, 1.0012, 1.0012, 1.0011, 1);
+    --litt-exit: 0.75;
+    --litt-dur-exit-responsive: 150ms;
+    --litt-dur-exit-expressive: 263ms;
+    --litt-stagger: 40ms;
+    --litt-travel: 16px;
+    --litt-dismiss-distance: 0.25;
+    --litt-dismiss-velocity: 0.4;
+    --litt-glass-blur: 20px;
+    --litt-glass-saturate: 140%;
+    --litt-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  min-height: 100vh;
-  font-family: var(--font-sans), system-ui, sans-serif;
-  background:
-    radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.03) 1px, transparent 0) 0 0 / 24px 24px,
-    var(--color-canvas);
-  position: relative;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(194, 69, 45, 0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 80% 25%, rgba(25, 86, 219, 0.05) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 50% 85%, rgba(74, 103, 65, 0.05) 0%, transparent 70%);
-  filter: blur(60px);
-}
-
-/* In the base layer so utility classes (text-muted etc.) can override it */
 @layer base {
   a {
     color: inherit;
     text-decoration: none;
   }
-
-  /* One focus ring everywhere — keyboard only, never on mouse click */
-  :where(a, button, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-ink);
-    outline-offset: 3px;
-    border-radius: 4px;
+  html {
+    font-synthesis-weight: none;
+    font-family: var(--litt-font-sans);
+    font-size: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, h5, h6, b, strong, th {
+    font-weight: var(--litt-weight);
+  }
+  button, input, select, textarea {
+    border-radius: var(--litt-radius-control);
+  }
+  :focus-visible {
+    outline: 2px solid var(--litt-focus);
+    outline-offset: 2px;
   }
 }
 
-/* Text link: muted, darkens and gains a hairline underline on hover */
-.link {
-  color: var(--color-muted);
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-  text-decoration-color: transparent;
-  transition:
-    color 150ms ease-out,
-    text-decoration-color 150ms ease-out;
-}
-
-@media (hover: hover) {
-  .link:hover {
-    color: var(--color-ink);
-    text-decoration-color: rgb(10 10 10 / 0.3);
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --litt-dur-instant: 0ms;
+    --litt-dur-responsive: 0ms;
+    --litt-dur-expressive: 0ms;
+    --litt-dur-exit-responsive: 0ms;
+    --litt-dur-exit-expressive: 0ms;
+    --litt-stagger: 0ms;
+    --litt-travel: 0px;
+    --litt-press-scale: 1;
   }
 }
 
-.link:focus-visible {
-  color: var(--color-ink);
+@media (min-width: 40rem) {
+  :root {
+    --litt-section-y: 96px;
+    --litt-gutter: 24px;
+    --litt-grid-gap: 24px;
+  }
 }
 
-::selection {
-  background: rgba(0, 0, 0, 0.08);
+@media (min-width: 64rem) {
+  :root {
+    --litt-section-y: 128px;
+    --litt-gutter: 32px;
+  }
+}
+  :root, [data-theme="light"], .light {
+    --litt-canvas: #fafbfc;
+    --litt-surface-1: #ffffff;
+    --litt-surface-2: #f4f5f7;
+    --litt-surface-3: #ebedf0;
+    --litt-line: #e3e5e9;
+    --litt-line-strong: #cfd2d8;
+    --litt-line-control: #82868e;
+    --litt-fg: #0e0f11;
+    --litt-fg-muted: #3c3f45;
+    --litt-fg-subtle: #64686f;
+    --litt-fg-disabled: #9a9ea6;
+    --litt-accent: #1a73d5;
+    --litt-accent-hover: #0961bb;
+    --litt-accent-fg: #ffffff;
+    --litt-accent-tint: #e1f0ff;
+    --litt-focus: #1a73d5;
+    --litt-success: #007c3b;
+    --litt-warning: #9c5a00;
+    --litt-danger: #be2e31;
+    --litt-glass-bg: rgba(255, 255, 255, 0.72);
+    --litt-glass-bg-solid: rgba(255, 255, 255, 0.94);
+    --litt-glass-border: rgba(14, 15, 17, 0.07);
+    --litt-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --litt-shadow-tooltip: 0 0 2px rgba(14, 15, 17, 0.08), 0 0 0 1px rgba(14, 15, 17, 0.06);
+    --litt-shadow-float: 0 0 8px rgba(14, 15, 17, 0.08), 0 0 24px rgba(14, 15, 17, 0.06), 0 0 0 1px rgba(14, 15, 17, 0.06);
+    --litt-shadow-modal: 0 0 40px rgba(14, 15, 17, 0.10), 0 0 72px rgba(14, 15, 17, 0.06), 0 0 0 1px rgba(14, 15, 17, 0.06);
+    --litt-light-strength: 12%;
+    --litt-glow-strength: 28%;
+    --litt-grain-opacity: 0.02;
+    color-scheme: light;
+}
+  [data-theme="dark"], .dark {
+    --litt-canvas: #08090a;
+    --litt-surface-1: #0f1011;
+    --litt-surface-2: #161719;
+    --litt-surface-3: #1c1e20;
+    --litt-line: #232529;
+    --litt-line-strong: #313439;
+    --litt-line-control: #656970;
+    --litt-fg: #f7f8f9;
+    --litt-fg-muted: #d0d6e0;
+    --litt-fg-subtle: #8a8f98;
+    --litt-fg-disabled: #62666d;
+    --litt-accent: #4c9fff;
+    --litt-accent-hover: #6bb3ff;
+    --litt-accent-fg: #08090a;
+    --litt-accent-tint: #0e2440;
+    --litt-focus: #4c9fff;
+    --litt-success: #4bc680;
+    --litt-warning: #e19b1b;
+    --litt-danger: #ff756f;
+    --litt-glass-bg: rgba(15, 16, 17, 0.72);
+    --litt-glass-bg-solid: rgba(15, 16, 17, 0.94);
+    --litt-glass-border: rgba(255, 255, 255, 0.08);
+    --litt-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --litt-shadow-tooltip: 0 0 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.5);
+    --litt-shadow-float: 0 0 8px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.5);
+    --litt-shadow-modal: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 72px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.5);
+    --litt-light-strength: 22%;
+    --litt-glow-strength: 40%;
+    --litt-grain-opacity: 0.04;
+    color-scheme: dark;
 }
 
-.grain {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23000000' fill-opacity='0.08'%3E%3Ccircle cx='12' cy='24' r='1'/%3E%3Ccircle cx='42' cy='67' r='1'/%3E%3Ccircle cx='87' cy='16' r='1'/%3E%3Ccircle cx='129' cy='44' r='1'/%3E%3Ccircle cx='145' cy='102' r='1'/%3E%3Ccircle cx='28' cy='134' r='1'/%3E%3Ccircle cx='76' cy='118' r='1'/%3E%3Ccircle cx='112' cy='150' r='1'/%3E%3C/g%3E%3C/svg%3E");
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"], .light) {
+    --litt-canvas: #08090a;
+    --litt-surface-1: #0f1011;
+    --litt-surface-2: #161719;
+    --litt-surface-3: #1c1e20;
+    --litt-line: #232529;
+    --litt-line-strong: #313439;
+    --litt-line-control: #656970;
+    --litt-fg: #f7f8f9;
+    --litt-fg-muted: #d0d6e0;
+    --litt-fg-subtle: #8a8f98;
+    --litt-fg-disabled: #62666d;
+    --litt-accent: #4c9fff;
+    --litt-accent-hover: #6bb3ff;
+    --litt-accent-fg: #08090a;
+    --litt-accent-tint: #0e2440;
+    --litt-focus: #4c9fff;
+    --litt-success: #4bc680;
+    --litt-warning: #e19b1b;
+    --litt-danger: #ff756f;
+    --litt-glass-bg: rgba(15, 16, 17, 0.72);
+    --litt-glass-bg-solid: rgba(15, 16, 17, 0.94);
+    --litt-glass-border: rgba(255, 255, 255, 0.08);
+    --litt-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --litt-shadow-tooltip: 0 0 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.5);
+    --litt-shadow-float: 0 0 8px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.5);
+    --litt-shadow-modal: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 72px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.5);
+    --litt-light-strength: 22%;
+    --litt-glow-strength: 40%;
+    --litt-grain-opacity: 0.04;
+    color-scheme: dark;
+  }
+}
+  :root, [data-theme], .dark, .light {
+    --litt-light: radial-gradient(120% 70% at 50% -10%, color-mix(in oklab, var(--litt-accent) var(--litt-light-strength), transparent) 0%, transparent 65%);
+    --litt-glow: 0 0 0 1px color-mix(in oklab, var(--litt-accent) 55%, transparent), 0 0 24px color-mix(in oklab, var(--litt-accent) var(--litt-glow-strength), transparent);
+    --litt-focus-ring: 0 0 0 2px var(--litt-canvas), 0 0 0 4px var(--litt-focus);
 }
 
-/* Section label: body size, muted, sentence case */
-.eyebrow {
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  letter-spacing: var(--text-body--letter-spacing);
-  font-weight: 400;
-  color: var(--color-muted);
+@supports not (color: color-mix(in oklab, red, blue)) {
+  :root, [data-theme], .dark, .light {
+    --litt-light: none;
+    --litt-glow: 0 0 0 1px var(--litt-accent);
+  }
 }
 
-/* Metadata: small, semibold, 55% ink (~4.6:1 contrast on the canvas) */
-.meta {
-  font-size: var(--text-meta);
-  line-height: var(--text-meta--line-height);
-  letter-spacing: var(--text-meta--letter-spacing);
-  font-weight: 600;
-  color: rgb(10 10 10 / 0.55);
-  font-variant-numeric: tabular-nums;
+@layer components {
+  .litt-glass {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--litt-radius-surface);
+  }
+  .litt-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--litt-glass-bg);
+    -webkit-backdrop-filter: blur(var(--litt-glass-blur)) saturate(var(--litt-glass-saturate));
+    backdrop-filter: blur(var(--litt-glass-blur)) saturate(var(--litt-glass-saturate));
+    box-shadow: inset 0 0 0 1px var(--litt-glass-border), var(--litt-highlight), var(--litt-glass-shadow, var(--litt-shadow-float));
+    pointer-events: none;
+  }
+  .litt-raised {
+    background: var(--litt-surface-1);
+    border-radius: var(--litt-radius-surface);
+    box-shadow: inset 0 0 0 1px var(--litt-line), var(--litt-highlight);
+  }
+  .litt-trim {
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+  }
+  .litt-lit {
+    background-image: var(--litt-light);
+    background-repeat: no-repeat;
+  }
+  .litt-grain {
+    position: relative;
+  }
+  .litt-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: var(--litt-grain);
+    opacity: var(--litt-grain-opacity);
+    pointer-events: none;
+  }
+  .litt-grain-fade::after {
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 95%);
+    mask-image: linear-gradient(to bottom, black 30%, transparent 95%);
+  }
 }
 
-.section-shell {
-  @apply mx-auto w-full max-w-[1200px] px-5 md:px-8 lg:px-12;
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .litt-glass::before {
+    background: var(--litt-glass-bg-solid);
+  }
 }
 
-.content-section {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 860px;
+@media (prefers-reduced-transparency: reduce) {
+  .litt-glass::before {
+    background: var(--litt-surface-1);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
-/* --- View Transition Recipes --- */
 
-:root {
-  --duration-exit: 150ms;
-  --duration-enter: 210ms;
-  --duration-move: 400ms;
-}
+/* ------------------------------------------------------------------------
+   litt.design on litt.md: the site layer
 
-@keyframes fade {
-  from { filter: blur(3px); opacity: 0; }
-  to { filter: blur(0); opacity: 1; }
-}
+   Everything above this line is litt's, installed from the registry. Never
+   edit it. Everything below names --litt-* tokens only: no hex, no rgba of a
+   hard-coded color, no radius off the scale, no duration of its own.
 
-@keyframes slide {
-  from { translate: var(--slide-offset); }
-  to { translate: 0; }
-}
+   Token plan
+   Accent:          the installed --litt-accent (Q2 is still open: the old lime
+                    reads 1.2:1 on the light canvas, so it cannot be a link or
+                    the focus ring there).
+   Light source:    one, from the top of the page, over the intro (.site-light).
+   Glass:           the sticky header and toasts. Nothing else floats.
+   Primary action:  "Email Nick", the one accent fill + glow in a view.
+   Type steps:      display once (the intro), h4 section labels, body titles,
+                    small descriptions, mono caption for years and dates.
+   Layout:          12 columns. Sections are a 3/9 split: label left, content
+                    right. Left-aligned. One centered closing statement.
+   Specific detail: a year of commits drawn in the same hairline grid as the
+                    page, read in Geist Mono.
+   ------------------------------------------------------------------------ */
 
-@keyframes slide-y {
-  from { transform: translateY(var(--slide-y-offset, 10px)); }
-  to { transform: translateY(0); }
-}
+@layer base {
+  body {
+    min-height: 100dvh;
+    background: var(--litt-canvas);
+    color: var(--litt-fg-muted);
+    font-family: var(--litt-font-sans);
+    font-size: var(--litt-type-body-size);
+    line-height: var(--litt-type-body-leading);
+    letter-spacing: var(--litt-type-body-tracking);
+  }
 
-/* Fade */
-::view-transition-old(.fade-out) {
-  animation: var(--duration-exit) ease-in fade reverse;
-}
-::view-transition-new(.fade-in) {
-  animation: var(--duration-enter) ease-out var(--duration-exit) both fade;
-}
-
-/* Slide vertical */
-::view-transition-old(.slide-down) {
-  animation:
-    var(--duration-exit) ease-out both fade reverse,
-    var(--duration-exit) ease-out both slide-y reverse;
-}
-::view-transition-new(.slide-up) {
-  animation:
-    var(--duration-enter) ease-in var(--duration-exit) both fade,
-    var(--duration-move) ease-in both slide-y;
+  ::selection {
+    background: color-mix(in oklab, var(--litt-accent) 22%, transparent);
+  }
 }
 
-/* Directional navigation */
+@layer components {
+  /* The page container. Matches the header's wrap, so every edge lines up. */
+  .shell {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--litt-container-wide);
+    padding-inline: var(--litt-gutter);
+  }
+
+  /* A section starts one --section-y below the last (P7). The last one on a
+     page adds .section-end so the page closes with the same air. */
+  .section {
+    padding-top: var(--litt-section-y);
+  }
+  .section-end {
+    padding-bottom: var(--litt-section-y);
+  }
+
+  /* The default composition: a 3/9 split. Label in columns 1-3 (sticky on
+     desktop), content in columns 4-12. Stacks on phones and tablets. */
+  .split {
+    display: grid;
+    row-gap: var(--litt-space-6);
+  }
+  @media (min-width: 64rem) {
+    .split {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--litt-grid-gap);
+    }
+    .split > .split-label {
+      grid-column: 1 / span 3;
+      align-self: start;
+      position: sticky;
+      top: calc(var(--litt-header-h) + var(--litt-space-6));
+    }
+    .split > .split-body {
+      grid-column: 4 / span 9;
+    }
+  }
+
+  /* Text link: muted, turns fg with a hairline underline on hover.
+     Instant tier, color only. */
+  .link {
+    color: var(--litt-fg-muted);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: transparent;
+    transition-property: color, text-decoration-color;
+    transition-duration: var(--litt-dur-instant);
+    transition-timing-function: var(--litt-ease-out);
+  }
+  @media (hover: hover) {
+    .link:hover {
+      color: var(--litt-fg);
+      text-decoration-color: var(--litt-line-strong);
+    }
+  }
+  .link:focus-visible {
+    color: var(--litt-fg);
+  }
+
+  /* Years, dates, counts: Geist Mono at caption size, subtle. */
+  .meta {
+    font-family: var(--litt-font-mono);
+    font-size: var(--litt-type-caption-size);
+    line-height: var(--litt-type-caption-leading);
+    letter-spacing: 0;
+    color: var(--litt-fg-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The one light source (P2): a static radial from the top of the page,
+     tinted by the accent, with a trace of grain that fades out below it.
+     It never moves (P5). The element also carries litt-lit litt-grain
+     litt-grain-fade. */
+  .site-light {
+    pointer-events: none;
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: -1;
+    height: 45rem;
+    border-radius: 0;
+  }
+}
+
+/* --- View transitions -----------------------------------------------------
+   Page to page is the responsive tier: the new page enters by --travel on the
+   responsive spring, the old one leaves at the exit time and never bounces.
+   Transform and opacity only. Reduced motion zeroes every token, and the
+   block below turns the animations off outright. */
+
+@keyframes litt-vt-fade-in {
+  from { opacity: 0; }
+}
+@keyframes litt-vt-fade-out {
+  to { opacity: 0; }
+}
+@keyframes litt-vt-from-right {
+  from { transform: translateX(var(--litt-travel)); }
+}
+@keyframes litt-vt-from-left {
+  from { transform: translateX(calc(var(--litt-travel) * -1)); }
+}
+@keyframes litt-vt-to-left {
+  to { transform: translateX(calc(var(--litt-travel) * -1)); }
+}
+@keyframes litt-vt-to-right {
+  to { transform: translateX(var(--litt-travel)); }
+}
+
 ::view-transition-old(.nav-forward) {
-  --slide-offset: -60px;
   animation:
-    var(--duration-exit) ease-in both fade reverse,
-    var(--duration-move) ease-in-out both slide reverse;
+    var(--litt-dur-exit-responsive) var(--litt-ease-out) both litt-vt-fade-out,
+    var(--litt-dur-exit-responsive) var(--litt-ease-out) both litt-vt-to-left;
 }
 ::view-transition-new(.nav-forward) {
-  --slide-offset: 60px;
   animation:
-    var(--duration-enter) ease-out var(--duration-exit) both fade,
-    var(--duration-move) ease-in-out both slide;
+    var(--litt-dur-responsive) var(--litt-ease-responsive) var(--litt-dur-exit-responsive) both litt-vt-fade-in,
+    var(--litt-dur-responsive) var(--litt-ease-responsive) var(--litt-dur-exit-responsive) both litt-vt-from-right;
 }
 ::view-transition-old(.nav-back) {
-  --slide-offset: 60px;
   animation:
-    var(--duration-exit) ease-in both fade reverse,
-    var(--duration-move) ease-in-out both slide reverse;
+    var(--litt-dur-exit-responsive) var(--litt-ease-out) both litt-vt-fade-out,
+    var(--litt-dur-exit-responsive) var(--litt-ease-out) both litt-vt-to-right;
 }
 ::view-transition-new(.nav-back) {
-  --slide-offset: -60px;
   animation:
-    var(--duration-enter) ease-out var(--duration-exit) both fade,
-    var(--duration-move) ease-in-out both slide;
+    var(--litt-dur-responsive) var(--litt-ease-responsive) var(--litt-dur-exit-responsive) both litt-vt-fade-in,
+    var(--litt-dur-responsive) var(--litt-ease-responsive) var(--litt-dur-exit-responsive) both litt-vt-from-left;
 }
 
-/* Shared element morph */
-::view-transition-group(.morph) {
-  animation-duration: var(--duration-move);
-}
-::view-transition-image-pair(.morph) {
-  animation-name: via-blur;
-}
-@keyframes via-blur {
-  30% { filter: blur(3px); }
-}
-
-/* Text morph (avoids raster scaling artifacts) */
+/* A shared title moves between pages on the responsive tier, as text, never
+   as a scaled bitmap. */
 ::view-transition-group(.text-morph) {
-  animation-duration: var(--duration-move);
+  animation-duration: var(--litt-dur-responsive);
+  animation-timing-function: var(--litt-ease-responsive);
 }
 ::view-transition-old(.text-morph) {
   display: none;
@@ -229,45 +584,11 @@ body::before {
   object-position: left top;
 }
 
-/* Persistent element isolation */
-::view-transition-group(.persistent-nav) {
-  animation: none;
-  z-index: 100;
-}
-::view-transition-old(.persistent-nav) {
-  display: none;
-}
-::view-transition-new(.persistent-nav) {
-  animation: none;
-}
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
   ::view-transition-old(*),
   ::view-transition-new(*),
   ::view-transition-group(*) {
     animation-duration: 0s !important;
     animation-delay: 0s !important;
-  }
-}
-
-/* Graffiti toolbar: rises in once the first stroke lands */
-.graffiti-toolbar {
-  animation: graffiti-in 280ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes graffiti-in {
-  from {
-    opacity: 0;
-    translate: 0 8px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .graffiti-toolbar {
-    animation: none;
   }
 }

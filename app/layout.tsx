@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
-import { DitherBackground } from "@/components/dither-background";
 import { GraffitiLayer } from "@/components/graffiti-layer";
+import { themeScript } from "@/components/theme-switch";
+import { TooltipProvider } from "@/components/litt/tooltip";
+import { Toaster } from "@/components/litt/toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,19 +32,30 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  colorScheme: "light dark",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <body className="bg-canvas text-ink antialiased">
-        <DitherBackground />
-        <GraffitiLayer />
-        <div className="grain" aria-hidden="true" />
-        <SiteHeader />
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="relative isolate">
+        {/* The one light source: static, from the top (P2, P5). */}
+        <div aria-hidden="true" className="site-light litt-lit litt-grain litt-grain-fade" />
+        <TooltipProvider>
+          <Toaster>
+            <GraffitiLayer />
+            <SiteHeader />
+            {children}
+          </Toaster>
+        </TooltipProvider>
       </body>
     </html>
   );

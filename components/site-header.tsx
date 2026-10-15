@@ -1,74 +1,45 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { Header, type HeaderLink } from "@/components/litt/header";
+
+// The sticky glass header (P3: it floats, so it earns glass). A text wordmark
+// at 400 (P9) replaces the looping logo GIF: litt has no autoplay loops.
+// /art and /studies are separate apps on this domain, so they stay plain <a>.
+
+const EXTERNAL = new Set(["/art", "/studies"]);
 
 export function SiteHeader() {
-  const [showTooltip, setShowTooltip] = useState(false);
-  const reduceMotion = useReducedMotion();
+  const pathname = usePathname();
+
+  const links: HeaderLink[] = [
+    { label: "Work", href: "/#work", current: pathname.startsWith("/work") },
+    { label: "Art", href: "/art" },
+    { label: "Studies", href: "/studies" },
+    { label: "Writing", href: "/#writing", current: pathname.startsWith("/writing") },
+  ];
 
   return (
-    <header className="relative z-50" style={{ viewTransitionName: "site-header" }}>
-      <div className="section-shell flex items-center justify-between py-5">
-        <div
-          className="relative"
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
-          onFocus={() => setShowTooltip(true)}
-          onBlur={() => setShowTooltip(false)}
+    <Header
+      navFrom="sm"
+      wordmark={
+        <Link
+          href="/"
+          {...({ transitionTypes: ["nav-back"] } as object)}
+          className="litt-trim text-litt-body text-litt-fg"
         >
-          <Link href="/" {...{ transitionTypes: ["nav-back"] } as any} aria-label="Home">
-            <Image
-              src="/logo.gif"
-              alt="litt.design"
-              width={80}
-              height={42}
-              unoptimized
-              priority
-            />
-          </Link>
-
-          <AnimatePresence>
-            {showTooltip && (
-              <motion.span
-                className="absolute left-full top-1/2 ml-3 whitespace-nowrap rounded-full border border-[rgba(0,0,0,0.08)] bg-white px-3.5 py-1.5 text-[12px] text-[#0a0a0a]"
-                initial={
-                  reduceMotion
-                    ? { opacity: 0 }
-                    : { opacity: 0, x: -6, scale: 0.96, filter: "blur(4px)" }
-                }
-                animate={{ opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }}
-                exit={
-                  reduceMotion
-                    ? { opacity: 0 }
-                    : { opacity: 0, x: -4, scale: 0.97, filter: "blur(2px)" }
-                }
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              >
-                frame by frame
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <nav className="flex items-center gap-6">
-          <Link href="/#work" className="link text-body">
-            Work
-          </Link>
-          {/* /art and /studies are separate apps on this domain: plain <a>, not <Link> */}
-          <a href="/art" className="link text-body">
-            Art
-          </a>
-          <a href="/studies" className="link text-body">
-            Studies
-          </a>
-          <Link href="/#writing" className="link text-body">
-            Writing
-          </Link>
-        </nav>
-      </div>
-    </header>
+          litt.design
+        </Link>
+      }
+      links={links}
+      renderLink={(link, props) =>
+        EXTERNAL.has(link.href) ? (
+          <a href={link.href} {...props} />
+        ) : (
+          <Link href={link.href} {...props} />
+        )
+      }
+    />
   );
 }
