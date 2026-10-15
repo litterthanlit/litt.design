@@ -1,745 +1,721 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+/**
+ * Craft: twelve small interaction studies, tuned to litt.md's three motion tiers.
+ *
+ * - Hover and press are the instant tier (CSS, color and scale only).
+ * - Anything that toggles, morphs or settles is the responsive spring (bounce 0).
+ * - One study, Cascade, is the page's expressive moment (bounce 0.12). Nothing else bounces.
+ * - Exits are quicker than entrances and never bounce. Only transform and opacity animate.
+ * - Dragging follows the pointer one to one. On release the object springs back on the
+ *   responsive tier with the speed it was let go at.
+ * - Every timing comes from the hooks in lib/litt/motion, so reduced motion works everywhere.
+ *
+ * The page itself has no entrance, no scroll reveal and no loop. Each study moves only when
+ * you act on it.
+ */
+import { useId, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import {
+  AnimatePresence,
+  animate,
   motion,
   useMotionValue,
-  useSpring,
-  useTransform,
-  AnimatePresence,
-  useReducedMotion,
-} from "framer-motion";
+  type AnimationPlaybackControls,
+  type MotionValue,
+  type Transition,
+  type ValueAnimationTransition,
+  type Variants,
+} from "motion/react";
+import { Button } from "@/components/litt/button";
+import { Card, CardBody, CardCover, CardDescription, CardLink, CardTitle } from "@/components/litt/card";
+import { CheckIcon, PlusIcon } from "@/components/litt/icons";
+import { Segmented } from "@/components/litt/segmented";
+import { Tag } from "@/components/litt/tag";
+import { useExit, useStagger, useTransition, useTravel } from "@/lib/litt/motion";
 
-// Seeded random for deterministic droplet configs
-function seededRandom(seed: number) {
-  const x = Math.sin(seed * 9301 + 49297) * 49297;
-  return x - Math.floor(x);
+/* -------------------------------------------------------------------------- */
+/* Shared helpers                                                             */
+/* -------------------------------------------------------------------------- */
+
+type Tier = "instant" | "responsive" | "expressive";
+
+/** A raised object on the stage: the line-strong hairline and the top highlight, and no shadow. Add a fill. */
+const OBJECT = "rounded-litt-surface shadow-[inset_0_0_0_1px_var(--litt-line-strong),var(--litt-highlight)]";
+
+/** A fill that fades at the instant tier. The OS tap flash is off, so it does not double the press. */
+const FADE = "transition-colors duration-(--litt-dur-instant) ease-litt [-webkit-tap-highlight-color:transparent]";
+
+const clamp = (n: number, lo = -1, hi = 1) => Math.min(hi, Math.max(lo, n));
+
+/** Spring a value to a target on a tier, starting from the speed it already has. */
+function go(value: MotionValue<number>, to: number, how: Transition, velocity = value.getVelocity()) {
+  return animate(value, to, { ...how, velocity } as ValueAnimationTransition<number>);
 }
 
-const DROPLET_CONFIGS = Array.from({ length: 5 }, (_, i) => ({
-  width: 10 + seededRandom(i * 3) * 8,
-  height: 10 + seededRandom(i * 3 + 1) * 8,
-  yOffset: -20 - seededRandom(i * 3 + 2) * 16,
-  xOffset: (seededRandom(i * 5) - 0.5) * 20,
-}));
+/**
+ * Springs values back to rest on the responsive tier. It never bounces, and it starts from the
+ * speed the object was released at. `stop` hands the values back to a new grab.
+ */
+function useSpringBack(...values: MotionValue<number>[]) {
+  const enter = useTransition("responsive");
+  const running = useRef<AnimationPlaybackControls[]>([]);
 
-/* ─────────────────────────────────────────────
-   Gallery shell
-   ───────────────────────────────────────────── */
+  const stop = () => {
+    running.current.forEach((c) => c.stop());
+    running.current = [];
+  };
+  const to = (targets: number[], velocities: number[] = []) => {
+    stop();
+    running.current = values.map((v, i) => go(v, targets[i], enter, velocities[i]));
+  };
+  return { stop, to, release: (velocities?: number[]) => to(values.map(() => 0), velocities) };
+}
+
+const ARROWS = new Map<string, [number, number]>([
+  ["ArrowLeft", [-1, 0]],
+  ["ArrowRight", [1, 0]],
+  ["ArrowUp", [0, -1]],
+  ["ArrowDown", [0, 1]],
+]);
+
+/**
+ * The keyboard way to do a pull: holding an arrow key holds the pull, letting go releases it.
+ * A drag is never the only way.
+ */
+function usePullKeys(pull: (x: number, y: number) => void, release: () => void) {
+  const held = useRef(new Set<string>());
+  const vector = (): [number, number] => {
+    let x = 0;
+    let y = 0;
+    held.current.forEach((k) => {
+      const d = ARROWS.get(k);
+      if (d) {
+        x += d[0];
+        y += d[1];
+      }
+    });
+    return [Math.sign(x), Math.sign(y)];
+  };
+  return {
+    onKeyDown(e: KeyboardEvent) {
+      if (!ARROWS.has(e.key)) return;
+      e.preventDefault();
+      if (e.repeat) return;
+      held.current.add(e.key);
+      pull(...vector());
+    },
+    onKeyUp(e: KeyboardEvent) {
+      if (!ARROWS.has(e.key)) return;
+      held.current.delete(e.key);
+      if (held.current.size) pull(...vector());
+      else release();
+    },
+    onBlur() {
+      if (!held.current.size) return;
+      held.current.clear();
+      release();
+    },
+  };
+}
+
+/** 16px minus, drawn like litt's own icons. The registry has a plus and no minus. */
+function MinusIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" aria-hidden="true" focusable="false">
+      <path d="M3 8h10" />
+    </svg>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Page                                                                       */
+/* -------------------------------------------------------------------------- */
 
 export function CraftGallery() {
-  const reduceMotion = useReducedMotion();
-
   return (
-    <main className="pt-36 pb-32 md:pt-44">
-      <div className="section-shell">
-        <motion.p
-          className="eyebrow mb-4"
-          initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
-          whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 80, damping: 30 }}
-        >
-          Craft
-        </motion.p>
-        <motion.p
-          className="mb-16 max-w-md text-[15px] leading-[1.6] text-[#737373]"
-          initial={reduceMotion ? {} : { opacity: 0, y: 10, filter: "blur(4px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 80, damping: 30, delay: 0.05 }}
-        >
-          Interactive experiments — spring physics, liquid effects, and
-          micro-interactions. Click, drag, and hover.
-        </motion.p>
+    <main>
+      <section className="section section-end" aria-labelledby="craft-title">
+        <div className="shell">
+          <h1 id="craft-title" className="text-litt-h1 text-litt-fg">
+            Craft
+          </h1>
+          <p className="mt-4 max-w-litt-reading text-litt-reading text-litt-fg-muted">
+            Small interaction studies. Press, drag, flip and toggle them.
+          </p>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <DemoCard label="Spring Press" delay={0}>
-            <SpringButton />
-          </DemoCard>
-          <DemoCard label="Magnetic Hover" delay={0.04}>
-            <MagneticButton />
-          </DemoCard>
-          <DemoCard label="Liquid Button" delay={0.08}>
-            <LiquidButton />
-          </DemoCard>
-          <DemoCard label="3D Tilt" delay={0.12}>
-            <TiltCard />
-          </DemoCard>
-          <DemoCard label="Jelly Press" delay={0.16}>
-            <JellyCard />
-          </DemoCard>
-          <DemoCard label="Drag & Snap" delay={0.2}>
-            <DragSnap />
-          </DemoCard>
-          <DemoCard label="Flip Card" delay={0.24}>
-            <FlipCard />
-          </DemoCard>
-          <DemoCard label="Gravity Drop" delay={0.28}>
-            <GravityDrop />
-          </DemoCard>
-          <DemoCard label="Spring Counter" delay={0.32}>
-            <SpringCounter />
-          </DemoCard>
-          <DemoCard label="Spring Toggle" delay={0.36}>
-            <SpringToggle />
-          </DemoCard>
-          <DemoCard label="Gooey Blobs" delay={0.4}>
-            <GooeyBlobs />
-          </DemoCard>
-          <DemoCard label="Wave Text" delay={0.44}>
-            <WaveText />
-          </DemoCard>
-          <DemoCard label="Ripple Touch" delay={0.48}>
-            <RippleButton />
-          </DemoCard>
-          <DemoCard label="Morph Button" delay={0.52}>
-            <MorphButton />
-          </DemoCard>
+          <ul className="mt-12 grid grid-cols-1 gap-x-4 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:mt-16 lg:grid-cols-3">
+            <Study name="Press" tier="instant" note="Hover fades the fill and press scales to 0.98. The box never moves.">
+              <PressStudy />
+            </Study>
+            <Study name="Ripple" tier="responsive" note="The response starts where you press. It spreads once, then fades.">
+              <RippleStudy />
+            </Study>
+            <Study name="Surface" tier="instant" note="Hover steps the fill one surface. No lift, no shadow, no scale." bare>
+              <SurfaceStudy />
+            </Study>
+            <Study name="Morph" tier="responsive" note="Two shapes crossfade. Nothing grows, shrinks or blurs.">
+              <MorphStudy />
+            </Study>
+            <Study name="Switch" tier="responsive" note="The knob glides by transform. The track fades at the instant tier.">
+              <SwitchStudy />
+            </Study>
+            <Study name="Flip" tier="responsive" note="A half turn on the responsive spring. No overshoot, no pulse.">
+              <FlipStudy />
+            </Study>
+            <Study name="Counter" tier="responsive" note="The number slides half a travel and fades. The old one leaves quicker.">
+              <CounterStudy />
+            </Study>
+            <Study name="Arrange" tier="responsive" note="Dots glide to their places 40ms apart. Position only, no filter.">
+              <ArrangeStudy />
+            </Study>
+            <Study name="Insert" tier="responsive" note="The row makes room by transform. A removed item only fades.">
+              <InsertStudy />
+            </Study>
+            <Study name="Cascade" tier="expressive" note="Letters arrive 40ms apart on the expressive spring, once per press.">
+              <CascadeStudy />
+            </Study>
+            <Study name="Tilt" tier="responsive" note="Hold and move. It follows the pointer one to one, then springs flat.">
+              <TiltStudy />
+            </Study>
+            <Study name="Drag" tier="responsive" note="Follows the pointer one to one. Let go and it springs back at your speed.">
+              <DragStudy />
+            </Study>
+          </ul>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
 
-/* ─────────────────────────────────────────────
-   Demo card wrapper
-   ───────────────────────────────────────────── */
-
-function DemoCard({
-  label,
-  delay,
-  children,
-}: {
-  label: string;
-  delay: number;
-  children: React.ReactNode;
-}) {
-  const reduceMotion = useReducedMotion();
-
+/**
+ * One study: its name and note, then the stage. The name comes first in the document so a screen
+ * reader hears what it is before it meets the control, and the stage is placed above it by order.
+ * The stage is a flat raised surface (no shadow, no glass). `bare` lets the study be the surface.
+ */
+function Study({ name, note, tier, bare = false, children }: { name: string; note: string; tier: Tier; bare?: boolean; children: ReactNode }) {
   return (
-    <motion.div
-      className="flex flex-col items-center justify-center rounded-2xl border border-[rgba(0,0,0,0.06)] bg-white p-8"
-      style={{ minHeight: 260 }}
-      initial={
-        reduceMotion ? {} : { opacity: 0, y: 16, filter: "blur(4px)" }
-      }
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{
-        type: "spring",
-        stiffness: 100,
-        damping: 28,
-        delay,
-      }}
-    >
-      <div className="flex flex-1 items-center justify-center">{children}</div>
-      <span className="mt-6 font-mono text-[10px] uppercase tracking-[0.1em] text-[#a3a3a3]">
-        {label}
-      </span>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   1 · Spring Button — bouncy press with shadow lift
-   ───────────────────────────────────────────── */
-
-function SpringButton() {
-  return (
-    <motion.button
-      className="rounded-full bg-[#0a0a0a] px-7 py-3 text-[13px] font-medium text-white"
-      whileHover={{ scale: 1.05, y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
-      whileTap={{ scale: 0.85 }}
-      transition={{ type: "spring", stiffness: 400, damping: 12 }}
-    >
-      Press me
-    </motion.button>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   2 · Magnetic Hover — elastic cursor follow
-   ───────────────────────────────────────────── */
-
-function MagneticButton() {
-  const ref = useRef<HTMLButtonElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 200, damping: 12 });
-  const springY = useSpring(y, { stiffness: 200, damping: 12 });
-
-  function handleMove(e: React.PointerEvent) {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const dx = e.clientX - (rect.left + rect.width / 2);
-    const dy = e.clientY - (rect.top + rect.height / 2);
-    x.set(dx * 0.4);
-    y.set(dy * 0.4);
-  }
-
-  function handleLeave() {
-    x.set(0);
-    y.set(0);
-  }
-
-  return (
-    <motion.button
-      ref={ref}
-      className="rounded-full border border-[rgba(0,0,0,0.12)] px-7 py-3 text-[13px] font-medium text-[#0a0a0a]"
-      style={{ x: springX, y: springY }}
-      onPointerMove={handleMove}
-      onPointerLeave={handleLeave}
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 300, damping: 15 }}
-    >
-      Hover me
-    </motion.button>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   3 · Liquid Button — gooey SVG filter with spring droplets
-   ───────────────────────────────────────────── */
-
-function LiquidButton() {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div className="relative">
-      <svg className="absolute" width="0" height="0">
-        <defs>
-          <filter id="gooey-btn">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
-              result="goo"
-            />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-          </filter>
-        </defs>
-      </svg>
-      <div style={{ filter: "url(#gooey-btn)", isolation: "isolate", contain: "layout paint" }}>
-        <motion.button
-          className="relative z-10 rounded-full bg-[#0a0a0a] px-7 py-3 text-[13px] font-medium text-white"
-          onHoverStart={() => setHovered(true)}
-          onHoverEnd={() => setHovered(false)}
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        >
-          Liquid
-          <AnimatePresence>
-            {hovered && (
-              <>
-                {DROPLET_CONFIGS.map((cfg, i) => (
-                  <motion.span
-                    key={i}
-                    className="absolute rounded-full bg-[#0a0a0a]"
-                    style={{
-                      width: cfg.width,
-                      height: cfg.height,
-                      left: `${20 + i * 15}%`,
-                      top: "50%",
-                    }}
-                    initial={{ y: 0, opacity: 1 }}
-                    animate={{
-                      y: [0, cfg.yOffset, 0],
-                      x: cfg.xOffset,
-                    }}
-                    exit={{ opacity: 0, scale: 0 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 9,
-                      delay: i * 0.04,
-                    }}
-                  />
-                ))}
-              </>
-            )}
-          </AnimatePresence>
-        </motion.button>
+    <li className="flex min-w-0 flex-col">
+      <div className="order-2 mt-4 flex items-baseline justify-between gap-4">
+        <h2 className="text-litt-body text-litt-fg">{name}</h2>
+        <span className="meta">{tier}</span>
       </div>
+      <p className="order-3 mt-1 text-litt-small text-litt-fg-subtle">{note}</p>
+      {bare ? (
+        <div className="order-1 h-64">{children}</div>
+      ) : (
+        <div className="litt-raised order-1 relative flex h-64 items-center justify-center overflow-hidden rounded-litt-surface">{children}</div>
+      )}
+    </li>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Press: the instant tier, in litt's own button                              */
+/* -------------------------------------------------------------------------- */
+
+function PressStudy() {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3 p-6">
+      <Button size="sm">Small</Button>
+      <Button size="md">Medium</Button>
+      <Button size="lg">Large</Button>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   4 · 3D Tilt Card — perspective with glare and dynamic shadow
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Ripple: a response that starts where you press                             */
+/* -------------------------------------------------------------------------- */
 
-function TiltCard() {
-  const ref = useRef<HTMLDivElement>(null);
-  const glareRef = useRef<HTMLDivElement>(null);
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
-  const springRX = useSpring(rotateX, { stiffness: 200, damping: 18 });
-  const springRY = useSpring(rotateY, { stiffness: 200, damping: 18 });
+type Spot = { id: number; x: number; y: number };
 
+function RippleStudy() {
+  const enter = useTransition("responsive");
+  const [spots, setSpots] = useState<Spot[]>([]);
+  const next = useRef(0);
 
-  function handleMove(e: React.PointerEvent) {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    rotateY.set(px * 30);
-    rotateX.set(-py * 30);
-    if (glareRef.current) {
-      const gx = (px + 0.5) * 100;
-      const gy = (py + 0.5) * 100;
-      glareRef.current.style.background = `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.25), transparent 60%)`;
-    }
-  }
-
-  function handleLeave() {
-    rotateX.set(0);
-    rotateY.set(0);
+  function press(e: React.MouseEvent<HTMLButtonElement>) {
+    const box = e.currentTarget.getBoundingClientRect();
+    // A keyboard press has no pointer position, so it starts at the centre.
+    const keyboard = e.detail === 0;
+    const spot = {
+      id: next.current++,
+      x: keyboard ? box.width / 2 : e.clientX - box.left,
+      y: keyboard ? box.height / 2 : e.clientY - box.top,
+    };
+    setSpots((all) => [...all.slice(-3), spot]);
   }
 
   return (
-    <motion.div
-      ref={ref}
-      className="relative h-32 w-44 cursor-default overflow-hidden rounded-xl bg-gradient-to-br from-[#0a0a0a] to-[#3a3a3a]"
-      style={{
-        rotateX: springRX,
-        rotateY: springRY,
-        transformPerspective: 600,
-        transformStyle: "preserve-3d",
-      }}
-      onPointerMove={handleMove}
-      onPointerLeave={handleLeave}
-      whileHover={{ scale: 1.04 }}
-      transition={{ type: "spring", stiffness: 200, damping: 20 }}
-    >
-      <div ref={glareRef} className="absolute inset-0 rounded-xl" />
-      <div className="flex h-full items-center justify-center">
-        <span className="text-[12px] font-medium tracking-wide text-white/60">
-          Move cursor
+    <div className="relative">
+      <Button size="lg" onClick={press}>
+        Press anywhere
+      </Button>
+      {/* A clip layer over the button, so the button's own focus ring is never cut. */}
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-litt-control">
+        {spots.map((s) => (
+          <motion.span
+            key={s.id}
+            className="absolute size-8 rounded-litt-pill bg-[color-mix(in_oklab,var(--litt-fg)_12%,transparent)]"
+            style={{ left: s.x - 16, top: s.y - 16 }}
+            initial={{ scale: 0, opacity: 1 }}
+            animate={{ scale: 8, opacity: 0 }}
+            transition={enter}
+            onAnimationComplete={() => setSpots((all) => all.filter((o) => o.id !== s.id))}
+          />
+        ))}
+      </span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Surface: a linked card, the way litt builds one                            */
+/* -------------------------------------------------------------------------- */
+
+function SurfaceStudy() {
+  const [presses, setPresses] = useState(0);
+  return (
+    <Card as="div" cover="inset" className="h-full">
+      <CardCover ratio="auto" className="grid flex-1 place-items-center">
+        <span className="font-litt-mono text-litt-h2 text-litt-fg tabular-nums" aria-hidden="true">
+          {presses}
         </span>
-      </div>
-    </motion.div>
+      </CardCover>
+      <CardBody>
+        <CardTitle as="h3">
+          <CardLink onClick={() => setPresses((n) => n + 1)}>Press the card</CardLink>
+        </CardTitle>
+        <CardDescription>{presses === 1 ? "Pressed once." : `Pressed ${presses} times.`}</CardDescription>
+      </CardBody>
+    </Card>
   );
 }
 
-/* ─────────────────────────────────────────────
-   5 · Jelly Press — squish with wobble
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Morph: two shapes crossfade                                                */
+/* -------------------------------------------------------------------------- */
 
-function JellyCard() {
-  return (
-    <motion.div
-      className="flex h-28 w-40 cursor-pointer items-center justify-center rounded-xl border border-[rgba(0,0,0,0.08)] bg-[#fafafa]"
-      whileHover={{ scale: 1.04, y: -2 }}
-      whileTap={{
-        scale: 0.88,
-        rotateZ: -3,
-        skewX: 4,
-        borderRadius: "20px",
-      }}
-      transition={{ type: "spring", stiffness: 500, damping: 12 }}
-    >
-      <span className="text-[12px] text-[#737373]">Squish me</span>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   6 · Drag & Snap — oscillating snap-back with rotation
-   ───────────────────────────────────────────── */
-
-function DragSnap() {
-  return (
-    <motion.div
-      className="flex h-16 w-16 cursor-grab items-center justify-center rounded-2xl bg-[#0a0a0a] active:cursor-grabbing"
-      drag
-      dragConstraints={{ top: -60, right: 60, bottom: 60, left: -60 }}
-      dragElastic={0.25}
-      dragTransition={{ bounceStiffness: 300, bounceDamping: 10 }}
-      whileDrag={{ scale: 1.12, rotate: 5, boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 300, damping: 15 }}
-    >
-      <span className="text-[10px] font-medium text-white/60">Drag</span>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   7 · Flip Card — spring flip with mid-flip scale pulse
-   ───────────────────────────────────────────── */
-
-function FlipCard() {
-  const [flipped, setFlipped] = useState(false);
+function MorphStudy() {
+  const enter = useTransition("responsive");
+  const leave = useExit("responsive");
+  const [done, setDone] = useState(false);
 
   return (
-    <div
-      className="cursor-pointer"
-      style={{ perspective: 600 }}
-      onClick={() => setFlipped((f) => !f)}
-    >
+    <div className="grid place-items-center">
+      {/* The one accent fill on the page: the primary action, in both of its shapes. */}
       <motion.div
-        className="relative h-28 w-40"
-        animate={{
-          rotateY: flipped ? 180 : 0,
-          scale: [null, 1.03, 1],
-        }}
-        transition={{ type: "spring", stiffness: 200, damping: 22 }}
-        style={{ transformStyle: "preserve-3d" }}
+        className="col-start-1 row-start-1"
+        inert={done}
+        initial={false}
+        animate={{ opacity: done ? 0 : 1, scale: done ? 0.9 : 1 }}
+        transition={done ? leave : enter}
       >
-        <div
-          className="absolute inset-0 flex items-center justify-center rounded-xl bg-[#0a0a0a]"
-          style={{ backfaceVisibility: "hidden" }}
-        >
-          <span className="text-[12px] font-medium text-white/60">
-            Click to flip
-          </span>
-        </div>
-        <div
-          className="absolute inset-0 flex items-center justify-center rounded-xl border border-[rgba(0,0,0,0.08)] bg-white"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-        >
-          <span className="text-[12px] text-[#737373]">Back side</span>
-        </div>
+        <Button variant="primary" size="md" onClick={() => setDone(true)}>
+          Submit
+        </Button>
+      </motion.div>
+      <motion.div
+        className="col-start-1 row-start-1"
+        inert={!done}
+        initial={false}
+        animate={{ opacity: done ? 1 : 0, scale: done ? 1 : 0.9 }}
+        transition={done ? enter : leave}
+      >
+        <Button variant="primary" size="md" iconOnly icon={<CheckIcon />} aria-label="Submitted. Press to reset." onClick={() => setDone(false)} />
       </motion.div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   8 · Gravity Drop — squash on impact, bounce back
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Switch: the knob glides, the track fades                                   */
+/* -------------------------------------------------------------------------- */
 
-function GravityDrop() {
-  const [balls, setBalls] = useState<{ id: number; x: number }[]>([]);
-  const counter = useRef(0);
-
-  function drop() {
-    const id = counter.current++;
-    const x = (seededRandom(id) - 0.5) * 80;
-    setBalls((b) => [...b.slice(-11), { id, x }]);
-  }
-
-  return (
-    <div
-      className="relative flex h-36 w-full cursor-pointer items-start justify-center overflow-hidden pt-2"
-      onClick={drop}
-    >
-      <span className="text-[12px] text-[#a3a3a3]">Click anywhere</span>
-      <AnimatePresence>
-        {balls.map((ball) => (
-          <motion.div
-            key={ball.id}
-            className="absolute top-2 h-4 w-4 rounded-full bg-[#0a0a0a]"
-            style={{ left: `calc(50% + ${ball.x}px)` }}
-            initial={{ y: 0, scaleX: 1, scaleY: 1 }}
-            animate={{
-              y: [0, 120],
-              scaleX: [1, 1, 1.35, 0.9, 1],
-              scaleY: [1, 1, 0.65, 1.1, 1],
-            }}
-            exit={{ opacity: 0, scale: 0 }}
-            transition={{
-              y: { type: "spring", stiffness: 80, damping: 7 },
-              scaleX: {
-                type: "spring",
-                stiffness: 400,
-                damping: 8,
-                delay: 0.3,
-              },
-              scaleY: {
-                type: "spring",
-                stiffness: 400,
-                damping: 8,
-                delay: 0.3,
-              },
-            }}
-            onAnimationComplete={() =>
-              setBalls((b) => b.filter((item) => item.id !== ball.id))
-            }
-          />
-        ))}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   9 · Spring Counter — overshooting number with scale pulse
-   ───────────────────────────────────────────── */
-
-function SpringCounter() {
-  const [count, setCount] = useState(0);
-  const motionCount = useMotionValue(0);
-  const springCount = useSpring(motionCount, { stiffness: 200, damping: 12 });
-  const display = useTransform(springCount, (v) => Math.round(v));
-
-  useEffect(() => {
-    motionCount.set(count);
-  }, [count, motionCount]);
-
-  return (
-    <div className="flex items-center gap-5">
-      <motion.button
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(0,0,0,0.12)] text-[15px] text-[#0a0a0a]"
-        whileTap={{ scale: 0.8 }}
-        whileHover={{ y: -2 }}
-        transition={{ type: "spring", stiffness: 400, damping: 12 }}
-        onClick={() => setCount((c) => c - 1)}
-      >
-        −
-      </motion.button>
-      <motion.span
-        // Keyed on count so each change replays the pulse — no extra state
-        key={count}
-        className="w-10 text-center font-mono text-[28px] tabular-nums text-[#0a0a0a]"
-        initial={{ scale: count === 0 ? 1 : 1.15 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 500, damping: 12 }}
-      >
-        {display}
-      </motion.span>
-      <motion.button
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(0,0,0,0.12)] text-[15px] text-[#0a0a0a]"
-        whileTap={{ scale: 0.8 }}
-        whileHover={{ y: -2 }}
-        transition={{ type: "spring", stiffness: 400, damping: 12 }}
-        onClick={() => setCount((c) => c + 1)}
-      >
-        +
-      </motion.button>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   10 · Spring Toggle — overshoot knob with bounce
-   ───────────────────────────────────────────── */
-
-function SpringToggle() {
+function SwitchStudy() {
+  const enter = useTransition("responsive");
+  const label = useId();
   const [on, setOn] = useState(false);
 
   return (
-    <motion.button
-      className="flex h-8 w-14 cursor-pointer items-center rounded-full p-1"
-      style={{ backgroundColor: on ? "#0a0a0a" : "#e5e5e5" }}
-      animate={{
-        backgroundColor: on ? "#0a0a0a" : "#e5e5e5",
-        scale: [null, 1.04, 1],
-      }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      onClick={() => setOn((v) => !v)}
-    >
-      <motion.div
-        className="h-6 w-6 rounded-full bg-white shadow-sm"
-        animate={{ x: on ? 22 : 0 }}
-        transition={{ type: "spring", stiffness: 500, damping: 18 }}
-      />
-    </motion.button>
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-labelledby={label}
+        onClick={() => setOn((v) => !v)}
+        className="group inline-flex h-litt-control-md w-litt-control-lg cursor-pointer items-center justify-center outline-none [-webkit-tap-highlight-color:transparent]"
+      >
+        <span
+          className={
+            "flex h-6 w-12 items-center rounded-litt-pill p-1 shadow-[inset_0_0_0_1px_var(--litt-line-strong)] " +
+            "transition-[background-color,scale] duration-(--litt-dur-instant) ease-litt " +
+            "group-active:scale-(--litt-press-scale) " +
+            "group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-litt-focus " +
+            (on ? "justify-end bg-litt-fg" : "justify-start bg-litt-surface-3")
+          }
+        >
+          <motion.span
+            layout
+            transition={enter}
+            className={"size-4 rounded-litt-pill transition-colors duration-(--litt-dur-instant) ease-litt " + (on ? "bg-litt-canvas" : "bg-litt-fg-subtle")}
+          />
+        </span>
+      </button>
+      <span id={label} className="w-8 text-litt-small text-litt-fg-muted">
+        {on ? "On" : "Off"}
+      </span>
+    </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   11 · Gooey Blobs — varied mass + rotation
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Flip: a half turn on the responsive spring                                 */
+/* -------------------------------------------------------------------------- */
 
-function GooeyBlobs() {
-  const [active, setActive] = useState(0);
-  const positions = [
-    { x: 0, y: 0 },
-    { x: 36, y: -10 },
-    { x: -36, y: -10 },
-    { x: 18, y: 28 },
-    { x: -18, y: 28 },
-  ];
-
-  const cycle = useCallback(() => {
-    setActive((a) => (a + 1) % 3);
-  }, []);
-
-  const layouts = [
-    positions,
-    positions.map((p) => ({ x: p.x * 0.3, y: p.y * 0.3 })),
-    positions.map((_, i) => ({ x: (i - 2) * 22, y: 0 })),
-  ];
-
-  const blobConfigs = [
-    { mass: 0.5, rotate: 45 },
-    { mass: 1.2, rotate: -30 },
-    { mass: 0.8, rotate: 60 },
-    { mass: 1.5, rotate: -15 },
-    { mass: 0.6, rotate: 90 },
-  ];
+function FlipStudy() {
+  const enter = useTransition("responsive");
+  const [back, setBack] = useState(false);
 
   return (
-    <div className="cursor-pointer" onClick={cycle}>
-      <svg className="absolute" width="0" height="0">
-        <defs>
-          <filter id="gooey-blobs">
-            <feGaussianBlur
-              in="SourceGraphic"
-              stdDeviation="8"
-              result="blur"
-            />
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -8"
-              result="goo"
-            />
-          </filter>
-        </defs>
-      </svg>
-      <div
-        className="relative flex h-24 w-32 items-center justify-center"
-        style={{ filter: "url(#gooey-blobs)", isolation: "isolate", contain: "layout paint" }}
-      >
-        {layouts[active].map((pos, i) => (
-          <motion.div
+    <button
+      type="button"
+      aria-pressed={back}
+      onClick={() => setBack((b) => !b)}
+      className="block h-24 w-40 cursor-pointer select-none transition-[scale] duration-(--litt-dur-instant) ease-litt [-webkit-tap-highlight-color:transparent] active:scale-(--litt-press-scale)"
+    >
+      <span className="block size-full" style={{ perspective: 600 }}>
+        <motion.span className="relative block size-full" style={{ transformStyle: "preserve-3d" }} animate={{ rotateY: back ? 180 : 0 }} transition={enter}>
+          <span
+            aria-hidden={back}
+            className={"absolute inset-0 grid place-items-center bg-litt-surface-2 " + OBJECT}
+            style={{ backfaceVisibility: "hidden" }}
+          >
+            <span className="text-litt-small text-litt-fg-muted">Front</span>
+          </span>
+          <span
+            aria-hidden={!back}
+            className={"absolute inset-0 grid place-items-center bg-litt-surface-3 " + OBJECT}
+            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          >
+            <span className="text-litt-small text-litt-fg-muted">Back</span>
+          </span>
+        </motion.span>
+      </span>
+    </button>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Counter: the number slides half a travel                                   */
+/* -------------------------------------------------------------------------- */
+
+function CounterStudy() {
+  const enter = useTransition("responsive");
+  const leave = useExit("responsive");
+  const travel = useTravel();
+  const [{ n, dir }, setState] = useState({ n: 0, dir: 1 });
+  const step = (d: 1 | -1) => setState((s) => ({ n: s.n + d, dir: d }));
+
+  // The number leaves the way it was going: counting up rolls the old one up and the new one in from below.
+  const slide: Variants = {
+    in: (d: number) => ({ opacity: 0, y: (d * travel) / 2 }),
+    rest: { opacity: 1, y: 0, transition: enter },
+    out: (d: number) => ({ opacity: 0, y: (-d * travel) / 2, transition: leave }),
+  };
+
+  return (
+    <div className="flex items-center gap-6">
+      <Button variant="secondary" iconOnly icon={<MinusIcon />} aria-label="Decrease" onClick={() => step(-1)} />
+      <div className="relative grid h-12 w-16 place-items-center">
+        <span className="sr-only" role="status">
+          {n}
+        </span>
+        <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+          <motion.span
+            key={n}
+            custom={dir}
+            variants={slide}
+            initial="in"
+            animate="rest"
+            exit="out"
+            aria-hidden="true"
+            className="font-litt-mono text-litt-h2 text-litt-fg tabular-nums"
+          >
+            {n}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+      <Button variant="secondary" iconOnly icon={<PlusIcon />} aria-label="Increase" onClick={() => step(1)} />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Arrange: five dots, three layouts                                          */
+/* -------------------------------------------------------------------------- */
+
+const ARRANGEMENTS = {
+  cluster: [
+    [0, 0],
+    [-32, -32],
+    [32, -32],
+    [-32, 32],
+    [32, 32],
+  ],
+  row: [
+    [-80, 0],
+    [-40, 0],
+    [0, 0],
+    [40, 0],
+    [80, 0],
+  ],
+  ring: [
+    [0, -44],
+    [42, -14],
+    [26, 36],
+    [-26, 36],
+    [-42, -14],
+  ],
+} as const;
+type Arrangement = keyof typeof ARRANGEMENTS;
+
+// From the strongest tone to the quietest, so each dot can be followed from layout to layout.
+const DOT_TONES = ["bg-litt-fg", "bg-litt-fg-muted", "bg-litt-fg-subtle", "bg-litt-fg-disabled", "bg-litt-line-strong"];
+
+function ArrangeStudy() {
+  const enter = useTransition("responsive");
+  const stagger = useStagger();
+  const [layout, setLayout] = useState<Arrangement>("cluster");
+  const place = (i: number): Transition => ({ ...enter, delay: i * stagger });
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      <div className="grid h-32 w-48 place-items-center" aria-hidden="true">
+        {ARRANGEMENTS[layout].map(([x, y], i) => (
+          <motion.span
             key={i}
-            className="absolute h-7 w-7 rounded-full bg-[#0a0a0a]"
-            animate={{
-              x: pos.x,
-              y: pos.y,
-              rotate: blobConfigs[i].rotate * (active + 1),
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 120,
-              damping: 14,
-              mass: blobConfigs[i].mass,
-            }}
+            className={"col-start-1 row-start-1 size-6 rounded-litt-pill " + DOT_TONES[i]}
+            initial={false}
+            animate={{ x, y }}
+            transition={place(i)}
           />
         ))}
+      </div>
+      <Segmented
+        legend="Arrangement"
+        size="sm"
+        value={layout}
+        onValueChange={setLayout}
+        options={[
+          { value: "cluster", label: "Cluster" },
+          { value: "row", label: "Row" },
+          { value: "ring", label: "Ring" },
+        ]}
+      />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Insert: the row makes room                                                 */
+/* -------------------------------------------------------------------------- */
+
+const MAX_ITEMS = 8;
+
+function InsertStudy() {
+  const enter = useTransition("responsive");
+  const leave = useExit("responsive");
+  const travel = useTravel();
+  const [items, setItems] = useState<number[]>([1, 2, 3]);
+  const next = useRef(4);
+
+  return (
+    <div className="flex w-full flex-col items-center gap-6 px-6">
+      <div className="relative flex min-h-16 w-full max-w-xs flex-wrap content-center justify-center gap-2">
+        {items.length === 0 && <p className="text-litt-small text-litt-fg-subtle">Nothing here yet.</p>}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {items.map((id) => (
+            <motion.span
+              key={id}
+              layout="position"
+              transition={enter}
+              initial={{ opacity: 0, y: -travel / 2 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, transition: leave }}
+              className="inline-flex"
+            >
+              <Tag>Item {id}</Tag>
+            </motion.span>
+          ))}
+        </AnimatePresence>
+      </div>
+      <div className="flex gap-3">
+        <Button size="sm" icon={<PlusIcon />} disabled={items.length >= MAX_ITEMS} onClick={() => setItems((l) => [...l, next.current++])}>
+          Add
+        </Button>
+        <Button size="sm" disabled={items.length === 0} onClick={() => setItems((l) => l.slice(0, -1))}>
+          Remove
+        </Button>
       </div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   12 · Wave Text — bouncy oscillating characters
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Cascade: the page's one expressive moment                                  */
+/* -------------------------------------------------------------------------- */
 
-function WaveText() {
-  const text = "Hover me";
+const WORD = "Considered";
+
+function CascadeStudy() {
+  const enter = useTransition("expressive");
+  const stagger = useStagger();
+  const travel = useTravel();
+  const [run, setRun] = useState(0);
+  const arrive = (i: number): Transition => ({ ...enter, delay: i * stagger });
 
   return (
-    <div className="flex gap-[2px]">
-      {text.split("").map((char, i) => (
-        <motion.span
-          key={i}
-          className="inline-block text-[22px] font-medium text-[#0a0a0a]"
-          whileHover={{ y: -16, scale: 1.25 }}
-          transition={{ type: "spring", stiffness: 500, damping: 8 }}
-        >
-          {char === " " ? "\u00A0" : char}
-        </motion.span>
-      ))}
+    <div className="flex flex-col items-center gap-6">
+      <p className="text-litt-h2 text-litt-fg">
+        <span className="sr-only">{WORD}</span>
+        {/* The word is already in place when the page loads. Only a press plays the cascade. */}
+        <span key={run} aria-hidden="true" className="inline-flex">
+          {Array.from(WORD).map((char, i) => (
+            <motion.span
+              key={i}
+              className="inline-block"
+              initial={run === 0 ? false : { opacity: 0, y: travel }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={arrive(i)}
+            >
+              {char}
+            </motion.span>
+          ))}
+        </span>
+      </p>
+      <Button variant="ghost" size="sm" onClick={() => setRun((r) => r + 1)}>
+        Replay
+      </Button>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   13 · Ripple Button — spring-based ripple expansion
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Tilt: held, not hovered                                                    */
+/* -------------------------------------------------------------------------- */
 
-function RippleButton() {
-  const [ripples, setRipples] = useState<
-    { id: number; x: number; y: number }[]
-  >([]);
-  const counter = useRef(0);
+const TILT_DEGREES = 14;
 
-  function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const id = counter.current++;
-    setRipples((r) => [
-      ...r.slice(-4),
-      { id, x: e.clientX - rect.left, y: e.clientY - rect.top },
-    ]);
+function TiltStudy() {
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const back = useSpringBack(rotateX, rotateY);
+  const frame = useRef<HTMLDivElement>(null);
+  const [held, setHeld] = useState(false);
+
+  // The angle is a straight function of where the pointer is, so the object follows it one to one.
+  function aim(e: PointerEvent<HTMLElement>) {
+    const box = frame.current?.getBoundingClientRect();
+    if (!box) return;
+    rotateY.set(clamp(((e.clientX - box.left) / box.width) * 2 - 1) * TILT_DEGREES);
+    rotateX.set(-clamp(((e.clientY - box.top) / box.height) * 2 - 1) * TILT_DEGREES);
   }
+  function letGo() {
+    setHeld(false);
+    back.release();
+  }
+  const keys = usePullKeys(
+    (x, y) => {
+      setHeld(true);
+      back.to([-y * TILT_DEGREES, x * TILT_DEGREES]);
+    },
+    letGo,
+  );
 
   return (
-    <motion.button
-      className="relative overflow-hidden rounded-full bg-[#0a0a0a] px-7 py-3 text-[13px] font-medium text-white"
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      onClick={handleClick}
-    >
-      Tap me
-      <AnimatePresence>
-        {ripples.map((ripple) => (
-          <motion.span
-            key={ripple.id}
-            className="absolute rounded-full bg-white/25"
-            style={{
-              left: ripple.x,
-              top: ripple.y,
-              width: 10,
-              height: 10,
-              marginLeft: -5,
-              marginTop: -5,
-            }}
-            initial={{ scale: 0, opacity: 0.6 }}
-            animate={{ scale: 16, opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ type: "spring", stiffness: 80, damping: 20 }}
-            onAnimationComplete={() =>
-              setRipples((r) => r.filter((item) => item.id !== ripple.id))
-            }
-          />
-        ))}
-      </AnimatePresence>
-    </motion.button>
+    <div ref={frame} className="h-24 w-40" style={{ perspective: 600 }}>
+      <motion.button
+        type="button"
+        style={{ rotateX, rotateY }}
+        className={
+          "size-full cursor-grab touch-none select-none active:cursor-grabbing " + FADE + " " + OBJECT + (held ? " bg-litt-surface-3" : " bg-litt-surface-2")
+        }
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          back.stop();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setHeld(true);
+          aim(e);
+        }}
+        onPointerMove={(e) => {
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) aim(e);
+        }}
+        onPointerUp={letGo}
+        onPointerCancel={letGo}
+        {...keys}
+      >
+        <span className="text-litt-small text-litt-fg-muted">Hold and move</span>
+        <span className="sr-only">, or hold an arrow key</span>
+      </motion.button>
+    </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   14 · Morph Button — shape morph with wobble
-   ───────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
+/* Drag: a puck in a well                                                     */
+/* -------------------------------------------------------------------------- */
 
-function MorphButton() {
-  const [morphed, setMorphed] = useState(false);
+const REACH = 64; // px the puck can travel from the centre, to the edge of its well
+const NUDGE = 48; // px an arrow key pulls it
+const WELL = { left: -REACH, right: REACH, top: -REACH, bottom: REACH };
+
+function DragStudy() {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const back = useSpringBack(x, y);
+  const [held, setHeld] = useState(false);
+  const keys = usePullKeys(
+    (dx, dy) => {
+      setHeld(true);
+      back.to([dx * NUDGE, dy * NUDGE]);
+    },
+    () => {
+      setHeld(false);
+      back.release();
+    },
+  );
 
   return (
-    <motion.button
-      className="flex items-center justify-center bg-[#0a0a0a] text-[13px] font-medium text-white"
-      animate={{
-        width: morphed ? 48 : 140,
-        height: morphed ? 48 : 44,
-        borderRadius: morphed ? 24 : 999,
-        scale: morphed ? [1, 1.08, 1] : 1,
-      }}
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 400, damping: 14 }}
-      onClick={() => setMorphed((m) => !m)}
-    >
-      <AnimatePresence mode="wait">
-        {morphed ? (
-          <motion.span
-            key="check"
-            initial={{ scale: 0, rotate: -90, filter: "blur(4px)" }}
-            animate={{ scale: 1, rotate: 0, filter: "blur(0px)" }}
-            exit={{ scale: 0, rotate: 90, filter: "blur(4px)" }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          >
-            ✓
-          </motion.span>
-        ) : (
-          <motion.span
-            key="label"
-            initial={{ opacity: 0, filter: "blur(4px)" }}
-            animate={{ opacity: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, filter: "blur(4px)" }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          >
-            Submit
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.button>
+    <div className="grid size-48 place-items-center rounded-litt-surface bg-litt-surface-2 shadow-[inset_0_0_0_1px_var(--litt-line)]">
+      <motion.button
+        type="button"
+        drag
+        dragConstraints={WELL}
+        dragElastic={0}
+        dragMomentum={false}
+        style={{ x, y }}
+        onDragStart={() => {
+          back.stop();
+          setHeld(true);
+        }}
+        onDragEnd={(_, info) => {
+          setHeld(false);
+          back.release([info.velocity.x, info.velocity.y]);
+        }}
+        className={
+          "grid size-16 cursor-grab place-items-center select-none active:cursor-grabbing " +
+          "transition-[background-color,scale] duration-(--litt-dur-instant) ease-litt [-webkit-tap-highlight-color:transparent] " +
+          "active:scale-(--litt-press-scale) " +
+          OBJECT +
+          (held ? " bg-litt-surface-3" : " bg-litt-surface-1")
+        }
+        {...keys}
+      >
+        <span className="text-litt-caption text-litt-fg-subtle">Drag</span>
+        <span className="sr-only">, or hold an arrow key</span>
+      </motion.button>
+    </div>
   );
 }
