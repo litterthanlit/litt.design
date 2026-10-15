@@ -138,7 +138,7 @@ export function ProjectDetail({ project, nextProject, coverSize }: ProjectDetail
               <Fact label="Category">{project.category}</Fact>
               {project.status && (
                 <Fact label="Status">
-                  <Tag status="success">{project.status}</Tag>
+                  <Tag status="neutral">{project.status}</Tag>
                 </Fact>
               )}
               <Fact label="Services">
@@ -232,7 +232,6 @@ export function ProjectDetail({ project, nextProject, coverSize }: ProjectDetail
                 <CardTitle>
                   <Link
                     href={`/work/${nextProject.slug}`}
-                    {...({ transitionTypes: ["nav-forward"] } as object)}
                     data-card-link=""
                     className={nextLink}
                   >

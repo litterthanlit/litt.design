@@ -10,7 +10,6 @@ export function WritingArticle({ entry }: { entry: WritingEntry }) {
         <div className="split-label">
           <Link
             href="/#writing"
-            {...({ transitionTypes: ["nav-back"] } as object)}
             className="link inline-flex min-h-litt-control-sm items-center text-litt-small pointer-coarse:min-h-litt-control-md"
           >
             All writing
