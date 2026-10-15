@@ -27,7 +27,7 @@ import {
   type Variants,
 } from "motion/react";
 import { Button } from "@/components/litt/button";
-import { Card, CardBody, CardCover, CardDescription, CardLink, CardTitle } from "@/components/litt/card";
+import { Card, CardBody, CardCover, CardLink, CardTitle } from "@/components/litt/card";
 import { CheckIcon, PlusIcon } from "@/components/litt/icons";
 import { Segmented } from "@/components/litt/segmented";
 import { Tag } from "@/components/litt/tag";
@@ -277,16 +277,16 @@ function SurfaceStudy() {
   const [presses, setPresses] = useState(0);
   return (
     <Card as="div" cover="inset" className="h-full">
-      <CardCover ratio="auto" className="grid flex-1 place-items-center">
-        <span className="font-litt-mono text-litt-h2 text-litt-fg tabular-nums" aria-hidden="true">
-          {presses}
+      <CardCover ratio="auto" className="grid flex-3 place-items-center">
+        <span role="status">
+          <span className="font-litt-mono text-litt-h2 text-litt-fg tabular-nums">{presses}</span>
+          <span className="sr-only"> presses</span>
         </span>
       </CardCover>
       <CardBody>
         <CardTitle as="h3">
           <CardLink onClick={() => setPresses((n) => n + 1)}>Press the card</CardLink>
         </CardTitle>
-        <CardDescription>{presses === 1 ? "Pressed once." : `Pressed ${presses} times.`}</CardDescription>
       </CardBody>
     </Card>
   );
@@ -482,7 +482,14 @@ const ARRANGEMENTS = {
 type Arrangement = keyof typeof ARRANGEMENTS;
 
 // From the strongest tone to the quietest, so each dot can be followed from layout to layout.
-const DOT_TONES = ["bg-litt-fg", "bg-litt-fg-muted", "bg-litt-fg-subtle", "bg-litt-fg-disabled", "bg-litt-line-strong"];
+// The last one is a hollow dot: surface-3 with the line-strong hairline, so it never disappears into the stage.
+const DOT_TONES = [
+  "bg-litt-fg",
+  "bg-litt-fg-muted",
+  "bg-litt-fg-subtle",
+  "bg-litt-fg-disabled",
+  "bg-litt-surface-3 shadow-[inset_0_0_0_1px_var(--litt-line-strong)]",
+];
 
 function ArrangeStudy() {
   const enter = useTransition("responsive");

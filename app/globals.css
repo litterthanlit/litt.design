@@ -434,6 +434,11 @@
   ::selection {
     background: color-mix(in oklab, var(--litt-accent) 22%, transparent);
   }
+
+  /* Anchors (/#work) and focused elements land below the sticky header. */
+  html {
+    scroll-padding-top: calc(var(--litt-header-h) + var(--litt-space-6));
+  }
 }
 
 @layer components {
