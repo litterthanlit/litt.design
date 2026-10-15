@@ -26,7 +26,6 @@ export function SiteHeader() {
       wordmark={
         <Link
           href="/"
-          {...({ transitionTypes: ["nav-back"] } as object)}
           className="litt-trim text-litt-body text-litt-fg"
         >
           litt.design

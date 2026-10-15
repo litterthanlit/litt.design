@@ -1,46 +1,76 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
+import { motion } from "motion/react";
+import { useStagger, useTransition, useTravel } from "@/lib/litt/motion";
 
-export function IntroSection() {
-  const reduceMotion = useReducedMotion();
+/**
+ * The intro is the view's one expressive moment: it arrives once, on load, as a short
+ * cascade (opacity and transform only, one --stagger apart). Nothing else on the page
+ * moves by itself. Under reduced motion the hooks return zero and everything is in place.
+ */
+function Arrive({ index, className, children }: { index: number; className?: string; children: ReactNode }) {
+  const travel = useTravel();
+  const stagger = useStagger();
+  const enter = useTransition("expressive");
+  const transition = { ...enter, delay: index * stagger };
 
   return (
-    <section className="section-shell pt-36 pb-12 md:pt-44 md:pb-16">
-      <div className="flex flex-col items-start gap-8 md:flex-row md:items-center md:gap-12">
-        <motion.div
-          className="h-[150px] w-[150px] shrink-0 overflow-hidden rounded-lg border-2 border-[rgba(0,0,0,0.08)] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.04)]"
-          initial={reduceMotion ? {} : { opacity: 0, scale: 0.9, filter: "blur(8px)" }}
-          whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 80, damping: 25 }}
-        >
-          <Image
-            src="/nick.png"
-            alt="Portrait of Nick"
-            width={150}
-            height={150}
-            className="h-full w-full object-cover"
-            priority
-          />
-        </motion.div>
+    <motion.div
+      className={className}
+      // The server renders the resting travel; a reduced-motion client reads zero.
+      suppressHydrationWarning
+      initial={{ opacity: 0, y: travel }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={transition}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-        <motion.div
-          className="max-w-[520px]"
-          initial={reduceMotion ? {} : { opacity: 0, y: 12, filter: "blur(4px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 80, damping: 30, delay: 0.06 }}
-        >
-          <h1 className="text-body font-medium text-ink">
-            Nick Georgiev
-            <span className="font-normal text-muted"> · Designer &amp; engineer</span>
-          </h1>
-          <p className="mt-3 text-intro text-ink">
-          Hi, I&apos;m Nick. I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
-          </p>
-        </motion.div>
+export function IntroSection() {
+  return (
+    <section aria-labelledby="intro-heading" className="pt-16 sm:pt-24 lg:pt-32">
+      <div className="shell">
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-x-6">
+          {/* The portrait: a flat raised surface that catches the top light on its upper edge. */}
+          <Arrive index={0} className="lg:col-start-11 lg:col-end-13 lg:row-start-1">
+            <div className="litt-raised aspect-square w-24 p-1 lg:w-full">
+              <Image
+                src="/nick.png"
+                alt="Portrait of Nick"
+                width={728}
+                height={728}
+                sizes="(min-width: 1024px) 192px, 96px"
+                className="size-full rounded-litt-control object-cover"
+                priority
+              />
+            </div>
+          </Arrive>
+
+          <div className="lg:col-span-7 lg:col-start-1 lg:row-start-1">
+            <Arrive index={1}>
+              <p className="text-litt-body text-litt-fg">
+                Nick Georgiev
+                <span className="text-litt-fg-subtle"> · Designer &amp; engineer</span>
+              </p>
+            </Arrive>
+
+            <Arrive index={2} className="mt-6">
+              <h1 id="intro-heading" className="text-litt-display text-litt-fg text-balance">
+                I design sites, products, and tools that are simple, usable, and feel considered.
+              </h1>
+            </Arrive>
+
+            <Arrive index={3} className="mt-8">
+              <p className="max-w-(--litt-measure) text-litt-reading text-litt-fg-muted">
+                Hi, I&apos;m Nick. I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse.
+              </p>
+            </Arrive>
+          </div>
+        </div>
       </div>
     </section>
   );

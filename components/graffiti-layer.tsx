@@ -2,22 +2,46 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
+import { Button } from "@/components/litt/button";
+import { Tooltip } from "@/components/litt/tooltip";
+import { useExit, useTransition, useTravel } from "@/lib/litt/motion";
 
 // Press and drag on empty space to draw. Strokes sit under the content, are
 // stored per page in localStorage, and only exist for mouse and pen input so
 // touch scrolling is never hijacked. Text and elements are keep-out zones:
 // ink that lands on or near them is erased, so the drawing never overlaps them.
+//
+// The toolbar is the only chrome, and it floats, so it is glass (P3). The
+// inks are litt tokens: Ink follows the theme (light in dark mode), Graphite
+// is the quiet one, and Accent is the project's accent. A canvas cannot read
+// var(), so the colors are read from the page and redrawn when the theme changes.
 
 type Point = [x: number, y: number, width: number];
+// `color` is an ink id from INKS. Strokes saved before the restyle hold a CSS color instead.
 type Stroke = { color: string; points: Point[] };
 type Rect = { x: number; y: number; w: number; h: number };
 
-const COLORS = [
-  { value: "#0a0a0a", label: "Ink" },
-  { value: "#F0782D", label: "Orange" },
-  { value: "#7B61FF", label: "Violet" },
-  { value: "#9BD62E", label: "Lime" },
+const INKS = [
+  { id: "ink", label: "Ink", token: "--litt-fg" },
+  { id: "graphite", label: "Graphite", token: "--litt-fg-subtle" },
+  { id: "accent", label: "Accent", token: "--litt-accent" },
 ] as const;
+
+// The old default ink, kept only so strokes saved before the restyle follow the theme too.
+const LEGACY_INK = "#0a0a0a"; // litt-allow: a stored value from older drawings, not a color of this component
+
+// The resolved color of each ink under the current theme.
+const paint: Record<string, string> = {};
+
+function readInks() {
+  const style = getComputedStyle(document.documentElement);
+  for (const ink of INKS) paint[ink.id] = style.getPropertyValue(ink.token).trim();
+}
+
+function inkOf(color: string) {
+  return paint[color === LEGACY_INK ? INKS[0].id : color] || color;
+}
 
 const MIN_WIDTH = 2;
 const MAX_WIDTH = 7;
@@ -139,7 +163,7 @@ function drawSegment(
   ctx.beginPath();
   ctx.moveTo((x0 + x1) / 2, (y0 + y1) / 2);
   ctx.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2);
-  ctx.strokeStyle = stroke.color;
+  ctx.strokeStyle = inkOf(stroke.color);
   ctx.lineWidth = pts[i][2];
   ctx.stroke();
 }
@@ -150,7 +174,7 @@ function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke, cx: number, s
     const [x, y] = toScreen(pts[0], cx, scrollY);
     ctx.beginPath();
     ctx.arc(x, y, pts[0][2] / 2, 0, Math.PI * 2);
-    ctx.fillStyle = stroke.color;
+    ctx.fillStyle = inkOf(stroke.color);
     ctx.fill();
     return;
   }
@@ -161,12 +185,17 @@ export function GraffitiLayer() {
   const pathname = usePathname();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Stroke[]>([]);
-  const colorRef = useRef<string>(COLORS[0].value);
+  const colorRef = useRef<string>(INKS[0].id);
   const redrawRef = useRef<() => void>(() => {});
   const relayoutRef = useRef<() => void>(() => {});
   const [enabled, setEnabled] = useState(false);
-  const [color, setColor] = useState<string>(COLORS[0].value);
+  const [color, setColor] = useState<string>(INKS[0].id);
   const [count, setCount] = useState(0);
+  // The toolbar is a floating surface: it arrives and leaves on the responsive tier,
+  // because the view's one expressive moment belongs to the closing's toast.
+  const enter = useTransition("responsive");
+  const exit = useExit("responsive");
+  const travel = useTravel();
 
   // Only fine pointers with hover (mouse, trackpad, pen) get the feature
   useEffect(() => {
@@ -213,6 +242,7 @@ export function GraffitiLayer() {
       const h = window.innerHeight;
       const cx = w / 2;
       const sy = window.scrollY;
+      readInks();
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx!.clearRect(0, 0, w, h);
       ctx!.lineCap = "round";
@@ -326,6 +356,12 @@ export function GraffitiLayer() {
     const observer = new ResizeObserver(() => relayout());
     observer.observe(document.body);
 
+    // A theme change (the switch, or the system) changes what Ink and Accent are
+    const scheme = window.matchMedia("(prefers-color-scheme: dark)");
+    const themeObserver = new MutationObserver(redraw);
+    themeObserver.observe(root, { attributes: true, attributeFilter: ["data-theme", "class"] });
+    scheme.addEventListener("change", redraw);
+
     resize();
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -339,6 +375,8 @@ export function GraffitiLayer() {
       cancelAnimationFrame(frame);
       clearTimeout(settle);
       observer.disconnect();
+      themeObserver.disconnect();
+      scheme.removeEventListener("change", redraw);
       root.style.cursor = "";
       redrawRef.current = () => {};
       relayoutRef.current = () => {};
@@ -377,49 +415,49 @@ export function GraffitiLayer() {
         aria-hidden="true"
       />
 
-      {count > 0 && (
-        <div
-          role="toolbar"
-          aria-label="Graffiti"
-          data-graffiti-ignore
-          className="graffiti-toolbar fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-white/70 p-1 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.16)] backdrop-blur-md"
-        >
-          {COLORS.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => pickColor(c.value)}
-              aria-label={`${c.label} marker`}
-              aria-pressed={color === c.value}
-              className="grid h-7 w-7 place-items-center rounded-full"
-            >
-              <span
-                className="h-3.5 w-3.5 rounded-full transition-transform duration-150 ease-out"
-                style={{
-                  background: c.value,
-                  transform: color === c.value ? "scale(1.25)" : undefined,
-                  boxShadow: color === c.value ? `0 0 0 2px #fff, 0 0 0 3px ${c.value}` : undefined,
-                }}
-              />
-            </button>
-          ))}
-          <span className="mx-1 h-4 w-px bg-line" aria-hidden="true" />
-          <button
-            type="button"
-            onClick={() => update(strokesRef.current.slice(0, -1))}
-            className="rounded-full px-2.5 py-1 text-meta text-muted transition-colors hover:text-ink"
+      <AnimatePresence>
+        {count > 0 && (
+          <motion.div
+            key="toolbar"
+            role="toolbar"
+            aria-label="Graffiti"
+            data-graffiti-ignore
+            className="litt-glass fixed inset-x-0 bottom-6 z-40 mx-auto flex w-fit items-center gap-1 rounded-litt-surface p-1"
+            initial={{ opacity: 0, y: travel }}
+            animate={{ opacity: 1, y: 0, transition: enter }}
+            exit={{ opacity: 0, y: travel, transition: exit }}
           >
-            Undo
-          </button>
-          <button
-            type="button"
-            onClick={() => update([])}
-            className="rounded-full px-2.5 py-1 text-meta text-muted transition-colors hover:text-ink"
-          >
-            Clear
-          </button>
-        </div>
-      )}
+            {INKS.map((ink) => (
+              <Tooltip key={ink.id} content={ink.label}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  iconOnly
+                  onClick={() => pickColor(ink.id)}
+                  aria-label={`${ink.label} marker`}
+                  aria-pressed={color === ink.id}
+                >
+                  {/* The dot is the ink itself; the ring says which one is picked, so color is never the only signal */}
+                  <span
+                    className={
+                      "size-4 rounded-litt-pill " +
+                      (color === ink.id ? "shadow-[0_0_0_2px_var(--litt-surface-1),0_0_0_3px_var(--litt-fg)]" : "")
+                    }
+                    style={{ background: `var(${ink.token})` }}
+                  />
+                </Button>
+              </Tooltip>
+            ))}
+            <span className="mx-1 h-4 w-px bg-litt-line-strong" aria-hidden="true" />
+            <Button variant="ghost" size="sm" onClick={() => update(strokesRef.current.slice(0, -1))}>
+              Undo
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => update([])}>
+              Clear
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

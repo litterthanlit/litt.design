@@ -1,80 +1,58 @@
-"use client";
-
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import type { WritingEntry } from "@/data/writing";
 
 type WritingSectionProps = {
   entries: WritingEntry[];
 };
 
+// Airy list rows: an fg 6% fill on hover (and on press, for a finger), instant tier, color only.
+const ROW = "flex items-baseline justify-between gap-4 rounded-litt-control px-3 py-3";
+const ROW_LINK =
+  ROW +
+  " transition-colors duration-(--litt-dur-instant) ease-litt" +
+  " hover:bg-[color-mix(in_oklab,var(--litt-fg)_6%,transparent)]" +
+  " pointer-coarse:active:bg-[color-mix(in_oklab,var(--litt-fg)_6%,transparent)]";
+
 export function WritingSection({ entries }: WritingSectionProps) {
-  const reduceMotion = useReducedMotion();
-
   return (
-    <section id="writing" className="section-shell py-16 md:py-24 *:max-w-[680px]">
-      <motion.h2
-        className="eyebrow mb-4"
-        initial={reduceMotion ? {} : { clipPath: "inset(100% 0 0 0)", y: 8 }}
-        whileInView={{ clipPath: "inset(0% 0 0 0)", y: 0 }}
-        viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 80, damping: 30 }}
-      >
-        Writing
-      </motion.h2>
+    <section id="writing" aria-labelledby="writing-heading" className="section">
+      <div className="shell">
+        <div className="split">
+          <div className="split-label">
+            <h2 id="writing-heading" className="text-litt-h4 text-litt-fg">
+              Writing
+            </h2>
+          </div>
 
-      <div>
-        {entries.map((entry, i) => (
-          <motion.div
-            key={entry.slug}
-            initial={
-              reduceMotion
-                ? {}
-                : { opacity: 0, y: 10, filter: "blur(2px)" }
-            }
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true, margin: "-20px" }}
-            transition={{
-              type: "spring",
-              stiffness: 120,
-              damping: 28,
-              delay: i * 0.04,
-            }}
-          >
-            {entry.body ? (
-              <Link
-                href={`/writing/${entry.slug}`}
-                {...{ transitionTypes: ["nav-forward"] } as any}
-                className="group -mx-2 flex items-baseline justify-between rounded-md px-2 py-2 transition-colors duration-150 ease-out hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-offset-0 active:bg-[rgba(0,0,0,0.05)]"
-              >
-                <span className="flex items-center gap-1.5 text-body font-medium text-ink">
-                  {entry.title}
-                  <span
-                    className="-translate-x-1 text-muted opacity-0 transition-[opacity,translate] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
-                    aria-hidden="true"
+          <ul className="split-body border-t border-litt-line">
+            {entries.map((entry) => (
+              <li key={entry.slug} className="border-b border-litt-line py-1">
+                {entry.body ? (
+                  <Link
+                    href={`/writing/${entry.slug}`}
+                    className={ROW_LINK}
                   >
-                    →
-                  </span>
-                </span>
-                <span className="meta ml-4 shrink-0">
-                  {entry.date}
-                </span>
-              </Link>
-            ) : (
-              <div className="flex items-baseline justify-between py-2">
-                <span className="text-body text-muted">
-                  {entry.title}
-                  <span className="sr-only"> (draft, not yet published)</span>
-                </span>
-                <span className="meta ml-4 shrink-0">
-                  {entry.date}
-                </span>
-              </div>
-            )}
-          </motion.div>
-        ))}
+                    <span className="text-litt-body text-litt-fg">{entry.title}</span>
+                    <time dateTime={entry.date} className="meta shrink-0">
+                      {entry.date}
+                    </time>
+                  </Link>
+                ) : (
+                  <div className={ROW}>
+                    <span className="text-litt-body text-litt-fg-subtle">
+                      {entry.title}
+                      <span className="sr-only"> (draft, not yet published)</span>
+                    </span>
+                    <time dateTime={entry.date} className="meta shrink-0">
+                      {entry.date}
+                    </time>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-
     </section>
   );
 }

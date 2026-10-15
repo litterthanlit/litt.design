@@ -17,9 +17,9 @@ export default function HomePage() {
         <WorkSection projects={projects} items={workList} />
         <ContributionGraph username="litterthanlit" />
         <WritingSection entries={writings} />
-        <Footer settings={siteSettings} />
         <ThankYouOrb />
       </main>
+      <Footer settings={siteSettings} />
     </DirectionalTransition>
   );
 }

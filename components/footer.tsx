@@ -1,408 +1,98 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { Button } from "@/components/litt/button";
+import { Tag } from "@/components/litt/tag";
+import { toast } from "@/components/litt/toast";
+import { ThemeSwitch } from "@/components/theme-switch";
+import { siteSettings } from "@/data/site";
 import type { SiteSettings } from "@/data/types";
+
+// The footer is quiet on purpose: a hairline, Nick's three lines, where and
+// whether, the links, and the theme. Nothing here moves, glows or reveals on
+// scroll. It brings its own air above (a section's --section-y), so it works
+// in either order with the closing statement below.
 
 type FooterProps = {
   settings: SiteSettings;
 };
 
 export function Footer({ settings }: FooterProps) {
-  const reduceMotion = useReducedMotion();
-
-  const fadeUp = (delay: number) =>
-    reduceMotion
-      ? {}
-      : {
-          initial: { opacity: 0, y: 20, filter: "blur(4px)" } as const,
-          whileInView: { opacity: 1, y: 0, filter: "blur(0px)" } as const,
-          viewport: { once: true, margin: "-80px" } as const,
-          transition: {
-            type: "spring" as const,
-            stiffness: 100,
-            damping: 30,
-            delay,
-          },
-        };
-
   return (
-    <footer className="section-shell py-16 md:py-20">
-      {/* Bio */}
-      <motion.div className="max-w-xl" {...fadeUp(0)}>
-        <p className="text-body font-medium text-ink">I build tools for creators.</p>
-        <p className="text-body text-ink">The craft is in what I leave out.</p>
-        <p className="text-body text-ink">More play.</p>
-        <p className="meta mt-4">
-          {settings.location} &middot; {settings.availability.label}
-        </p>
-      </motion.div>
+    <footer className="shell section pb-12">
+      <div className="border-t border-litt-line pt-12">
+        <div className="flex flex-col gap-12">
+          <div className="flex flex-col gap-6">
+            <div className="text-litt-body">
+              <p className="text-litt-fg">I build tools for creators.</p>
+              <p className="text-litt-fg-muted">The craft is in what I leave out.</p>
+              <p className="text-litt-fg-muted">More play.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-litt-small text-litt-fg-subtle">
+              <span>{settings.location}</span>
+              <Tag status="success">{settings.availability.label}</Tag>
+            </div>
+          </div>
 
-      {/* Socials */}
-      <motion.div className="mt-6 flex flex-wrap gap-x-5 gap-y-1" {...fadeUp(0.08)}>
-        {settings.socialLinks.map((link) => (
-          <a
-            key={link.label}
-            href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link text-body"
-          >
-            {link.label}
-          </a>
-        ))}
-        <a
-          href={`mailto:${settings.contactEmail}`}
-          className="link text-body"
-        >
-          {settings.contactEmail}
-        </a>
-      </motion.div>
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <nav aria-label="Social links">
+              <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                {settings.socialLinks.map((link) => (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link inline-flex h-litt-control-sm items-center text-litt-body"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <ThemeSwitch className="self-start lg:self-auto" />
+          </div>
+        </div>
+      </div>
     </footer>
   );
 }
 
-// --- Thank You Orb (Canvas-based for performance) ---
-
-function seededRandom(seed: number) {
-  const x = Math.sin(seed) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-type Dot = {
-  x: number;
-  y: number;
-  size: number;
-  opacity: number;
-  hue: number;
-  speed: number;
-  phase: number;
-  orbitRadius: number;
-};
-
-function generateDots(count: number, radius: number): Dot[] {
-  const dots: Dot[] = [];
-  for (let i = 0; i < count; i++) {
-    const angle = seededRandom(i * 2) * Math.PI * 2;
-    const dist = Math.sqrt(seededRandom(i * 2 + 1)) * radius;
-    const x = Math.cos(angle) * dist;
-    const y = Math.sin(angle) * dist;
-    const distRatio = dist / radius;
-
-    const size = 0.015 + seededRandom(i * 3) * 0.03 * (1 - distRatio * 0.5);
-    const opacity = 0.4 + (1 - distRatio) * 0.5 + seededRandom(i * 4) * 0.1;
-    const hue = distRatio;
-    const speed = 0.3 + seededRandom(i * 5) * 0.7;
-    const phase = seededRandom(i * 6) * Math.PI * 2;
-    const orbitRadius = 0.01 + seededRandom(i * 7) * 0.03;
-
-    dots.push({ x, y, size, opacity, hue, speed, phase, orbitRadius });
-  }
-  return dots;
-}
-
-// Normalized coords: dots live in -1..1 space
-const DOTS = generateDots(200, 0.9);
-
-// Per-dot spring state for mouse interaction
-const dotOffsets = DOTS.map(() => ({ x: 0, y: 0, vx: 0, vy: 0 }));
-
-// Spring constants for cursor interaction
-const SPRING_STIFFNESS = 120;  // how snappy the return (higher = faster snap)
-const SPRING_DAMPING = 12;     // resistance (higher = less oscillation)
-const REPEL_STRENGTH = 0.008;  // force magnitude
-const REPEL_RADIUS = 0.3;     // influence radius in normalized space
-
-// OKLCH palettes: [lightness, chroma, hue°]
-// Interpolation uses nearest-hue in OKLCH space for natural transitions
-const COLOR_PALETTES = [
-  { center: [0.78, 0.22, 130], edge: [0.82, 0.16, 130], glow: [0.60, 0.28, 145] },   // vivid lime
-  { center: [0.65, 0.18, 230], edge: [0.72, 0.14, 230], glow: [0.48, 0.24, 250] },   // electric blue
-  { center: [0.60, 0.24, 300], edge: [0.68, 0.18, 300], glow: [0.42, 0.30, 310] },   // vivid violet
-  { center: [0.68, 0.22, 350], edge: [0.74, 0.16, 350], glow: [0.45, 0.28, 360] },   // hot pink
-];
-
-const CYCLE_DURATION = 8;
-
-// Nearest-hue interpolation in OKLCH
-function lerpHue(a: number, b: number, t: number): number {
-  let diff = b - a;
-  // Nearest hue: take the shortest path around the wheel
-  if (diff > 180) diff -= 360;
-  if (diff < -180) diff += 360;
-  return ((a + diff * t) % 360 + 360) % 360;
-}
-
-function lerpOklch(a: number[], b: number[], t: number): number[] {
-  return [
-    a[0] + (b[0] - a[0]) * t,  // lightness
-    a[1] + (b[1] - a[1]) * t,  // chroma
-    lerpHue(a[2], b[2], t),     // hue (nearest path)
-  ];
-}
-
-// Convert OKLCH to RGB for canvas (canvas doesn't support oklch natively)
-function oklchToRgb(l: number, c: number, h: number): number[] {
-  const hRad = (h * Math.PI) / 180;
-  const a_ = c * Math.cos(hRad);
-  const b_ = c * Math.sin(hRad);
-
-  // OKLab to linear sRGB via LMS
-  const l_ = l + 0.3963377774 * a_ + 0.2158037573 * b_;
-  const m_ = l - 0.1055613458 * a_ - 0.0638541728 * b_;
-  const s_ = l - 0.0894841775 * a_ - 1.2914855480 * b_;
-
-  const ll = l_ * l_ * l_;
-  const mm = m_ * m_ * m_;
-  const ss = s_ * s_ * s_;
-
-  const r = +4.0767416621 * ll - 3.3077115913 * mm + 0.2309699292 * ss;
-  const g = -1.2684380046 * ll + 2.6097574011 * mm - 0.3413193965 * ss;
-  const b = -0.0041960863 * ll - 0.7034186147 * mm + 1.7076147010 * ss;
-
-  // Gamma correction + clamp
-  const toSrgb = (x: number) => Math.round(Math.max(0, Math.min(1, x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055)) * 255);
-  return [toSrgb(r), toSrgb(g), toSrgb(b)];
-}
-
-
+// The closing statement. The export keeps its old name so page.tsx still
+// compiles, but the animated orb is gone: material is static (P5), and the
+// page's one centered statement is a thank-you and one action. The primary
+// button owns the page's accent fill and glow (P1, P10). Pressing it copies
+// the address and fires the view's one expressive moment, the toast. The
+// plain mailto link under it works without JavaScript.
 export function ThankYouOrb() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const textRef = useRef<HTMLParagraphElement>(null);
-  const glowRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const mouseRef = useRef({ x: 0, y: 0, active: false });
-  const rafRef = useRef<number>(0);
+  const email = siteSettings.contactEmail;
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    let size = canvas.clientWidth || 360;
-
-    function resizeCanvas() {
-      size = canvas!.clientWidth || 360;
-      canvas!.width = size * dpr;
-      canvas!.height = size * dpr;
-      ctx!.setTransform(1, 0, 0, 1, 0, 0);
-      ctx!.scale(dpr, dpr);
+  async function copyEmail() {
+    try {
+      await navigator.clipboard.writeText(email);
+      toast({ title: "Email copied", description: email, tone: "success" });
+    } catch {
+      // Clipboard blocked or unavailable: say so, and show the address to copy by hand.
+      toast({ title: "Couldn’t copy", description: email, tone: "error" });
     }
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    const startTime = performance.now();
-    let lastTime = startTime;
-    let lastGlow = 0;
-    let running = false;
-
-    function animate(now: number) {
-      // Slow drift reads the same at 30fps and halves the canvas work
-      if (running && now - lastTime < 1000 / 30 - 1) {
-        rafRef.current = requestAnimationFrame(animate);
-        return;
-      }
-      const t = (now - startTime) / 1000;
-      const dt = Math.min((now - lastTime) / 1000, 0.033); // cap at ~30fps delta to avoid explosions
-      lastTime = now;
-      const mouse = mouseRef.current;
-
-      // Palette
-      const totalCycle = CYCLE_DURATION * COLOR_PALETTES.length;
-      const cycleT = (t % totalCycle) / CYCLE_DURATION;
-      const pidx = Math.floor(cycleT) % COLOR_PALETTES.length;
-      const nidx = (pidx + 1) % COLOR_PALETTES.length;
-      const blend = cycleT - Math.floor(cycleT);
-      const ease = blend * blend * (3 - 2 * blend);
-
-      const cur = COLOR_PALETTES[pidx];
-      const nxt = COLOR_PALETTES[nidx];
-      const centerOklch = lerpOklch(cur.center, nxt.center, ease);
-      const edgeOklch = lerpOklch(cur.edge, nxt.edge, ease);
-      const glowOklch = lerpOklch(cur.glow, nxt.glow, ease);
-      const center = oklchToRgb(centerOklch[0], centerOklch[1], centerOklch[2]);
-      const edge = oklchToRgb(edgeOklch[0], edgeOklch[1], edgeOklch[2]);
-      const glow = oklchToRgb(glowOklch[0], glowOklch[1], glowOklch[2]);
-
-      // The palette shifts over seconds, so the large glow layers
-      // only need repainting ~15 times a second, not every frame.
-      const updateGlow = now - lastGlow > 66;
-      if (updateGlow) lastGlow = now;
-
-      // Text: white with a glow matching the current palette
-      if (updateGlow && textRef.current) {
-        textRef.current.style.color = `rgba(255,255,255,0.95)`;
-        textRef.current.style.textShadow = `0 0 20px rgba(${glow[0]},${glow[1]},${glow[2]},0.6), 0 0 40px rgba(${glow[0]},${glow[1]},${glow[2]},0.3)`;
-      }
-
-      glowRefs.current.forEach((el, idx) => {
-        if (!el || !updateGlow) return;
-        const op = [0.08, 0.14, 0.2][idx] ?? 0.14;
-        // Soft falloff baked into the gradient instead of a CSS blur filter,
-        // which forced a full re-raster of each layer on every colour change
-        const rgb = `${glow[0]},${glow[1]},${glow[2]}`;
-        el.style.background = `radial-gradient(circle, rgba(${rgb},${op}) 0%, rgba(${rgb},${op * 0.55}) 25%, rgba(${rgb},${op * 0.18}) 50%, transparent 70%)`;
-      });
-
-      // Clear — use current size
-      const currentSize = canvas!.clientWidth || 360;
-      const currentHalf = currentSize / 2;
-      ctx!.clearRect(0, 0, currentSize, currentSize);
-
-      // Draw each dot with spring-based cursor interaction
-      for (let i = 0; i < DOTS.length; i++) {
-        const dot = DOTS[i];
-        const off = dotOffsets[i];
-
-        const dx = Math.sin(t * dot.speed + dot.phase) * dot.orbitRadius;
-        const dy = Math.cos(t * dot.speed * 0.8 + dot.phase) * dot.orbitRadius;
-
-        const baseX = dot.x + dx;
-        const baseY = dot.y + dy;
-
-        // --- Spring physics for cursor interaction ---
-        // 1. Calculate repulsion force from cursor
-        let forceX = 0;
-        let forceY = 0;
-
-        if (mouse.active) {
-          const toX = baseX + off.x - mouse.x;
-          const toY = baseY + off.y - mouse.y;
-          const dist = Math.sqrt(toX * toX + toY * toY);
-
-          if (dist < REPEL_RADIUS && dist > 0.001) {
-            // Inverse-square falloff — sharp near cursor, gentle at edge
-            const normalizedDist = dist / REPEL_RADIUS;
-            const falloff = 1 / (normalizedDist * normalizedDist + 0.1) - 1 / 1.1;
-            forceX = (toX / dist) * falloff * REPEL_STRENGTH;
-            forceY = (toY / dist) * falloff * REPEL_STRENGTH;
-          }
-        }
-
-        // 2. Spring force pulling back to rest (offset = 0)
-        const springX = -SPRING_STIFFNESS * off.x;
-        const springY = -SPRING_STIFFNESS * off.y;
-
-        // 3. Damping (friction opposing velocity)
-        const dampX = -SPRING_DAMPING * off.vx;
-        const dampY = -SPRING_DAMPING * off.vy;
-
-        // 4. Integrate (semi-implicit Euler)
-        off.vx += (springX + dampX + forceX * 1000) * dt;
-        off.vy += (springY + dampY + forceY * 1000) * dt;
-        off.x += off.vx * dt;
-        off.y += off.vy * dt;
-
-        const fx = baseX + off.x;
-        const fy = baseY + off.y;
-
-        const breath = dot.size + Math.sin(t * dot.speed * 0.5 + dot.phase) * 0.003;
-
-        // Convert normalized to px
-        const px = (fx * 0.5 + 0.5) * currentSize;
-        const py = (fy * 0.5 + 0.5) * currentSize;
-        const pr = Math.max(1, breath * currentHalf);
-        const bloomR = pr * 2.5;
-
-        const c = [
-          Math.round(center[0] + (edge[0] - center[0]) * dot.hue),
-          Math.round(center[1] + (edge[1] - center[1]) * dot.hue),
-          Math.round(center[2] + (edge[2] - center[2]) * dot.hue),
-        ];
-
-        // Single radial gradient per dot — core + soft falloff = bloom effect
-        const grad = ctx!.createRadialGradient(px, py, 0, px, py, bloomR);
-        grad.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]},${dot.opacity})`);
-        grad.addColorStop(0.4, `rgba(${c[0]},${c[1]},${c[2]},${dot.opacity * 0.35})`);
-        grad.addColorStop(1, `rgba(${c[0]},${c[1]},${c[2]},0)`);
-
-        ctx!.beginPath();
-        ctx!.arc(px, py, bloomR, 0, Math.PI * 2);
-        ctx!.fillStyle = grad;
-        ctx!.fill();
-      }
-
-      if (running) rafRef.current = requestAnimationFrame(animate);
-    }
-
-    function start() {
-      if (running) return;
-      running = true;
-      lastTime = performance.now();
-      rafRef.current = requestAnimationFrame(animate);
-    }
-
-    function stop() {
-      running = false;
-      cancelAnimationFrame(rafRef.current);
-    }
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      // Draw a single still frame
-      rafRef.current = requestAnimationFrame(animate);
-      return () => {
-        cancelAnimationFrame(rafRef.current);
-        window.removeEventListener("resize", resizeCanvas);
-      };
-    }
-
-    // Only animate while the orb is on screen
-    const observer = new IntersectionObserver(
-      ([entry]) => (entry.isIntersecting ? start() : stop()),
-      { rootMargin: "200px" },
-    );
-    observer.observe(canvas);
-
-    return () => {
-      stop();
-      observer.disconnect();
-      window.removeEventListener("resize", resizeCanvas);
-    };
-  }, []);
-
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-    mouseRef.current = { x, y, active: true };
   }
-
-  function handleMouseLeave() {
-    mouseRef.current = { ...mouseRef.current, active: false };
-  }
-
-  const setGlowRef = (idx: number) => (el: HTMLDivElement | null) => {
-    glowRefs.current[idx] = el;
-  };
 
   return (
-    <section className="relative flex items-center justify-center overflow-hidden py-32 md:py-48">
-      {/* Bloom layers — tight around the orb */}
-      <div ref={setGlowRef(0)} className="pointer-events-none absolute h-[700px] w-[700px] rounded-full md:h-[800px] md:w-[800px]" />
-      <div ref={setGlowRef(1)} className="pointer-events-none absolute h-[480px] w-[480px] rounded-full md:h-[560px] md:w-[560px]" />
-      <div ref={setGlowRef(2)} className="pointer-events-none absolute h-[330px] w-[330px] rounded-full md:h-[410px] md:w-[410px]" />
-
-      {/* Interactive dot orb */}
-      <div
-        className="relative h-[280px] w-[280px] cursor-default md:h-[360px] md:w-[360px]"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        <canvas ref={canvasRef} className="h-full w-full" />
-
-        {/* Text overlay */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <p
-            ref={textRef}
-            className="pl-4 text-[16px] font-medium leading-[1.5] tracking-[-0.01em] md:text-[18px]"
-            style={{ color: "rgba(255,255,255,0.95)" }}
+    <section aria-labelledby="closing-title" className="shell section">
+      <div className="mx-auto flex max-w-litt-reading flex-col items-center gap-8 text-center">
+        <h2 id="closing-title" className="text-litt-h2 text-litt-fg text-balance">
+          Thank you for being here.
+        </h2>
+        <div className="flex flex-col items-center gap-4">
+          <Button variant="primary" size="lg" onClick={copyEmail}>
+            Copy email
+          </Button>
+          <a
+            href={`mailto:${email}`}
+            className="link inline-flex h-litt-control-sm items-center text-litt-small"
           >
-            thank you
-            <br />
-            for being here
-          </p>
+            {email}
+          </a>
         </div>
       </div>
     </section>
