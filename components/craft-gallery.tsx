@@ -162,7 +162,7 @@ export function CraftGallery() {
             <Study name="Flip" tier="responsive" note="A half turn on the responsive spring. No overshoot, no pulse.">
               <FlipStudy />
             </Study>
-            <Study name="Counter" tier="responsive" note="The number slides half a travel and fades. The old one leaves quicker.">
+            <Study name="Counter" tier="responsive" note="The number slides half a travel and fades. Exits are quicker.">
               <CounterStudy />
             </Study>
             <Study name="Arrange" tier="responsive" note="Dots glide to their places 40ms apart. Position only, no filter.">
@@ -177,7 +177,7 @@ export function CraftGallery() {
             <Study name="Tilt" tier="responsive" note="Hold and move. It follows the pointer one to one, then springs flat.">
               <TiltStudy />
             </Study>
-            <Study name="Drag" tier="responsive" note="Follows the pointer one to one. Let go and it springs back at your speed.">
+            <Study name="Drag" tier="responsive" note="One to one while held. Let go and it springs back at your speed.">
               <DragStudy />
             </Study>
           </ul>
