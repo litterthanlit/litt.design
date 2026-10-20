@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { previewMotion } from "@/components/previews";
 import type { Project } from "@/data/types";
 import type { WorkItem } from "@/data/work";
 
@@ -132,6 +133,7 @@ function CardCaption({
 
 function ProjectCard({ project }: { project: Project }) {
   const { preview, background, position } = project.coverMedia;
+  const Motion = previewMotion[project.slug];
 
   return (
     <Link
@@ -152,6 +154,7 @@ function ProjectCard({ project }: { project: Project }) {
         ) : (
           <div className="absolute inset-0" style={{ background }} aria-hidden="true" />
         )}
+        {Motion && <Motion />}
       </div>
       <CardCaption
         title={project.title}

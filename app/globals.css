@@ -271,3 +271,216 @@ body::before {
     animation: none;
   }
 }
+
+/* Hypher work card: dump → note → write-back, played on hover.
+   Decorative layer over the screenshot (components/previews/hypher-preview.tsx).
+   Only where hover exists and motion is allowed; touch and reduced-motion
+   visitors get the plain screenshot. */
+.hyp-fx {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --hyp-accent: #3b82f6;
+  --hyp-loop: 6s;
+  --hyp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .hyp-fx {
+    display: block;
+  }
+}
+
+/* Soft veil so the floating UI reads against the busy screenshot */
+.hyp-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(255 255 255 / 0.38);
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+/* Same box as the cover-cropped screenshot (1604×981), centred. Size
+   containment gives children cqw/cqh units relative to the image. */
+.hyp-stage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 100%;
+  aspect-ratio: 1604 / 981;
+  translate: -50% 0;
+  container-type: size;
+}
+
+.hyp-pos {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  translate: -50% -50%;
+}
+
+.hyp-pill {
+  display: grid;
+  align-items: center;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgb(0 0 0 / 0.08);
+  background: rgb(255 255 255 / 0.82);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.2);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--text-meta);
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  white-space: nowrap;
+  opacity: 0;
+}
+
+/* Both states share one grid cell so the pill never resizes */
+.hyp-a,
+.hyp-b {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: calc(var(--hyp-chars, 28) * 1ch);
+}
+
+.hyp-b {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  opacity: 0;
+}
+
+.hyp-type {
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+}
+
+.hyp-caret {
+  width: 1px;
+  height: 0.95em;
+  margin-left: -0.375rem;
+  background: var(--hyp-accent);
+}
+
+.hyp-check {
+  width: 1rem;
+  height: 1rem;
+  padding: 2px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--hyp-accent);
+}
+
+.hyp-b-title {
+  font-weight: 500;
+}
+
+.hyp-b-meta {
+  margin-left: auto;
+  color: rgb(10 10 10 / 0.55);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The "hypher beta launch" card inside the screenshot */
+.hyp-ring {
+  position: absolute;
+  left: 16.2%;
+  top: 60.6%;
+  width: 25.2%;
+  height: 31.2%;
+  border-radius: 4px;
+  border: 1px solid var(--hyp-accent);
+  background: rgb(59 130 246 / 0.07);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.14);
+  opacity: 0;
+}
+
+.hyp-chip {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: -0.25rem 0 0 -0.25rem;
+  border-radius: 3px;
+  background: var(--hyp-accent);
+  opacity: 0;
+}
+
+.group:is(:hover, :focus-visible) .hyp-scrim {
+  opacity: 1;
+}
+
+.group:is(:hover, :focus-visible) .hyp-pill {
+  animation: hyp-pill var(--hyp-loop) var(--hyp-ease) infinite;
+}
+
+.group:is(:hover, :focus-visible) .hyp-type {
+  animation: hyp-type var(--hyp-loop) steps(28, end) infinite;
+}
+
+.group:is(:hover, :focus-visible) .hyp-caret {
+  animation: hyp-caret 1s steps(1, end) infinite;
+}
+
+.group:is(:hover, :focus-visible) .hyp-a {
+  animation: hyp-a var(--hyp-loop) ease infinite;
+}
+
+.group:is(:hover, :focus-visible) .hyp-b {
+  animation: hyp-b var(--hyp-loop) var(--hyp-ease) infinite;
+}
+
+.group:is(:hover, :focus-visible) .hyp-chip {
+  animation: hyp-chip var(--hyp-loop) cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.group:is(:hover, :focus-visible) .hyp-ring {
+  animation: hyp-ring var(--hyp-loop) var(--hyp-ease) infinite;
+}
+
+@keyframes hyp-pill {
+  0% { opacity: 0; transform: translateY(6px) scale(0.97); }
+  6%, 90% { opacity: 1; transform: none; }
+  97%, 100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+/* 28 characters typed between 6% and 36% of the loop */
+@keyframes hyp-type {
+  0%, 6% { width: 0; }
+  36%, 100% { width: 28ch; }
+}
+
+@keyframes hyp-caret {
+  50% { opacity: 0; }
+}
+
+@keyframes hyp-a {
+  0%, 40% { opacity: 1; }
+  44%, 100% { opacity: 0; }
+}
+
+@keyframes hyp-b {
+  0%, 42% { opacity: 0; transform: translateY(5px); }
+  50%, 90% { opacity: 1; transform: none; }
+  97%, 100% { opacity: 0; transform: none; }
+}
+
+/* Leaves the composer as typing ends, lands on the project card */
+@keyframes hyp-chip {
+  0%, 38% { opacity: 0; transform: translate(0, 0) scale(1); }
+  41% { opacity: 1; transform: translate(0, 0) scale(1); }
+  54% { opacity: 1; transform: translate(-21.3cqw, 42cqh) scale(0.7); }
+  58%, 100% { opacity: 0; transform: translate(-21.3cqw, 42cqh) scale(0.2); }
+}
+
+@keyframes hyp-ring {
+  0%, 52% { opacity: 0; transform: scale(0.985); }
+  60%, 90% { opacity: 1; transform: none; }
+  97%, 100% { opacity: 0; transform: none; }
+}
