@@ -142,7 +142,9 @@ function ProjectCard({ project }: { project: Project }) {
       className={LINK}
     >
       <div className={`${FRAME} bg-[#f0f0f0]`}>
-        {preview ? (
+        {Motion ? (
+          <Motion />
+        ) : preview ? (
           <Image
             src={preview}
             alt={`${project.title} — ${project.oneLineOutcome}`}
@@ -154,7 +156,6 @@ function ProjectCard({ project }: { project: Project }) {
         ) : (
           <div className="absolute inset-0" style={{ background }} aria-hidden="true" />
         )}
-        {Motion && <Motion />}
       </div>
       <CardCaption
         title={project.title}

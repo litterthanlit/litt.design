@@ -101,23 +101,23 @@ export const projects: Project[] = [
     category: "Product",
     status: "In progress",
     description:
-      "Project memory under your coding agents. Dump the project as it actually is — rants, screenshots, chat exports, “don't do X” — and Hypher compiles it into one note the next agent reads, works from, and writes back to.",
+      "Project memory under your coding agents. Hypher carries decisions, constraints and next steps between Claude Code and Codex: save in one, resume in the other, without retyping the project. Rants, screenshots and “don't do X” go in; one bounded note comes out.",
     oneLineOutcome:
       "Switch coding agents without starting over.",
     client: "Personal Project",
     year: "2026",
     services: ["Product Strategy", "Product Design", "Full-Stack Development"],
     stack: ["Next.js", "Convex", "TypeScript", "MCP"],
-    accent: "#3B82F6",
+    accent: "#F5813F",
     coverMedia: {
-      background: "linear-gradient(135deg, #f7f8fa 0%, #e8ecf3 100%)",
+      background: "linear-gradient(135deg, #0b0c0e 0%, #1c1d20 100%)",
       preview: "/previews/hypher.jpg",
     },
     externalUrl: "https://www.hypher.app/",
     heroFrames: [
-      { id: "hypher-1", background: "linear-gradient(180deg, #f7f8fa, #3B82F6)", focus: 0.3 },
-      { id: "hypher-2", background: "linear-gradient(180deg, #3B82F6, #f7f8fa)", focus: 0.5 },
-      { id: "hypher-3", background: "linear-gradient(180deg, #f7f8fa, #3B82F6)", focus: 0.7 },
+      { id: "hypher-1", background: "linear-gradient(180deg, #0b0c0e, #F5813F)", focus: 0.3 },
+      { id: "hypher-2", background: "linear-gradient(180deg, #F5813F, #0b0c0e)", focus: 0.5 },
+      { id: "hypher-3", background: "linear-gradient(180deg, #0b0c0e, #F5813F)", focus: 0.7 },
     ],
     storyBlocks: [
       {
