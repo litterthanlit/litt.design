@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { previewMotion } from "@/components/previews";
+import { CoverVideo, usePrefersReducedMotion } from "@/components/cover-video";
 import type { Project } from "@/data/types";
 import type { WorkItem } from "@/data/work";
 
@@ -132,18 +133,26 @@ function CardCaption({
 }
 
 function ProjectCard({ project }: { project: Project }) {
-  const { preview, background, position } = project.coverMedia;
-  const Motion = previewMotion[project.slug];
+  const { preview, background, position, video } = project.coverMedia;
+  const reduceMotion = usePrefersReducedMotion();
+  // null = follow the visitor's motion preference until they press the button
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const playing = choice ?? !reduceMotion;
 
-  return (
+  const link = (
     <Link
       href={`/work/${project.slug}`}
       {...({ transitionTypes: ["nav-forward"] } as object)}
       className={LINK}
     >
       <div className={`${FRAME} bg-[#f0f0f0]`}>
-        {Motion ? (
-          <Motion />
+        {video ? (
+          <CoverVideo
+            video={video}
+            poster={preview}
+            playing={playing}
+            className={`absolute inset-0 h-full w-full ${IMAGE_MOTION}`}
+          />
         ) : preview ? (
           <Image
             src={preview}
@@ -164,6 +173,32 @@ function ProjectCard({ project }: { project: Project }) {
         status={project.status}
       />
     </Link>
+  );
+
+  if (!video) return link;
+
+  // The control can't live inside the link (no interactive content in an
+  // <a>), so it sits over the frame as a sibling.
+  return (
+    <div className="relative">
+      {link}
+      <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[16/10]">
+        <button
+          type="button"
+          onClick={() => setChoice(!playing)}
+          aria-label={`${playing ? "Pause" : "Play"} ${project.title} preview`}
+          className="pointer-events-auto absolute bottom-2.5 right-2.5 grid size-8 place-items-center rounded-full bg-black/45 text-white backdrop-blur-md transition-colors duration-150 ease-out hover:bg-black/65 focus-visible:outline-offset-2"
+        >
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
+            {playing ? (
+              <path d="M4.5 3h2.25v10H4.5zM9.25 3h2.25v10H9.25z" />
+            ) : (
+              <path d="M5 3.2v9.6a.5.5 0 0 0 .77.42l7.2-4.8a.5.5 0 0 0 0-.84l-7.2-4.8A.5.5 0 0 0 5 3.2z" />
+            )}
+          </svg>
+        </button>
+      </div>
+    </div>
   );
 }
 

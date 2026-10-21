@@ -31,7 +31,11 @@ export type Project = {
   accent: string;
   coverMedia: {
     background: string;
+    // Still image: the card cover, or the video's poster when `video` is set
     preview?: string;
+    // Looping screen recording for the card. Muted, lazy-loaded, paused
+    // off-screen and for reduced motion. Same aspect as the card (16:10).
+    video?: { mp4: string; webm?: string };
     // CSS object-position for the card crop, e.g. "top" or "left center"
     position?: string;
   };

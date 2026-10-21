@@ -112,6 +112,7 @@ export const projects: Project[] = [
     coverMedia: {
       background: "linear-gradient(135deg, #0b0c0e 0%, #1c1d20 100%)",
       preview: "/previews/hypher.jpg",
+      video: { mp4: "/previews/hypher.mp4", webm: "/previews/hypher.webm" },
     },
     externalUrl: "https://www.hypher.app/",
     heroFrames: [
