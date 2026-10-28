@@ -1,12 +1,15 @@
-// Composes the homepage card covers into public/previews/covers/<slug>.jpg.
+// Composes the homepage card covers into public/previews/covers/<slug>-<shape>.jpg,
+// one file for each shape a card can ask for (data/work.ts, coverShapes).
 //
-// Each cover is a stage, after the visuals on hypher.app: the project's own
-// imagery blurred into a field of light, with one crisp piece of the real
-// product floating on it. Sources are captured from the live sites (or read
-// from public/art) into scripts/covers/.cache, which is gitignored.
+// The covers are flat: a solid ground with crisp pieces of the real product
+// on it, and the composition does the work (scale, crop, edges, air). There is
+// no blur, no grain, no light and no shadow, except what a capture carries in
+// itself. Vyo is the one exception: its soft orange field is part of its Block
+// style. Sources are captured from the live sites into scripts/covers/.cache,
+// which is gitignored.
 //
-//   node scripts/covers/build.mjs            every cover
-//   node scripts/covers/build.mjs carson     one cover
+//   node scripts/covers/build.mjs            every scene, in every shape
+//   node scripts/covers/build.mjs brand      one scene, in every shape
 //   node scripts/covers/build.mjs --fresh    recapture the sources first
 //
 // Needs Playwright with Chromium (npx playwright install chromium).
@@ -21,11 +24,36 @@ const { chromium } = createRequire(import.meta.url)("playwright");
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const CACHE = path.join(ROOT, "scripts/covers/.cache");
 const OUT = path.join(ROOT, "public/previews/covers");
-const ART = path.join(ROOT, "public/art/pieces");
 
-// The stage is 16/10, or 2/1 for a card that spans both columns, rendered at 2x
-const W = 800;
-const height = (scene) => (scene.wide ? 400 : 500);
+// Each shape in CSS px, rendered at 2x. A wide card shows at 16/10 on a phone,
+// so a wide scene keeps everything that matters inside its middle 80%.
+const SHAPES = {
+  landscape: { w: 800, h: 500 },
+  wide: { w: 800, h: 400 },
+  square: { w: 600, h: 600 },
+  portrait: { w: 600, h: 750 },
+};
+
+const BRAND = "https://brand-five-gules.vercel.app/";
+const LITT = "https://littmd.vercel.app/";
+
+// Brand's generators, by the slug its index links to
+const GENERATORS = [
+  "stipple-cloud", "glitch-field", "ink-bleed", "long-exposure", "line-sweep", "particle-stream",
+  "blur-echo", "screen-orb", "photogram", "bar-type", "halftone", "mesh-gradient", "dither", "stamp",
+  "bauhaus", "flow-field", "truchet", "blob", "topography", "type-repeat", "sunburst", "waves", "rings",
+];
+
+// litt.md's own wall: its components, by their wall tile's id, on raised tiles
+// over the stone page, in columns, so every component in a column shows at one
+// scale. A tile takes its share of the column's spare height as air.
+const LITT_WALL = {
+  landscape: { margin: [20, 20], columns: [["chart", "dot-plot"], ["switch", "slide-confirm", "button"]] },
+  wide: { margin: [88, 16], columns: [["chart", "heatmap"], ["switch", "button"]] },
+  square: { margin: [20, 20], columns: [["chart", "segmented", "button"]] },
+  portrait: { margin: [20, 20], columns: [["chart", "switch", "button"]] },
+};
+const LITT_TILES = [...new Set(Object.values(LITT_WALL).flatMap((s) => s.columns.flat()))];
 
 // Hypher's marketing CSS, minus every backdrop, so a card captures on transparent
 const HYPHER_BARE =
@@ -33,10 +61,13 @@ const HYPHER_BARE =
   ".marketing-photo__img{visibility:hidden!important}" +
   ".marketing-photo::before,.marketing-photo::after,.marketing-vtile::before,.marketing-vtile::after{display:none!important}";
 
-const download = (url) => async () => Buffer.from(await (await fetch(url)).arrayBuffer());
+// Brand rounds its index tiles and blurs what scrolls under its header; a cover wants square tiles and a bare header
+const BRAND_SQUARE = "li .rounded-md{border-radius:0!important}header{backdrop-filter:none!important}";
 
-const shoot = (url, { scale = 2, css, prepare, locate, bare = false }) => async (browser) => {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: scale, reducedMotion: "reduce" });
+// The screenshot is clipped to the element's whole CSS pixels, so no sliver of
+// the page shows at an edge, and grown by margin px to keep what overflows it
+const shoot = (url, { scale = 2, viewport = { width: 1440, height: 900 }, css, prepare, locate, bare = false, margin = 0 }) => async (browser) => {
+  const page = await browser.newPage({ viewport, deviceScaleFactor: scale, reducedMotion: "reduce" });
   try {
     await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
     if (css) await page.addStyleTag({ content: css });
@@ -45,28 +76,54 @@ const shoot = (url, { scale = 2, css, prepare, locate, bare = false }) => async 
     await el.scrollIntoViewIfNeeded();
     await page.waitForTimeout(2500);
     if (bare) await el.evaluate((node) => { for (let p = node.parentElement; p; p = p.parentElement) p.style.background = "transparent"; });
-    return await el.screenshot({ omitBackground: bare });
+    const b = await el.boundingBox();
+    const [x, y] = [Math.ceil(b.x) - margin, Math.ceil(b.y) - margin];
+    const clip = { x, y, width: Math.floor(b.x + b.width) + margin - x, height: Math.floor(b.y + b.height) + margin - y };
+    return await page.screenshot({ clip, omitBackground: bare });
   } finally {
     await page.close();
   }
 };
 
-const brandTile = (name) =>
-  shoot("https://brand-five-gules.vercel.app/", { locate: (p) => p.locator("li").filter({ hasText: name }).first().locator(":scope > *").first() });
+// One generator's artwork, full size, in one of Brand's export formats
+const brandArt = (slug, format) =>
+  shoot(BRAND, {
+    scale: 3,
+    prepare: async (p) => {
+      await p.locator(`a[href="#/t/${slug}"]`).first().click();
+      await p.locator("button", { hasText: format }).first().click();
+    },
+    locate: (p) => p.locator('[role=img][aria-label*="artwork"]'),
+  });
+
+async function expectClass(locator, name, act, tries = 20) {
+  for (let i = 0; i < tries; i++) {
+    await act();
+    await locator.page().waitForTimeout(250);
+    if ((await locator.getAttribute("class"))?.split(" ").includes(name)) return;
+  }
+  throw new Error(`${name} never appeared`);
+}
+
+// The litt.works gallery's Orb view lays itself out to the window, so each shape
+// gets its own capture at that shape's proportions, with the page chrome hidden
+const littWorksOrb = (shape) =>
+  shoot("https://www.litt.design/art", {
+    scale: 1.25,
+    viewport: { width: SHAPES[shape].w * 1.6, height: SHAPES[shape].h * 1.6 },
+    // A click before hydration is lost, so it repeats until Orb is the active view.
+    // The chrome hides only after, since a hidden button takes no clicks.
+    prepare: async (p) => {
+      const orb = p.locator("button.gallery-view-btn", { hasText: "Orb" });
+      await expectClass(orb, "is-active", () => orb.click());
+      await p.addStyleTag({ content: ".canvas-logo,.gallery-view-toggle,.canvas-header-label,.canvas-hint{visibility:hidden!important}" });
+    },
+    locate: (p) => p.locator("body"),
+  });
 
 const SOURCES = {
-  "hypher-ground.webp": download("https://www.hypher.app/marketing/visuals/light-streak.webp"),
+  ...Object.fromEntries(Object.keys(SHAPES).map((shape) => [`litt-works-${shape}.png`, littWorksOrb(shape)])),
   "hypher-note.png": shoot("https://www.hypher.app/", { scale: 3, css: HYPHER_BARE, bare: true, locate: (p) => p.locator("#the-loop .marketing-vtile").nth(1) }),
-  "brand-blur-echo.png": brandTile("Blur Echo"),
-  "brand-screen-orb.png": brandTile("Screen Orb"),
-  "brand-long-exposure.png": brandTile("Long Exposure"),
-  "carson-poster.png": shoot("https://carson-navy.vercel.app/", {
-    scale: 5,
-    bare: true,
-    prepare: async (p) => { const skip = p.getByText("Skip intro"); if (await skip.count()) await skip.first().click(); },
-    locate: (p) => p.locator("svg.home-wreck-art"),
-  }),
-  "studio-moodboard.png": download("https://studio-os.io/taste-moodboard-gallery.png"),
   // The taste rows, set into one dark panel of their own so the gaps read as the panel
   "studio-taste.png": shoot("https://studio-os.io/", {
     scale: 3,
@@ -74,102 +131,218 @@ const SOURCES = {
     css: "html,body{background:transparent!important}article.group div.absolute.inset-0{display:none!important}article.group div.max-w-\\[240px\\]{background:#0b0b10!important;padding:12px!important;max-width:264px!important;border-radius:8px!important}",
     locate: (p) => p.locator("article.group").nth(1).locator("div.max-w-\\[240px\\]"),
   }),
+  ...Object.fromEntries(
+    GENERATORS.map((g) => [`brand-${g}.png`, shoot(BRAND, { css: BRAND_SQUARE, locate: (p) => p.locator(`li a[href="#/t/${g}"] [role=img]`) })]),
+  ),
+  "brand-index-heading.png": shoot(BRAND, { scale: 6, bare: true, css: "#tools-heading{line-height:1!important}", locate: (p) => p.locator("#tools-heading") }),
+  "brand-wordmark.png": shoot(BRAND, { scale: 6, bare: true, css: BRAND_SQUARE, locate: (p) => p.locator('header a[href="#/"]') }),
+  // The whole index at once: a viewport that tall renders every tile
+  "brand-index.png": shoot(BRAND, { viewport: { width: 1440, height: 6200 }, locate: (p) => p.locator("#tools") }),
+  "brand-sunburst-16x9.png": brandArt("sunburst", "16:9"),
+  "brand-sunburst-1x1.png": brandArt("sunburst", "1:1"),
+  "brand-sunburst-4x5.png": brandArt("sunburst", "4:5"),
+  // A component as its wall tile draws it, without most of the tile's air. A tile mounts its component once it scrolls into view.
+  ...Object.fromEntries(
+    LITT_TILES.map((id) => [
+      `litt-${id}.png`,
+      shoot(LITT, {
+        scale: 3,
+        margin: 12,
+        prepare: (p) => p.locator(`[data-tile="${id}"]`).scrollIntoViewIfNeeded(),
+        locate: (p) => p.locator(`[data-tile="${id}"] > div:first-child > div > *`).first(),
+      }),
+    ]),
+  ),
 };
 
 const cached = (name) => pathToFileURL(path.join(CACHE, name)).href;
-const art = (name) => pathToFileURL(path.join(ART, name)).href;
 
-// Zero-offset glow and a ring: litt's floating depth, so nothing casts sideways
-const FLOAT = "0 0 0 1px rgb(0 0 0 / 0.08), 0 0 24px rgb(0 0 0 / 0.16), 0 0 72px rgb(0 0 0 / 0.14)";
-const FLOAT_DARK = "0 0 0 1px rgb(255 255 255 / 0.06), 0 0 24px rgb(0 0 0 / 0.5), 0 0 72px rgb(0 0 0 / 0.45)";
+const BRAND_INK = "#0a0a0b";
 
-// A ground is the project's own image, blurred until it reads as light.
-// An object is a crisp piece of the product: w is its width in % of the stage,
-// x and y its centre, ratio and top crop it to a fixed shape. A wide scene is
-// for a card marked wide in data/work.ts, so keep the two in step.
-const SCENES = {
-  hypher: {
-    wide: true,
-    base: "#dfe4e8",
-    ground: { src: cached("hypher-ground.webp"), blur: 0 },
-    objects: [{ src: cached("hypher-note.png"), w: 52, x: 50, y: 52 }],
-  },
-  brand: {
-    base: "#0a0a0b",
-    ground: { src: cached("brand-long-exposure.png"), blur: 90, scale: 1.4, opacity: 0.4 },
-    objects: [
-      { src: cached("brand-blur-echo.png"), w: 26, x: 22, y: 51, ratio: "4 / 5", top: true, shadow: FLOAT_DARK },
-      { src: cached("brand-screen-orb.png"), w: 26, x: 50, y: 51, ratio: "4 / 5", top: true, shadow: FLOAT_DARK },
-      { src: cached("brand-long-exposure.png"), w: 26, x: 78, y: 51, ratio: "4 / 5", top: true, shadow: FLOAT_DARK },
-    ],
-  },
-  carson: {
-    base: "#d9323f",
-    ground: { src: cached("carson-poster.png"), blur: 28, scale: 3.2, origin: "40% 62%", opacity: 0.5, blend: "multiply" },
-    objects: [{ src: cached("carson-poster.png"), w: 35, x: 50, y: 52, rotate: -4 }],
-  },
-  "studio-os": {
-    base: "#1a1c24",
-    ground: { src: cached("studio-moodboard.png"), blur: 28, scale: 1.3, saturate: 1.3, brightness: 1.15 },
-    objects: [{ src: cached("studio-taste.png"), w: 52, x: 50, y: 51, radius: 8, shadow: FLOAT_DARK }],
-  },
-  "litt-works": {
-    wide: true,
-    base: "#ece9e4",
-    ground: { src: art("untld2.jpg"), blur: 80, scale: 1.6, opacity: 0.75 },
-    objects: [
-      { src: art("untld1.jpg"), w: 19, x: 31, y: 53, rotate: -6 },
-      { src: art("in-the-fire.jpg"), w: 19, x: 69, y: 53, rotate: 6 },
-      { src: art("shattered.jpg"), w: 21, x: 50, y: 50 },
-    ],
-  },
-  vyo: { html: vyo },
-};
-
+// An object is a box on the stage: x and y are its centre, w its width, all in
+// % of the stage (h in % of its height). Without h the image keeps its own
+// shape; with h it fits the box ("contain") or fills and crops it ("cover", at
+// pos). fill, pad and radius make the box a flat tile of its own.
+// An object with a view is a camera on a big capture instead: the capture at
+// its real size times zoom, with its point (left, top) at the stage's corner.
 function objectHtml(o) {
+  if (o.view) {
+    const { left, top, zoom } = o.view;
+    return `<img class="view" srcset="${cached(o.src)} ${o.density / zoom}x" style="left:${-left * zoom}px;top:${-top * zoom}px">`;
+  }
   const box = [
     `left:${o.x}%`,
     `top:${o.y}%`,
     `width:${o.w}%`,
-    o.ratio && `aspect-ratio:${o.ratio}`,
-    `transform:translate(-50%,-50%) rotate(${o.rotate ?? 0}deg)`,
-    `box-shadow:${o.shadow ?? FLOAT}`,
-    `border-radius:${o.radius ?? 4}px`,
+    o.h && `height:${o.h}%`,
+    o.fill && `background:${o.fill}`,
+    o.pad && `padding:${o.pad}`,
+    o.radius && `border-radius:${o.radius}px`,
   ].filter(Boolean).join(";");
-  // A cropped object zooms 3% so the source's own edge never shows
-  const fit = o.ratio ? `height:100%;object-fit:cover;object-position:${o.top ? "top" : "center"};transform:scale(1.03)` : "height:auto";
-  // A transparent capture (a card with its own shadow) floats without a box of its own
-  const transparent = o.src.endsWith(".png") && !o.ratio && !o.rotate && o.shadow === undefined;
-  return `<div class="o" style="${box}${transparent ? ";box-shadow:none;border-radius:0" : ""}"><img src="${o.src}" style="width:100%;${fit}"></div>`;
+  const fit = o.h ? `height:100%;object-fit:${o.fit ?? "contain"};object-position:${o.pos ?? "center"}` : "height:auto";
+  return `<div class="o" style="${box}"><img src="${cached(o.src)}" style="width:100%;${fit}"></div>`;
 }
 
-function sceneHtml(s) {
-  const g = s.ground;
-  return `
-    <div class="ground" style="background:${s.base}">
-      <img src="${g.src}" style="filter:blur(${g.blur}px) saturate(${g.saturate ?? 1.15}) brightness(${g.brightness ?? 1});transform:scale(${g.scale ?? 1});transform-origin:${g.origin ?? "center"};opacity:${g.opacity ?? 1};mix-blend-mode:${g.blend ?? "normal"}">
-    </div>
-    ${s.objects.map(objectHtml).join("")}`;
+// Lays cells out edge to edge like CSS grid-template-areas: one string of names
+// per row, and a name that fills a rectangle of the grid is one cell spanning
+// it. Cell edges fall on whole pixels so the gaps stay crisp.
+function areas(shape, rows, { gap, cell }) {
+  const { w: W, h: H } = SHAPES[shape];
+  const grid = rows.map((r) => r.trim().split(/\s+/));
+  const edges = (n, size) => Array.from({ length: n + 1 }, (_, i) => Math.round((i * (size + gap)) / n));
+  const xs = edges(grid[0].length, W);
+  const ys = edges(grid.length, H);
+  const spans = new Map();
+  grid.forEach((names, r) =>
+    names.forEach((name, c) => {
+      const s = spans.get(name) ?? { r0: r, c0: c, r1: r, c1: c };
+      spans.set(name, { ...s, r1: r, c1: Math.max(s.c1, c) });
+    }),
+  );
+  return [...spans].map(([name, { r0, c0, r1, c1 }]) => {
+    const [left, right, top, bottom] = [xs[c0], xs[c1 + 1] - gap, ys[r0], ys[r1 + 1] - gap];
+    return { ...cell(name), x: ((left + right) / 2 / W) * 100, y: ((top + bottom) / 2 / H) * 100, w: ((right - left) / W) * 100, h: ((bottom - top) / H) * 100 };
+  });
 }
+
+const byShape = (table, layout) => Object.fromEntries(Object.entries(table).map(([shape, rows]) => [shape, layout(shape, rows)]));
+
+// Brand, edge to edge: all 23 generators once each, cropped to their cells,
+// and one cell for the index's own heading. A crop position keeps a
+// generator's own words whole, or its words out and its subject in.
+const GENERATOR_POS = { "stipple-cloud": "left center", "glitch-field": "right center", "particle-stream": "center 80%" };
+const generatorCell = (name) =>
+  name === "index"
+    ? { src: "brand-index-heading.png", fill: BRAND_INK, pad: "28px" }
+    : { src: `brand-${name}.png`, fit: "cover", pos: GENERATOR_POS[name] };
+
+const BRAND_MOSAIC = {
+  landscape: [
+    "sunburst dither truchet screen-orb waves bauhaus",
+    "particle-stream stamp photogram rings mesh-gradient stipple-cloud",
+    "type-repeat flow-field blur-echo index long-exposure halftone",
+    "glitch-field blob line-sweep topography ink-bleed bar-type",
+  ],
+  wide: [
+    "sunburst dither truchet screen-orb waves bauhaus particle-stream stamp",
+    "photogram rings mesh-gradient stipple-cloud index flow-field blur-echo long-exposure",
+    "halftone type-repeat glitch-field blob line-sweep topography ink-bleed bar-type",
+  ],
+  square: [
+    "sunburst dither truchet screen-orb waves",
+    "bauhaus particle-stream stamp photogram rings",
+    "mesh-gradient stipple-cloud index index flow-field",
+    "blur-echo long-exposure halftone type-repeat glitch-field",
+    "blob line-sweep topography ink-bleed bar-type",
+  ],
+  portrait: [
+    "sunburst dither truchet screen-orb",
+    "waves bauhaus particle-stream stamp",
+    "photogram rings mesh-gradient stipple-cloud",
+    "index flow-field blur-echo long-exposure",
+    "halftone type-repeat glitch-field blob",
+    "line-sweep topography ink-bleed bar-type",
+  ],
+};
+
+// Brand's wordmark on a chip of its black, its bottom edge bottom px up, and
+// its left edge left px in (or centred, without left). WORDMARK is the
+// capture's width over its height.
+const WORDMARK = 636 / 108;
+function wordmarkChip(shape, { left, bottom, width }) {
+  const { w: W, h: H } = SHAPES[shape];
+  const [padX, padY] = [14, 10];
+  const [cw, ch] = [width + 2 * padX, width / WORDMARK + 2 * padY];
+  const x = left === undefined ? 50 : ((left + cw / 2) / W) * 100;
+  return { src: "brand-wordmark.png", fill: BRAND_INK, pad: `${padY}px ${padX}px`, radius: 2, x, y: ((H - bottom - ch / 2) / H) * 100, w: (cw / W) * 100 };
+}
+const fullBleed = (src) => ({ src, x: 50, y: 50, w: 100, h: 100, fit: "cover" });
+
+// Brand's index on its black, as the site lays it out: a camera on the whole
+// index, in the capture's CSS px. Rows 13 to 15 (Dither, Stamp, Bauhaus Grid) start at 2581.
+const BRAND_INDEX = {
+  landscape: { left: 0, top: 2531, zoom: 0.75 },
+  wide: { left: 0, top: 2545, zoom: 0.75 },
+  square: { left: 0, top: 2556, zoom: 0.6 },
+  portrait: { left: 0, top: 2531, zoom: 0.6 },
+};
+
+// Every scene has a flat ground and, for each shape, the objects on it.
+// A scene with `html` draws itself.
+const SCENES = {
+  hypher: {
+    ground: "#b9cdd8",
+    shapes: {
+      landscape: [{ src: "hypher-note.png", x: 50, y: 50, w: 74 }],
+      wide: [{ src: "hypher-note.png", x: 50, y: 50, w: 58 }],
+      square: [{ src: "hypher-note.png", x: 50, y: 50, w: 106 }],
+      portrait: [{ src: "hypher-note.png", x: 50, y: 50, w: 112 }],
+    },
+  },
+  "studio-os": {
+    ground: "#f2f5f9",
+    shapes: {
+      landscape: [{ src: "studio-taste.png", x: 50, y: 50, w: 57 }],
+      wide: [{ src: "studio-taste.png", x: 50, y: 50, w: 47 }],
+      square: [{ src: "studio-taste.png", x: 50, y: 50, w: 80 }],
+      portrait: [{ src: "studio-taste.png", x: 50, y: 50, w: 84 }],
+    },
+  },
+  vyo: { html: vyo },
+  "litt-md": { html: littWall },
+  brand: {
+    ground: BRAND_INK,
+    shapes: byShape(BRAND_MOSAIC, (shape, rows) => areas(shape, rows, { gap: 4, cell: generatorCell })),
+  },
+  "brand-b": {
+    ground: BRAND_INK,
+    shapes: {
+      landscape: [fullBleed("brand-sunburst-16x9.png"), wordmarkChip("landscape", { left: 28, bottom: 28, width: 190 })],
+      wide: [fullBleed("brand-sunburst-16x9.png"), wordmarkChip("wide", { bottom: 24, width: 170 })],
+      square: [fullBleed("brand-sunburst-1x1.png"), wordmarkChip("square", { left: 28, bottom: 28, width: 170 })],
+      portrait: [fullBleed("brand-sunburst-4x5.png"), wordmarkChip("portrait", { left: 28, bottom: 28, width: 170 })],
+    },
+  },
+  "brand-c": {
+    ground: BRAND_INK,
+    shapes: byShape(BRAND_INDEX, (_, view) => [{ src: "brand-index.png", density: 2, view }]),
+  },
+  "litt-works": {
+    ground: "#f4f2ee",
+    shapes: Object.fromEntries(Object.keys(SHAPES).map((shape) => [shape, [fullBleed(`litt-works-${shape}.png`)]])),
+  },
+};
 
 // Vyo's own Block style: one hue, out of focus, with the features stacked as
 // black blocks, each tagged with a status tab. Words sit on blocks, never on the field.
-function vyo() {
-  const col = (n) => 48 + n * (44 + 16);
-  const span = (a, b) => col(b) - col(a) - 16;
+// Each shape sets the 12 columns' outer edges, the top of the stack and each block's height.
+const VYO = {
+  landscape: { left: 48, right: 48, top: 56, rows: [88, 104, 88, 88] },
+  wide: { left: 96, right: 96, top: 36, rows: [64, 76, 64, 64] },
+  square: { left: 40, right: 40, top: 64, rows: [96, 112, 96, 96] },
+  portrait: { left: 40, right: 40, top: 96, rows: [116, 132, 116, 116] },
+};
+
+function vyo(shape) {
+  const { w: W } = SHAPES[shape];
+  const { left, right, top, rows } = VYO[shape];
+  const gutter = 16;
+  const colW = (W - left - right - 11 * gutter) / 12;
+  const col = (n) => left + n * (colW + gutter);
+  const span = (a, b) => col(b) - col(a) - gutter;
   const blocks = [
     { from: 2, to: 8, tab: "Scan", say: "Reads the repository" },
     { from: 4, to: 12, tab: "App guide", say: "How the app works, in plain English" },
     { from: 1, to: 7, tab: "Project story", say: "The sheet you sell it with" },
     { from: 3, to: 10, tab: "Exploded view", say: "Its real parts, drawn from the code" },
   ];
-  let y = 56;
+  let y = top;
   const stack = blocks.map((b, i) => {
-    const h = i === 1 ? 104 : 88;
-    const top = y;
+    const h = rows[i];
+    const at = y;
     y += h;
     return `
-      <div style="position:absolute;left:${col(b.from)}px;top:${top}px;width:${span(b.from, b.to)}px;height:${h}px;background:#0a0a0a">
+      <div style="position:absolute;left:${col(b.from)}px;top:${at}px;width:${span(b.from, b.to)}px;height:${h}px;background:#0a0a0a">
         <div style="position:absolute;top:-12px;${i % 2 ? "right:0" : "left:0"};height:24px;padding:0 8px;display:flex;gap:6px;align-items:center;background:#ffcc00;font:700 10px/1 'Helvetica Neue',Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#0a0a0a">${b.tab}<span style="font-weight:400">Live</span></div>
         <p style="margin:0;padding:20px 16px 0;font:500 14px/24px 'Helvetica Neue',Arial,sans-serif;color:#fff">${b.say}</p>
       </div>`;
@@ -186,15 +359,27 @@ function vyo() {
     <div style="position:absolute;left:${col(8)}px;top:${y + 24}px;padding:8px 12px;background:#fff;font:700 18px/24px 'Helvetica Neue',Arial,sans-serif;letter-spacing:-.01em;color:#0a0a0a">Vyo<span style="color:#e4002b">.</span></div>`;
 }
 
-const page = (body, h) => `<!doctype html><html><head><style>
+function littWall(shape) {
+  const { margin: [mx, my], columns } = LITT_WALL[shape];
+  const tile = (id) =>
+    `<div style="flex:1 1 auto;display:grid;place-items:center;padding:12px;background:#f7f5f3;border:1px solid #e8e4e1;border-radius:8px"><img src="${cached(`litt-${id}.png`)}" style="display:block;width:100%"></div>`;
+  const column = (ids) => `<div data-fits style="flex:1;display:flex;flex-direction:column;gap:12px">${ids.map(tile).join("")}</div>`;
+  return `<div class="ground" style="background:#fcfbfa;display:flex;gap:12px;padding:${my}px ${mx}px">${columns.map(column).join("")}</div>`;
+}
+
+function sceneHtml(s, shape) {
+  if (s.html) return s.html(shape);
+  return `<div class="ground" style="background:${s.ground}"></div>${s.shapes[shape].map(objectHtml).join("")}`;
+}
+
+const page = (body, { w, h }) => `<!doctype html><html><head><style>
   html,body{margin:0}
-  .stage{position:relative;width:${W}px;height:${h}px;overflow:hidden}
-  .ground,.ground>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .o{position:absolute;overflow:hidden}
+  .stage{position:relative;width:${w}px;height:${h}px;overflow:hidden}
+  .ground{position:absolute;inset:0}
+  .o{position:absolute;box-sizing:border-box;overflow:hidden;transform:translate(-50%,-50%)}
   .o img{display:block}
-  .grain{position:absolute;inset:0;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-  .light{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 45% at 50% -8%,rgb(255 255 255/.16),transparent 70%)}
-</style></head><body><div class="stage">${body}<div class="light"></div><div class="grain"></div></div></body></html>`;
+  .view{position:absolute;max-width:none}
+</style></head><body><div class="stage">${body}</div></body></html>`;
 
 const args = process.argv.slice(2);
 const fresh = args.includes("--fresh");
@@ -213,15 +398,19 @@ try {
       console.log(`captured ${name}`);
     }
   }
-  const tab = await browser.newPage({ viewport: { width: W, height: 500 }, deviceScaleFactor: 2 });
+  const tab = await browser.newPage({ viewport: { width: 800, height: 750 }, deviceScaleFactor: 2 });
   for (const slug of slugs) {
-    const s = SCENES[slug];
-    const html = path.join(CACHE, `${slug}.html`);
-    fs.writeFileSync(html, page(s.html ? s.html() : sceneHtml(s), height(s)));
-    await tab.goto(pathToFileURL(html).href, { waitUntil: "load" });
-    await tab.evaluate(() => Promise.all([...document.images].map((i) => i.decode().catch(() => {}))));
-    await tab.locator(".stage").screenshot({ path: path.join(OUT, `${slug}.jpg`), type: "jpeg", quality: 86 });
-    console.log(`wrote public/previews/covers/${slug}.jpg`);
+    for (const [shape, size] of Object.entries(SHAPES)) {
+      const html = path.join(CACHE, `${slug}-${shape}.html`);
+      fs.writeFileSync(html, page(sceneHtml(SCENES[slug], shape), size));
+      await tab.goto(pathToFileURL(html).href, { waitUntil: "load" });
+      await tab.evaluate(() => Promise.all([...document.images].map((i) => i.decode().catch(() => {}))));
+      // A column marked data-fits holds whole tiles, so one that overflows would cut its last
+      const over = await tab.evaluate(() => [...document.querySelectorAll("[data-fits]")].some((e) => e.scrollHeight > e.clientHeight + 1));
+      if (over) throw new Error(`${slug}-${shape}: a column overflows the stage; give it fewer tiles`);
+      await tab.locator(".stage").screenshot({ path: path.join(OUT, `${slug}-${shape}.jpg`), type: "jpeg", quality: 86 });
+      console.log(`wrote public/previews/covers/${slug}-${shape}.jpg`);
+    }
   }
 } finally {
   await browser.close();
