@@ -15,9 +15,11 @@ export function Reveal({ children, className, delay = 0, blur = 4 }: RevealProps
 
   // Always animate to visible: the server renders the hidden initial state,
   // and hydration won't clear it if reduced motion swaps in a plain element.
+  // The server can't know the preference, so CSS shows it at once under
+  // reduced motion instead of waiting for it to scroll into view.
   return (
     <motion.div
-      className={className}
+      className={`motion-reduce:opacity-100! motion-reduce:transform-none! motion-reduce:filter-none! ${className ?? ""}`}
       initial={reduceMotion ? {} : { opacity: 0, y: 20, filter: `blur(${blur}px)` }}
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: true, margin: "-80px" }}
