@@ -5,7 +5,7 @@
   --color-panel: #f5f5f5;
   --color-line: rgba(0, 0, 0, 0.08);
   --color-ink: #0a0a0a;
-  --color-muted: #737373;
+  --color-muted: #6b6b6b;
   --color-accent: #C2FF4D;
   --font-sans: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
@@ -117,13 +117,13 @@ body::before {
   color: var(--color-muted);
 }
 
-/* Metadata: small, semibold, 55% ink (~4.6:1 contrast on the canvas) */
+/* Metadata: small, semibold, 60% ink (5.2:1 on the canvas, 5:1 over the dither) */
 .meta {
   font-size: var(--text-meta);
   line-height: var(--text-meta--line-height);
   letter-spacing: var(--text-meta--letter-spacing);
   font-weight: 600;
-  color: rgb(10 10 10 / 0.55);
+  color: rgb(10 10 10 / 0.6);
   font-variant-numeric: tabular-nums;
 }
 
@@ -251,6 +251,40 @@ body::before {
   ::view-transition-group(*) {
     animation-duration: 0s !important;
     animation-delay: 0s !important;
+  }
+}
+
+/* First-screen reveal in plain CSS, so the content paints before JS loads.
+   The fades start at 0.01, not 0. Chrome skips opacity:0 content when timing
+   the largest paint, which pushed LCP from 0.4s to 2.3s on a throttled phone. */
+.reveal-in {
+  animation: reveal-in 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0.01;
+    translate: 0 12px;
+    filter: blur(4px);
+  }
+}
+
+.reveal-in-scale {
+  animation: reveal-in-scale 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes reveal-in-scale {
+  from {
+    opacity: 0.01;
+    scale: 0.9;
+    filter: blur(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-in,
+  .reveal-in-scale {
+    animation: none;
   }
 }
 

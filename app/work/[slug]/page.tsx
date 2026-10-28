@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProjectDetail } from "@/components/project-detail";
 import { DirectionalTransition } from "@/components/view-transitions";
 import { projects } from "@/data/projects";
+import { OG_IMAGE } from "@/data/site";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: `${project.title} | litt.design`,
       description: project.oneLineOutcome,
-      images: ["/og.svg"],
+      images: [OG_IMAGE],
     },
   };
 }

@@ -136,7 +136,7 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/work/${project.slug}`}
-      {...({ transitionTypes: ["nav-forward"] } as object)}
+      transitionTypes={["nav-forward"]}
       className={LINK}
     >
       <div className={`${FRAME} bg-[#f0f0f0]`}>

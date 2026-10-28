@@ -6,7 +6,7 @@ import {
   processSteps,
   servicePackages,
 } from "@/data/packages";
-import { BOOKING_URL } from "@/data/site";
+import { BOOKING_URL, siteSettings } from "@/data/site";
 
 function BookCallLink() {
   return (
@@ -31,17 +31,15 @@ function BookCallLink() {
 export function ServicesPage() {
   return (
     <main className="section-shell flex min-h-screen flex-col gap-16 pb-8 pt-36 md:gap-20 md:pb-12 md:pt-44">
-      <section className="max-w-2xl">
-        <Reveal>
-          <h1 className="text-body font-medium text-ink">Services</h1>
-          <p className="mt-3 text-intro text-ink">{POSITIONING}</p>
-          <p className="mt-3 text-body text-muted">
-            Prices in EUR, excl. VAT.
-          </p>
-          <div className="mt-6">
-            <BookCallLink />
-          </div>
-        </Reveal>
+      <section className="reveal-in max-w-2xl">
+        <h1 className="text-body font-medium text-ink">Services</h1>
+        <p className="mt-3 text-intro text-ink">{POSITIONING}</p>
+        <p className="mt-3 text-body text-muted">
+          Prices in EUR, excl. VAT. Projects take a 50% deposit up front.
+        </p>
+        <div className="mt-6">
+          <BookCallLink />
+        </div>
       </section>
 
       <section className="max-w-2xl" aria-labelledby="packages-heading">
@@ -53,10 +51,13 @@ export function ServicesPage() {
         <div>
           {servicePackages.map((offer, index) => (
             <Reveal key={offer.name} delay={0.04 + index * 0.04}>
-              <article className="border-t border-[rgba(0,0,0,0.06)] py-6">
+              <article
+                id={offer.name.toLowerCase().replaceAll(" ", "-")}
+                className="scroll-mt-8 border-t border-[rgba(0,0,0,0.06)] py-6"
+              >
                 <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
                   <h3 className="text-body font-medium text-ink">{offer.name}</h3>
-                  <p className="meta shrink-0">{offer.price}</p>
+                  <p className="shrink-0 text-body tabular-nums text-ink">{offer.price}</p>
                 </div>
                 <p className="meta mt-1">{offer.duration}</p>
                 <p className="mt-2 text-body text-muted">{offer.description}</p>
@@ -95,12 +96,23 @@ export function ServicesPage() {
 
       <section className="max-w-2xl">
         <Reveal>
-          <p className="text-body text-ink">
-            Projects take a 50% deposit up front.
-          </p>
-          <div className="mt-6">
+          <p className="text-intro text-ink">Have a launch coming up?</p>
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
             <BookCallLink />
+            <a href={`mailto:${siteSettings.contactEmail}`} className="link text-body">
+              or email {siteSettings.contactEmail}
+            </a>
           </div>
+          <p className="mt-6 text-body text-muted">
+            Not sure yet? Start with a{" "}
+            <a
+              href="#taste-audit"
+              className="text-ink underline decoration-[rgb(10_10_10/0.3)] underline-offset-4 transition-[text-decoration-color] duration-150 ease-out hover:decoration-[rgb(10_10_10/0.8)]"
+            >
+              Taste Audit
+            </a>
+            .
+          </p>
         </Reveal>
       </section>
     </main>
