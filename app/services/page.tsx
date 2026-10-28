@@ -6,8 +6,9 @@ import { POSITIONING } from "@/data/packages";
 import { siteSettings } from "@/data/site";
 
 export const metadata: Metadata = {
-  title: "Services",
+  title: "Launch sites for AI & dev-tool startups",
   description: POSITIONING,
+  alternates: { canonical: "/services" },
   openGraph: {
     title: "Services | litt.design",
     description: POSITIONING,

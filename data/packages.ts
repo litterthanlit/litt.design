@@ -18,20 +18,20 @@ export const POSITIONING =
 
 export const servicePackages: ServicePackage[] = [
   {
-    name: "Launch Hero",
-    price: "from €1,800",
-    duration: "5 working days",
-    description:
-      "One WebGL/shader hero, a matching OG image, and a 15-second Remotion social video. Delivered as a Next.js component. Two revision rounds.",
-    notIncluded: "copywriting, full-site build",
-  },
-  {
     name: "Launch Site",
     price: "from €6,500",
     duration: "3 weeks",
     description:
       "Landing page up to 5 sections, plus 2 inner pages (pricing, about, or changelog). Custom motion, CMS or MDX, Lighthouse 90+ on mobile, Vercel deploy, handover video.",
     notIncluded: "brand identity, ongoing content",
+  },
+  {
+    name: "Launch Hero",
+    price: "from €1,800",
+    duration: "5 working days",
+    description:
+      "One WebGL/shader hero, a matching OG image, and a 15-second Remotion social video. Delivered as a Next.js component. Two revision rounds.",
+    notIncluded: "copywriting, full-site build",
   },
   {
     name: "Launch Video Kit",
