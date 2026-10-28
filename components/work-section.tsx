@@ -36,7 +36,7 @@ export function WorkSection({ projects, items }: WorkSectionProps) {
           Selected work
         </h2>
 
-        <div className="grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
           {cards.map((card, index) => (
             <Reveal
               key={card.type === "art" ? "litt-works" : card.project.slug}
@@ -77,56 +77,48 @@ function Reveal({
   );
 }
 
-// Press feedback: a quick 1% shrink on click/tap (off for reduced motion)
-const LINK =
-  "group block rounded-[10px] transition-transform duration-150 ease-out focus-visible:outline-offset-4 active:scale-[0.99] motion-reduce:active:scale-100";
+// The fill steps one grey darker on hover and press; nothing moves
+const CARD =
+  "flex flex-col rounded-[8px] bg-card p-6 shadow-card transition-colors duration-100 ease-out hover:bg-card-hover active:bg-card-hover focus-visible:outline-offset-4";
 
-// Shared frame: thin border, small radius, neutral fill behind the image
-const FRAME =
-  "relative aspect-[16/10] overflow-hidden rounded-[10px] border border-[rgba(0,0,0,0.08)] transition-[border-color,box-shadow] duration-200 ease-out group-hover:border-[rgba(0,0,0,0.14)] group-hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.16)] group-focus-visible:border-[rgba(0,0,0,0.14)]";
+const COVER_SIZES = "(min-width: 640px) 240px, 70vw";
 
-const IMAGE_MOTION =
-  "object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02] group-focus-visible:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100";
-
-function CardCaption({
+function CardBody({
   title,
-  meta,
-  description,
+  category,
+  year,
   status,
-  external = false,
+  children,
 }: {
   title: string;
-  meta: string;
-  description: string;
+  category: string;
+  year: string;
   status?: string;
-  external?: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="mt-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="flex items-center gap-1.5 text-body font-medium text-ink">
-          {status && (
-            <span
-              className="mr-0.5 h-1.5 w-1.5 shrink-0 self-center rounded-full bg-[#9BD62E]"
-              title={status}
-              aria-hidden="true"
-            />
-          )}
-          {title}
-          {status && <span className="sr-only"> ({status})</span>}
-          <span
-            className="-translate-x-1 text-body text-muted opacity-0 transition-[opacity,translate] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
-            aria-hidden="true"
-          >
-            {external ? "↗" : "→"}
-          </span>
-        </h3>
-        <span className="meta shrink-0">
-          {meta}
-        </span>
+    <>
+      {/* The hairline lies over the image so a pale screenshot keeps its edge */}
+      <div className="relative aspect-[16/10] w-5/6 overflow-hidden rounded-[4px] bg-panel after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[inset_0_0_0_1px_var(--color-line)]">
+        {children}
       </div>
-      <p className="mt-0.5 line-clamp-2 text-body text-muted">{description}</p>
-    </div>
+      <div className="mt-8 grid grid-cols-2 gap-x-4">
+        <div>
+          <h3 className="text-body font-medium text-ink">{title}</h3>
+          {status && (
+            <p className="meta mt-1 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#9BD62E]" aria-hidden="true" />
+              {status}
+            </p>
+          )}
+        </div>
+        <div>
+          {/* Not text-muted: it fails contrast on the hover grey */}
+          <p className="text-body text-ink/60">{category}</p>
+          <p className="meta mt-1">{year}</p>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -137,28 +129,27 @@ function ProjectCard({ project }: { project: Project }) {
     <Link
       href={`/work/${project.slug}`}
       transitionTypes={["nav-forward"]}
-      className={LINK}
+      className={CARD}
     >
-      <div className={`${FRAME} bg-[#f0f0f0]`}>
+      <CardBody
+        title={project.title}
+        category={project.category}
+        year={project.year.slice(-4)}
+        status={project.status}
+      >
         {preview ? (
           <Image
             src={preview}
             alt={`${project.title} — ${project.oneLineOutcome}`}
             fill
-            sizes="(min-width: 640px) 340px, 100vw"
-            className={IMAGE_MOTION}
+            sizes={COVER_SIZES}
+            className="object-cover"
             style={{ objectPosition: position ?? "center" }}
           />
         ) : (
           <div className="absolute inset-0" style={{ background }} aria-hidden="true" />
         )}
-      </div>
-      <CardCaption
-        title={project.title}
-        meta={project.year.slice(-4)}
-        description={project.oneLineOutcome}
-        status={project.status}
-      />
+      </CardBody>
     </Link>
   );
 }
@@ -166,21 +157,16 @@ function ProjectCard({ project }: { project: Project }) {
 function ArtCard({ href }: { href: string }) {
   return (
     // /art is a separate app on this domain, so a plain <a> (not <Link>)
-    <a href={href} className={LINK}>
-      <div className={`${FRAME} bg-[#f0f0f0]`}>
+    <a href={href} className={CARD}>
+      <CardBody title="litt.works" category="Digital Art" year="2024–26">
         <Image
           src="/previews/litt-works-orb.jpg"
           alt="litt.works gallery in Orb view — artworks arranged on a slowly drifting sphere"
           fill
-          sizes="(min-width: 640px) 340px, 100vw"
-          className={IMAGE_MOTION}
+          sizes={COVER_SIZES}
+          className="object-cover"
         />
-      </div>
-      <CardCaption
-        title="litt.works"
-        meta="2024–26"
-        description="Abstract digital art — prints, visual experiments, and long-form pieces."
-      />
+      </CardBody>
     </a>
   );
 }
