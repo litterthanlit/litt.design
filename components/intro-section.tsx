@@ -19,7 +19,7 @@ export function IntroSection() {
         <div className="reveal-in max-w-[520px] text-intro text-ink [animation-delay:60ms]">
           <h1 className="inline">Hi, I&apos;m Nick Georgiev, a designer who builds.</h1>{" "}
           <p className="inline">
-            I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
+            I got into the practice through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
           </p>
         </div>
       </div>
