@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 export function SiteHeader() {
@@ -20,15 +19,19 @@ export function SiteHeader() {
           onBlur={() => setShowTooltip(false)}
         >
           <Link href="/" {...{ transitionTypes: ["nav-back"] } as any} aria-label="Home">
-            <Image
-              src="/logo.gif"
-              alt="litt.design"
-              width={80}
-              height={42}
-              className="w-16 sm:w-20"
-              unoptimized
-              priority
-            />
+            {/* Animated AVIF with a WebP fallback, and a still frame under reduced motion */}
+            <picture>
+              <source media="(prefers-reduced-motion: reduce)" srcSet="/logo-still.webp" />
+              <source type="image/avif" srcSet="/logo.avif" />
+              <img
+                src="/logo.webp"
+                alt="litt.design"
+                width={80}
+                height={57}
+                className="w-16 sm:w-20"
+                fetchPriority="high"
+              />
+            </picture>
           </Link>
 
           <AnimatePresence>
