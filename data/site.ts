@@ -1,7 +1,6 @@
 import type { SiteSettings } from "@/data/types";
 
-/** Swap this for Nick's Cal.com 15-min event URL. */
-export const BOOKING_URL = "https://cal.com/nick-georgiev/15min";
+export const BOOKING_URL = "https://cal.com/nick-georgiev-1qq4zg/15min";
 
 export const siteSettings: SiteSettings = {
   brandName: "litt.design",
