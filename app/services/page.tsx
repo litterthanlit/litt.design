@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Services | litt.design",
     description: POSITIONING,
+    type: "website",
     url: "https://litt.design/services",
     images: ["/og.svg"],
   },

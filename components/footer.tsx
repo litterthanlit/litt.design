@@ -36,8 +36,14 @@ export function Footer({ settings }: FooterProps) {
         <p className="text-body text-ink">More play.</p>
         <p className="meta mt-4">
           {settings.location} &middot;{" "}
-          <Link href="/services" className="link">
+          <Link href="/services" className="link group">
             {settings.availability.label}
+            <span
+              className="ml-1 inline-block transition-[translate] duration-150 ease-out group-hover:translate-x-0.5"
+              aria-hidden="true"
+            >
+              →
+            </span>
           </Link>
         </p>
       </motion.div>

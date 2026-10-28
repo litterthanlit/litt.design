@@ -36,7 +36,7 @@ export function ServicesPage() {
           <h1 className="text-body font-medium text-ink">Services</h1>
           <p className="mt-3 text-intro text-ink">{POSITIONING}</p>
           <p className="mt-3 text-body text-muted">
-            Prices in EUR, excl. VAT. From prices unless noted.
+            Prices in EUR, excl. VAT.
           </p>
           <div className="mt-6">
             <BookCallLink />
@@ -80,7 +80,7 @@ export function ServicesPage() {
             Process
           </h2>
         </Reveal>
-        <ol className="grid list-none gap-8 p-0 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10">
+        <ol role="list" className="grid gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10">
           {processSteps.map((item, index) => (
             <li key={item.title}>
               <Reveal delay={0.04 + index * 0.04}>
