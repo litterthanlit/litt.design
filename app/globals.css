@@ -9,7 +9,6 @@
   --color-accent: #C2FF4D;
   --color-card: #ededed; /* project card fill at rest */
   --color-card-hover: #e6e6e6; /* one step down, for hover and press */
-  --shadow-card: inset 0 0 0 1px var(--color-line), inset 0 1px 0 rgb(255 255 255 / 0.9); /* hairline plus a top highlight, lit from above; no outer shadow */
   --font-sans: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-sans);

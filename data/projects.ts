@@ -17,7 +17,6 @@ export const projects: Project[] = [
     accent: "#E0364F",
     coverMedia: {
       background: "linear-gradient(135deg, #1f1f1f 0%, #3a3a3a 100%)",
-      preview: "/previews/covers/carson.jpg",
     },
     externalUrl: "https://carson-navy.vercel.app/",
     heroFrames: [
@@ -64,7 +63,6 @@ export const projects: Project[] = [
     accent: "#FF4F1F",
     coverMedia: {
       background: "linear-gradient(135deg, #0a0a0a 0%, #1c2a30 100%)",
-      preview: "/previews/covers/brand.jpg",
     },
     externalUrl: "https://brand-five-gules.vercel.app/",
     heroFrames: [
@@ -111,7 +109,6 @@ export const projects: Project[] = [
     accent: "#3B82F6",
     coverMedia: {
       background: "linear-gradient(135deg, #f7f8fa 0%, #e8ecf3 100%)",
-      preview: "/previews/covers/hypher.jpg",
     },
     externalUrl: "https://www.hypher.app/",
     heroFrames: [
@@ -158,7 +155,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
-      preview: "/previews/covers/studio-os.jpg",
     },
     externalUrl: "https://studio-os.io/",
     screens: [
@@ -211,7 +207,6 @@ export const projects: Project[] = [
     accent: "#FF6A13",
     coverMedia: {
       background: "linear-gradient(135deg, #ff6a13 0%, #0a0a0a 100%)",
-      preview: "/previews/covers/vyo.jpg",
     },
     externalUrl: "https://github.com/litterthanlit/vyo",
     heroFrames: [
@@ -243,6 +238,51 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "litt-md",
+    title: "litt.md",
+    category: "Design System",
+    description:
+      "A design language packaged as a Claude Code plugin: the tokens, rules and taste an agent reads before it builds, a registry of tested React components it installs, and a check that scores any app against the language.",
+    oneLineOutcome:
+      "A design language an agent can install, follow and be checked against.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Design Systems", "Agent Design", "Front-End Development"],
+    stack: ["Claude Code", "React", "Tailwind CSS", "shadcn"],
+    accent: "#0957FD",
+    coverMedia: {
+      background: "linear-gradient(135deg, #f7f5f3 0%, #0957fd 100%)",
+    },
+    externalUrl: "https://littmd.vercel.app/",
+    heroFrames: [
+      { id: "litt-md-1", background: "linear-gradient(180deg, #F7F5F3, #0957FD)", focus: 0.3 },
+      { id: "litt-md-2", background: "linear-gradient(180deg, #0957FD, #F7F5F3)", focus: 0.5 },
+      { id: "litt-md-3", background: "linear-gradient(180deg, #F7F5F3, #0957FD)", focus: 0.7 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "Agents build in everyone's voice but yours",
+        body: "Ask an agent for a page and you get the average of the internet: purple gradients, three icon cards, a bounce on everything.",
+      },
+      {
+        label: "Approach",
+        heading: "Taste, written down as rules",
+        body: "Nine rules, one token file and a taste journal that changes only through a review. The agent loads the skill before it touches anything visual.",
+      },
+      {
+        label: "Execution",
+        heading: "Components it can't get wrong",
+        body: "A shadcn registry of tested components, a gallery that shows each one live, and lints that fail on a stray hex value or an off-scale radius.",
+      },
+      {
+        label: "Result",
+        heading: "One voice across every project",
+        body: "New work starts on the language instead of drifting from it, and any app gets a score out of 100 with every fix listed.",
+      },
+    ],
+  },
+  {
     slug: "good-md",
     title: "Houston-MD",
     category: "Desktop App",
@@ -258,8 +298,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #00B894 0%, #55efc4 50%, #dfe6e9 100%)",
-      preview: "/previews/good-md.png",
-      position: "left center",
     },
     externalUrl: "https://houston-md.vercel.app/",
     heroFrames: [
@@ -313,7 +351,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #1A1A1A 0%, #4a4a4a 50%, #8a8a8a 100%)",
-      preview: "/previews/vceezy.png",
     },
     externalUrl: "https://vceezy.vercel.app/",
     heroFrames: [
@@ -367,7 +404,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #E17055 0%, #fab1a0 40%, #ffeaa7 100%)",
-      preview: "/previews/wavr.jpg",
     },
     externalUrl: "https://wavr-v1.vercel.app/",
     screens: [
