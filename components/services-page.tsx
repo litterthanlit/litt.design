@@ -80,15 +80,17 @@ export function ServicesPage() {
             Process
           </h2>
         </Reveal>
-        <div className="grid gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10">
+        <ol className="grid list-none gap-8 p-0 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10">
           {processSteps.map((item, index) => (
-            <Reveal key={item.title} delay={0.04 + index * 0.04}>
-              <p className="meta">{item.step}</p>
-              <h3 className="mt-1 text-body font-medium text-ink">{item.title}</h3>
-              <p className="mt-0.5 text-body text-muted">{item.description}</p>
-            </Reveal>
+            <li key={item.title}>
+              <Reveal delay={0.04 + index * 0.04}>
+                <p className="meta">{item.step}</p>
+                <h3 className="mt-1 text-body font-medium text-ink">{item.title}</h3>
+                <p className="mt-0.5 text-body text-muted">{item.description}</p>
+              </Reveal>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
 
       <section className="max-w-2xl">
