@@ -8,6 +8,7 @@ const LAST_MODIFIED = new Date("2026-09-26");
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE, lastModified: LAST_MODIFIED },
+    { url: `${BASE}/services`, lastModified: new Date("2026-10-28") },
     { url: `${BASE}/art`, lastModified: LAST_MODIFIED },
     { url: `${BASE}/art2`, lastModified: LAST_MODIFIED },
     ...projects.map((project) => ({

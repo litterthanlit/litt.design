@@ -53,9 +53,16 @@ export function SiteHeader() {
           </AnimatePresence>
         </div>
 
-        <nav className="flex items-center gap-6">
+        <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 sm:gap-x-6">
           <Link href="/#work" className="link text-body">
             Work
+          </Link>
+          <Link
+            href="/services"
+            {...{ transitionTypes: ["nav-forward"] } as any}
+            className="link text-body"
+          >
+            Services
           </Link>
           {/* /art and /studies are separate apps on this domain: plain <a>, not <Link> */}
           <a href="/art" className="link text-body">

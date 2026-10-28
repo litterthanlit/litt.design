@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import type { SiteSettings } from "@/data/types";
 
@@ -34,7 +35,10 @@ export function Footer({ settings }: FooterProps) {
         <p className="text-body text-ink">The craft is in what I leave out.</p>
         <p className="text-body text-ink">More play.</p>
         <p className="meta mt-4">
-          {settings.location} &middot; {settings.availability.label}
+          {settings.location} &middot;{" "}
+          <Link href="/services" className="link">
+            {settings.availability.label}
+          </Link>
         </p>
       </motion.div>
 
