@@ -15,7 +15,7 @@
   /* Type scale: three sizes. Hierarchy comes from colour and weight,
      not size — titles are ink/medium, supporting text is muted. */
   --text-intro: 1.125rem; /* 18px — the intro statement */
-  --text-intro--line-height: 1.6;
+  --text-intro--line-height: 1.5;
   --text-intro--letter-spacing: -0.015em;
   --text-body: 0.875rem; /* 14px — titles, descriptions, labels, links */
   --text-body--line-height: 1.6;

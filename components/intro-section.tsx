@@ -15,13 +15,11 @@ export function IntroSection() {
           />
         </div>
 
-        <div className="reveal-in max-w-[520px] [animation-delay:60ms]">
-          <h1 className="text-body font-medium text-ink">
-            Nick Georgiev
-            <span className="font-normal text-muted">, designer who builds</span>
-          </h1>
-          <p className="mt-3 text-intro text-ink">
-          Hi, I&apos;m Nick. I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
+        {/* The first sentence is the page's h1, set inline so it reads as one paragraph */}
+        <div className="reveal-in max-w-[520px] text-intro text-ink [animation-delay:60ms]">
+          <h1 className="inline">Hi, I&apos;m Nick Georgiev, a designer who builds.</h1>{" "}
+          <p className="inline">
+            I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
           </p>
         </div>
       </div>
