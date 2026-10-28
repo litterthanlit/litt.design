@@ -151,7 +151,7 @@ export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
       </section>
 
       {/* Next project */}
-      <Link href={`/work/${nextProject.slug}`} {...{ transitionTypes: ["nav-forward"] } as any} className="group block">
+      <Link href={`/work/${nextProject.slug}`} transitionTypes={["nav-forward"]} className="group block">
         <motion.div
           className="flex items-center justify-between border-t border-[rgba(0,0,0,0.06)] py-6"
           initial={reduceMotion ? {} : { opacity: 0 }}

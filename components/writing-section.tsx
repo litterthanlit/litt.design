@@ -44,7 +44,7 @@ export function WritingSection({ entries }: WritingSectionProps) {
             {entry.body ? (
               <Link
                 href={`/writing/${entry.slug}`}
-                {...{ transitionTypes: ["nav-forward"] } as any}
+                transitionTypes={["nav-forward"]}
                 className="group -mx-2 flex items-baseline justify-between rounded-md px-2 py-2 transition-colors duration-150 ease-out hover:bg-[rgba(0,0,0,0.03)] focus-visible:outline-offset-0 active:bg-[rgba(0,0,0,0.05)]"
               >
                 <span className="flex items-center gap-1.5 text-body font-medium text-ink">

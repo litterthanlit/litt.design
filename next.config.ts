@@ -20,9 +20,6 @@ const nextConfig: NextConfig = {
       { source: "/studies/:path+", destination: `${STUDIES_URL}/studies/:path+` },
     ];
   },
-  experimental: {
-    viewTransition: true,
-  },
   images: {
     remotePatterns: [],
   },

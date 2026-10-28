@@ -18,7 +18,7 @@ export function SiteHeader() {
           onFocus={() => setShowTooltip(true)}
           onBlur={() => setShowTooltip(false)}
         >
-          <Link href="/" {...{ transitionTypes: ["nav-back"] } as any} aria-label="Home">
+          <Link href="/" transitionTypes={["nav-back"]} aria-label="Home">
             {/* Animated AVIF with a WebP fallback, and a still frame under reduced motion */}
             <picture>
               <source media="(prefers-reduced-motion: reduce)" srcSet="/logo-still.webp" />
@@ -63,7 +63,7 @@ export function SiteHeader() {
           </Link>
           <Link
             href="/services"
-            {...{ transitionTypes: ["nav-forward"] } as any}
+            transitionTypes={["nav-forward"]}
             className="link text-body"
           >
             Services
