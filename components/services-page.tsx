@@ -31,17 +31,15 @@ function BookCallLink() {
 export function ServicesPage() {
   return (
     <main className="section-shell flex min-h-screen flex-col gap-16 pb-8 pt-36 md:gap-20 md:pb-12 md:pt-44">
-      <section className="max-w-2xl">
-        <Reveal>
-          <h1 className="text-body font-medium text-ink">Services</h1>
-          <p className="mt-3 text-intro text-ink">{POSITIONING}</p>
-          <p className="mt-3 text-body text-muted">
-            Prices in EUR, excl. VAT.
-          </p>
-          <div className="mt-6">
-            <BookCallLink />
-          </div>
-        </Reveal>
+      <section className="reveal-in max-w-2xl">
+        <h1 className="text-body font-medium text-ink">Services</h1>
+        <p className="mt-3 text-intro text-ink">{POSITIONING}</p>
+        <p className="mt-3 text-body text-muted">
+          Prices in EUR, excl. VAT.
+        </p>
+        <div className="mt-6">
+          <BookCallLink />
+        </div>
       </section>
 
       <section className="max-w-2xl" aria-labelledby="packages-heading">

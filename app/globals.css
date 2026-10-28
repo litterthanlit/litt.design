@@ -254,6 +254,40 @@ body::before {
   }
 }
 
+/* First-screen reveal in plain CSS, so the content paints before JS loads.
+   The fades start at 0.01, not 0. Chrome skips opacity:0 content when timing
+   the largest paint, which pushed LCP from 0.4s to 2.3s on a throttled phone. */
+.reveal-in {
+  animation: reveal-in 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0.01;
+    translate: 0 12px;
+    filter: blur(4px);
+  }
+}
+
+.reveal-in-scale {
+  animation: reveal-in-scale 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes reveal-in-scale {
+  from {
+    opacity: 0.01;
+    scale: 0.9;
+    filter: blur(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-in,
+  .reveal-in-scale {
+    animation: none;
+  }
+}
+
 /* Graffiti toolbar: rises in once the first stroke lands */
 .graffiti-toolbar {
   animation: graffiti-in 280ms cubic-bezier(0.22, 1, 0.36, 1);
