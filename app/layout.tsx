@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono";
 import { SiteHeader } from "@/components/site-header";
 import { DitherBackground } from "@/components/dither-background";
 import { GraffitiLayer } from "@/components/graffiti-layer";
+import { OG_IMAGE } from "@/data/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,14 +22,14 @@ export const metadata: Metadata = {
       "Sites, products, and tools for creators. The craft is in what I leave out.",
     type: "website",
     url: "https://litt.design",
-    images: ["/og.svg"],
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "litt.design",
     description:
       "Sites, products, and tools for creators. The craft is in what I leave out.",
-    images: ["/og.svg"],
+    images: [OG_IMAGE],
   },
 };
 

@@ -2,6 +2,14 @@ import type { SiteSettings } from "@/data/types";
 
 export const BOOKING_URL = "https://cal.com/nick-georgiev-1qq4zg/15min";
 
+// Social platforms don't render SVG previews, so the share card is a PNG
+export const OG_IMAGE = {
+  url: "/og.png",
+  width: 1200,
+  height: 630,
+  alt: "litt.design. Web experiences, brand identity, and motion that moves business.",
+};
+
 export const siteSettings: SiteSettings = {
   brandName: "litt.design",
   tagline: "Web experiences, brand identity, and motion that converts clarity into momentum.",

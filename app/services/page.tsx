@@ -13,13 +13,11 @@ export const metadata: Metadata = {
     description: POSITIONING,
     type: "website",
     url: "https://litt.design/services",
-    images: ["/og.svg"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Services | litt.design",
     description: POSITIONING,
-    images: ["/og.svg"],
   },
 };
 
