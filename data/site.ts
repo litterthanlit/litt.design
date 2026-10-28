@@ -1,5 +1,7 @@
 import type { SiteSettings } from "@/data/types";
 
+export const BOOKING_URL = "https://cal.com/nick-georgiev-1qq4zg/15min";
+
 export const siteSettings: SiteSettings = {
   brandName: "litt.design",
   tagline: "Web experiences, brand identity, and motion that converts clarity into momentum.",
