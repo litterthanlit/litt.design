@@ -17,7 +17,7 @@ export const projects: Project[] = [
     accent: "#E0364F",
     coverMedia: {
       background: "linear-gradient(135deg, #1f1f1f 0%, #3a3a3a 100%)",
-      preview: "/previews/carson.jpg",
+      preview: "/previews/covers/carson.jpg",
     },
     externalUrl: "https://carson-navy.vercel.app/",
     heroFrames: [
@@ -64,7 +64,7 @@ export const projects: Project[] = [
     accent: "#FF4F1F",
     coverMedia: {
       background: "linear-gradient(135deg, #0a0a0a 0%, #1c2a30 100%)",
-      preview: "/previews/brand-v2.jpg",
+      preview: "/previews/covers/brand.jpg",
     },
     externalUrl: "https://brand-five-gules.vercel.app/",
     heroFrames: [
@@ -111,7 +111,7 @@ export const projects: Project[] = [
     accent: "#3B82F6",
     coverMedia: {
       background: "linear-gradient(135deg, #f7f8fa 0%, #e8ecf3 100%)",
-      preview: "/previews/hypher.jpg",
+      preview: "/previews/covers/hypher.jpg",
     },
     externalUrl: "https://www.hypher.app/",
     heroFrames: [
@@ -158,7 +158,7 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
-      preview: "/previews/studio-os-cover.jpg",
+      preview: "/previews/covers/studio-os.jpg",
     },
     externalUrl: "https://studio-os.io/",
     screens: [
@@ -192,6 +192,53 @@ export const projects: Project[] = [
         label: "Result",
         heading: "Taste you can reuse",
         body: "Direction stops living only in your head. The same directives shape every screen, so the output looks like it came from one designer with one point of view.",
+      },
+    ],
+  },
+  {
+    slug: "vyo",
+    title: "Vyo",
+    category: "Agent Skill",
+    status: "In progress",
+    description:
+      "A Cursor skill that reads a codebase and explains the app in plain English, on posters a non-engineer can read: how the app works, the project story, and an exploded view of its real parts. A built-in checker holds every poster to Swiss grid rules before it ships.",
+    oneLineOutcome:
+      "Turns a codebase into posters that explain the app to anyone.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Product Design", "Agent Design", "Information Design"],
+    stack: ["Cursor Skills", "React", "Playwright", "esbuild"],
+    accent: "#FF6A13",
+    coverMedia: {
+      background: "linear-gradient(135deg, #ff6a13 0%, #0a0a0a 100%)",
+      preview: "/previews/covers/vyo.jpg",
+    },
+    externalUrl: "https://github.com/litterthanlit/vyo",
+    heroFrames: [
+      { id: "vyo-1", background: "linear-gradient(180deg, #0A0A0A, #FF6A13)", focus: 0.3 },
+      { id: "vyo-2", background: "linear-gradient(180deg, #FF6A13, #0A0A0A)", focus: 0.5 },
+      { id: "vyo-3", background: "linear-gradient(180deg, #0A0A0A, #FF6A13)", focus: 0.7 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "Code explains itself only to coders",
+        body: "Clients, PMs and founders live with an app they can't read. Handoff docs go stale, and walkthroughs disappear after the call.",
+      },
+      {
+        label: "Approach",
+        heading: "A poster, not a document",
+        body: "The skill scans the repository and lays out what it finds on a real 12-column grid: journeys, screens, what runs under the hood, and an exploded view drawn from the code itself.",
+      },
+      {
+        label: "Execution",
+        heading: "Rules a machine can check",
+        body: "Two styles, Swiss and a Farrow-inspired Block. A checker renders each poster in Chromium and fails it on an off-grid line, a fifth type size or low contrast. Exports are PNG, PDF and editable SVG.",
+      },
+      {
+        label: "Result",
+        heading: "A shared picture of the app",
+        body: "One sheet a non-engineer can read in a minute and talk about with confidence.",
       },
     ],
   },
