@@ -1,6 +1,20 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { CoverShape, WorkCard } from "@/data/work";
+
+// A card links to its page, with <Link> inside this app and a plain <a> to /art
+export function CardLink({ card, className, children }: { card: WorkCard; className: string; children: ReactNode }) {
+  return card.sameApp ? (
+    <Link href={card.href} transitionTypes={["nav-forward"]} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <a href={card.href} className={className}>
+      {children}
+    </a>
+  );
+}
 
 // The wide shape is 16/10 on a phone, where every card is one column
 const ASPECT: Record<CoverShape, string> = {
@@ -53,13 +67,9 @@ export function FlatCard({ card, shape = "landscape", sizes, className = "" }: F
 
   const frame = `group block rounded-[12px] bg-card p-1 transition-colors duration-150 ease-out hover:bg-card-hover active:bg-card-hover focus-visible:outline-offset-4 ${className}`;
 
-  return card.sameApp ? (
-    <Link href={card.href} transitionTypes={["nav-forward"]} className={frame}>
+  return (
+    <CardLink card={card} className={frame}>
       {body}
-    </Link>
-  ) : (
-    <a href={card.href} className={frame}>
-      {body}
-    </a>
+    </CardLink>
   );
 }

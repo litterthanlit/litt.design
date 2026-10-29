@@ -31,6 +31,8 @@ export type WorkCard = {
   category: string;
   year: string;
   status?: string;
+  // One line on what it is
+  summary: string;
   href: string;
   // /art is a separate app on this domain, so it takes a plain <a>, not <Link>
   sameApp: boolean;
@@ -51,6 +53,7 @@ export function workCards(items: WorkItem[] = workList): WorkCard[] {
           title: "litt.works",
           category: "Digital Art",
           year: "2024–26",
+          summary: "Abstract digital art: prints, visual experiments and long-form pieces.",
           href: item.href,
           sameApp: false,
           alt: "litt.works gallery in Orb view — artworks arranged on a slowly drifting sphere",
@@ -68,6 +71,7 @@ export function workCards(items: WorkItem[] = workList): WorkCard[] {
         category: project.category,
         year: project.year.slice(-4),
         status: project.status,
+        summary: project.oneLineOutcome,
         href: `/work/${project.slug}`,
         sameApp: true,
         alt: `${project.title} — ${project.oneLineOutcome}`,
