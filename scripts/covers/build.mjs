@@ -10,10 +10,11 @@
 // which is gitignored.
 //
 //   node scripts/covers/build.mjs            every scene
-//   node scripts/covers/build.mjs brand      one scene
+//   node scripts/covers/build.mjs wavr       one scene
 //   node scripts/covers/build.mjs --fresh    recapture the sources first
 //
-// Needs Playwright with Chromium (npx playwright install chromium).
+// Needs Playwright with Chromium (npx playwright install chromium). Wavr draws
+// with WebGL, which headless Chromium runs on its software renderer only when allowed.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -31,15 +32,7 @@ const SHAPES = {
   landscape: { w: 800, h: 500 },
 };
 
-const BRAND = "https://brand-five-gules.vercel.app/";
 const LITT = "https://littmd.vercel.app/";
-
-// Brand's generators, by the slug its index links to
-const GENERATORS = [
-  "stipple-cloud", "glitch-field", "ink-bleed", "long-exposure", "line-sweep", "particle-stream",
-  "blur-echo", "screen-orb", "photogram", "bar-type", "halftone", "mesh-gradient", "dither", "stamp",
-  "bauhaus", "flow-field", "truchet", "blob", "topography", "type-repeat", "sunburst", "waves", "rings",
-];
 
 // litt.md's own wall: its components, by their wall tile's id, on raised tiles
 // over the stone page, in columns, so every component in a column shows at one
@@ -54,9 +47,6 @@ const HYPHER_BARE =
   "html,body,main,section,.marketing-wrap,.marketing-section,.marketing-vtile,.marketing-photo,.marketing-vcards,.marketing-vcard{background:transparent!important}" +
   ".marketing-photo__img{visibility:hidden!important}" +
   ".marketing-photo::before,.marketing-photo::after,.marketing-vtile::before,.marketing-vtile::after{display:none!important}";
-
-// Brand rounds its index tiles and blurs what scrolls under its header; a cover wants square tiles and a bare header
-const BRAND_SQUARE = "li .rounded-md{border-radius:0!important}header{backdrop-filter:none!important}";
 
 // The screenshot is clipped to the element's whole CSS pixels, so no sliver of
 // the page shows at an edge, and grown by margin px to keep what overflows it
@@ -105,6 +95,21 @@ const littWorksOrb = (shape) =>
     locate: (p) => p.locator("body"),
   });
 
+// Wavr's editor draws a look on a canvas the size of the window, less its 420px
+// panel and 84px of bars, so this window gives a 16:10 canvas at more than the
+// cover's 2x size. Under reduced motion the editor opens paused, which keeps
+// the frame still and the slow-frame notice off the canvas.
+const wavrLook = (look) =>
+  shoot("https://wavr-v1.vercel.app/editor", {
+    scale: 1,
+    viewport: { width: 2600, height: 1446 },
+    prepare: async (p) => {
+      await p.locator("button", { hasText: "Skip" }).click();
+      await p.locator(`button[aria-label="${look}"]`).click();
+    },
+    locate: (p) => p.locator("canvas").first(),
+  });
+
 const SOURCES = {
   ...Object.fromEntries(Object.keys(SHAPES).map((shape) => [`litt-works-${shape}.png`, littWorksOrb(shape)])),
   "hypher-note.png": shoot("https://www.hypher.app/", { scale: 3, css: HYPHER_BARE, bare: true, locate: (p) => p.locator("#the-loop .marketing-vtile").nth(1) }),
@@ -115,10 +120,7 @@ const SOURCES = {
     css: "html,body{background:transparent!important}article.group div.absolute.inset-0{display:none!important}article.group div.max-w-\\[240px\\]{background:#0b0b10!important;padding:12px!important;max-width:264px!important;border-radius:8px!important}",
     locate: (p) => p.locator("article.group").nth(1).locator("div.max-w-\\[240px\\]"),
   }),
-  ...Object.fromEntries(
-    GENERATORS.map((g) => [`brand-${g}.png`, shoot(BRAND, { css: BRAND_SQUARE, locate: (p) => p.locator(`li a[href="#/t/${g}"] [role=img]`) })]),
-  ),
-  "brand-index-heading.png": shoot(BRAND, { scale: 6, bare: true, css: "#tools-heading{line-height:1!important}", locate: (p) => p.locator("#tools-heading") }),
+  "wavr-horizon-glow.png": wavrLook("Horizon Glow"),
   // A component as its wall tile draws it, without most of the tile's air. A tile mounts its component once it scrolls into view.
   ...Object.fromEntries(
     LITT_TILES.map((id) => [
@@ -135,67 +137,15 @@ const SOURCES = {
 
 const cached = (name) => pathToFileURL(path.join(CACHE, name)).href;
 
-const BRAND_INK = "#0a0a0b";
-
 // An object is a box on the stage: x and y are its centre, w its width, all in
 // % of the stage (h in % of its height). Without h the image keeps its own
 // shape; with h it fits the box ("contain") or fills and crops it ("cover", at
-// pos). fill, pad and radius make the box a flat tile of its own.
+// pos).
 function objectHtml(o) {
-  const box = [
-    `left:${o.x}%`,
-    `top:${o.y}%`,
-    `width:${o.w}%`,
-    o.h && `height:${o.h}%`,
-    o.fill && `background:${o.fill}`,
-    o.pad && `padding:${o.pad}`,
-    o.radius && `border-radius:${o.radius}px`,
-  ].filter(Boolean).join(";");
+  const box = [`left:${o.x}%`, `top:${o.y}%`, `width:${o.w}%`, o.h && `height:${o.h}%`].filter(Boolean).join(";");
   const fit = o.h ? `height:100%;object-fit:${o.fit ?? "contain"};object-position:${o.pos ?? "center"}` : "height:auto";
   return `<div class="o" style="${box}"><img src="${cached(o.src)}" style="width:100%;${fit}"></div>`;
 }
-
-// Lays cells out edge to edge like CSS grid-template-areas: one string of names
-// per row, and a name that fills a rectangle of the grid is one cell spanning
-// it. Cell edges fall on whole pixels so the gaps stay crisp.
-function areas(shape, rows, { gap, cell }) {
-  const { w: W, h: H } = SHAPES[shape];
-  const grid = rows.map((r) => r.trim().split(/\s+/));
-  const edges = (n, size) => Array.from({ length: n + 1 }, (_, i) => Math.round((i * (size + gap)) / n));
-  const xs = edges(grid[0].length, W);
-  const ys = edges(grid.length, H);
-  const spans = new Map();
-  grid.forEach((names, r) =>
-    names.forEach((name, c) => {
-      const s = spans.get(name) ?? { r0: r, c0: c, r1: r, c1: c };
-      spans.set(name, { ...s, r1: r, c1: Math.max(s.c1, c) });
-    }),
-  );
-  return [...spans].map(([name, { r0, c0, r1, c1 }]) => {
-    const [left, right, top, bottom] = [xs[c0], xs[c1 + 1] - gap, ys[r0], ys[r1 + 1] - gap];
-    return { ...cell(name), x: ((left + right) / 2 / W) * 100, y: ((top + bottom) / 2 / H) * 100, w: ((right - left) / W) * 100, h: ((bottom - top) / H) * 100 };
-  });
-}
-
-const byShape = (table, layout) => Object.fromEntries(Object.entries(table).map(([shape, rows]) => [shape, layout(shape, rows)]));
-
-// Brand, edge to edge: all 23 generators once each, cropped to their cells,
-// and one cell for the index's own heading. A crop position keeps a
-// generator's own words whole, or its words out and its subject in.
-const GENERATOR_POS = { "stipple-cloud": "left center", "glitch-field": "right center", "particle-stream": "center 80%" };
-const generatorCell = (name) =>
-  name === "index"
-    ? { src: "brand-index-heading.png", fill: BRAND_INK, pad: "28px" }
-    : { src: `brand-${name}.png`, fit: "cover", pos: GENERATOR_POS[name] };
-
-const BRAND_MOSAIC = {
-  landscape: [
-    "sunburst dither truchet screen-orb waves bauhaus",
-    "particle-stream stamp photogram rings mesh-gradient stipple-cloud",
-    "type-repeat flow-field blur-echo index long-exposure halftone",
-    "glitch-field blob line-sweep topography ink-bleed bar-type",
-  ],
-};
 
 const fullBleed = (src) => ({ src, x: 50, y: 50, w: 100, h: 100, fit: "cover" });
 
@@ -216,9 +166,10 @@ const SCENES = {
   },
   vyo: { html: vyo },
   "litt-md": { html: littWall },
-  brand: {
-    ground: BRAND_INK,
-    shapes: byShape(BRAND_MOSAIC, (shape, rows) => areas(shape, rows, { gap: 4, cell: generatorCell })),
+  // One look, edge to edge: the horizon of light Wavr draws on its canvas
+  wavr: {
+    ground: "#05060c",
+    shapes: { landscape: [fullBleed("wavr-horizon-glow.png")] },
   },
   "litt-works": {
     ground: "#f4f2ee",
@@ -298,7 +249,7 @@ for (const slug of slugs) if (!SCENES[slug]) throw new Error(`No scene named ${s
 
 fs.mkdirSync(CACHE, { recursive: true });
 fs.mkdirSync(OUT, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ["--enable-unsafe-swiftshader"] });
 try {
   for (const [name, get] of Object.entries(SOURCES)) {
     const file = path.join(CACHE, name);
