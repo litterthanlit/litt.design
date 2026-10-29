@@ -2,9 +2,6 @@
 
 import { useRef, type DragEvent, type FocusEvent, type MouseEvent, type PointerEvent, type ReactNode, type Ref } from "react";
 import { motion, useReducedMotion, type HTMLMotionProps, type Variants } from "framer-motion";
-import type { WorkCard } from "@/data/work";
-
-export type ReelProps = { cards: WorkCard[]; label: string };
 
 export const SPRING = { type: "spring", stiffness: 260, damping: 25 } as const;
 
@@ -79,22 +76,6 @@ export function RoundButton({ icon, label, disabled = false, onClick }: RoundBut
         <path d={ICONS[icon]} />
       </svg>
     </button>
-  );
-}
-
-type ReelControlsProps = { index: number; count: number; onStep: (step: -1 | 1) => void };
-
-export function ReelControls({ index, count, onStep }: ReelControlsProps) {
-  return (
-    <div className="section-shell mt-5 flex items-center justify-between">
-      <p className="meta" aria-live="polite" aria-atomic="true">
-        {index + 1} / {count}
-      </p>
-      <div className="flex gap-2">
-        <RoundButton icon="previous" label="Previous card" disabled={index === 0} onClick={() => onStep(-1)} />
-        <RoundButton icon="next" label="Next card" disabled={index === count - 1} onClick={() => onStep(1)} />
-      </div>
-    </div>
   );
 }
 
