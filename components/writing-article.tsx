@@ -27,7 +27,7 @@ export function WritingArticle({ entry }: { entry: WritingEntry }) {
       </div>
 
       <Link
-        href="/#writing"
+        href="/"
         transitionTypes={["nav-back"]}
         className="link mt-16 inline-block text-body"
       >
