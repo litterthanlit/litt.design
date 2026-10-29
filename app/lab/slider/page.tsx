@@ -1,8 +1,23 @@
 import { workCards } from "@/data/work";
 import { Grid3x2 } from "@/components/lab/slider/grid";
+import { FeatureSlider } from "@/components/lab/slider/feature-slider";
 import { Heading, Slider } from "@/components/lab/slider/slider";
 
 export const metadata = { title: "Lab: slider", robots: { index: false } };
+
+// One project at a time, in the homepage column, with the next half shown and out of focus
+const FEATURES = [
+  {
+    title: "One in view, description beside it",
+    note: "A panel on the left names the current project and says what it is; it changes as you slide.",
+    layout: "side",
+  },
+  {
+    title: "One in view, description in the card",
+    note: "Each card carries its own words on the left and its picture on the right.",
+    layout: "split",
+  },
+] as const;
 
 const SLIDERS = [
   {
@@ -48,8 +63,14 @@ export default function SliderPage() {
     <main className="pt-36 pb-24 md:pt-44">
       <div className="section-shell">
         <h1 className="text-body font-medium text-ink">Slider</h1>
-        <p className="mt-1 text-body text-muted">Sliders with two or three cards in view, then the same six cards as a 3×2 grid.</p>
+        <p className="mt-1 text-body text-muted">One project at a time with the next half in view, then two or three in view, then the six cards as a 3×2 grid.</p>
       </div>
+
+      {FEATURES.map((feature) => (
+        <div key={feature.title} className="mt-16 md:mt-24">
+          <FeatureSlider cards={cards} {...feature} />
+        </div>
+      ))}
 
       {SLIDERS.map((slider) => (
         <div key={slider.title} className="mt-16 md:mt-24">
