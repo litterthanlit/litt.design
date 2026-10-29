@@ -1,5 +1,6 @@
-// Composes the homepage card covers into public/previews/covers/<slug>-<shape>.jpg,
-// one file for each shape a card can ask for (data/work.ts, coverShapes).
+// Composes the homepage card covers into public/previews/covers/<slug>-landscape.jpg.
+// SHAPES holds the one shape the homepage uses; a scene's layout tables are keyed
+// by shape, so another shape is one more entry in SHAPES and in each table.
 //
 // The covers are flat: a solid ground with crisp pieces of the real product
 // on it, and the composition does the work (scale, crop, edges, air). There is
@@ -8,8 +9,8 @@
 // style. Sources are captured from the live sites into scripts/covers/.cache,
 // which is gitignored.
 //
-//   node scripts/covers/build.mjs            every scene, in every shape
-//   node scripts/covers/build.mjs brand      one scene, in every shape
+//   node scripts/covers/build.mjs            every scene
+//   node scripts/covers/build.mjs brand      one scene
 //   node scripts/covers/build.mjs --fresh    recapture the sources first
 //
 // Needs Playwright with Chromium (npx playwright install chromium).
@@ -25,13 +26,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const CACHE = path.join(ROOT, "scripts/covers/.cache");
 const OUT = path.join(ROOT, "public/previews/covers");
 
-// Each shape in CSS px, rendered at 2x. A wide card shows at 16/10 on a phone,
-// so a wide scene keeps everything that matters inside its middle 80%.
+// Each shape in CSS px, rendered at 2x
 const SHAPES = {
   landscape: { w: 800, h: 500 },
-  wide: { w: 800, h: 400 },
-  square: { w: 600, h: 600 },
-  portrait: { w: 600, h: 750 },
 };
 
 const BRAND = "https://brand-five-gules.vercel.app/";
@@ -49,9 +46,6 @@ const GENERATORS = [
 // scale. A tile takes its share of the column's spare height as air.
 const LITT_WALL = {
   landscape: { margin: [20, 20], columns: [["chart", "dot-plot"], ["switch", "slide-confirm", "button"]] },
-  wide: { margin: [88, 16], columns: [["chart", "heatmap"], ["switch", "button"]] },
-  square: { margin: [20, 20], columns: [["chart", "segmented", "button"]] },
-  portrait: { margin: [20, 20], columns: [["chart", "switch", "button"]] },
 };
 const LITT_TILES = [...new Set(Object.values(LITT_WALL).flatMap((s) => s.columns.flat()))];
 
@@ -85,16 +79,6 @@ const shoot = (url, { scale = 2, viewport = { width: 1440, height: 900 }, css, p
   }
 };
 
-// One generator's artwork, full size, in one of Brand's export formats
-const brandArt = (slug, format) =>
-  shoot(BRAND, {
-    scale: 3,
-    prepare: async (p) => {
-      await p.locator(`a[href="#/t/${slug}"]`).first().click();
-      await p.locator("button", { hasText: format }).first().click();
-    },
-    locate: (p) => p.locator('[role=img][aria-label*="artwork"]'),
-  });
 
 async function expectClass(locator, name, act, tries = 20) {
   for (let i = 0; i < tries; i++) {
@@ -135,12 +119,6 @@ const SOURCES = {
     GENERATORS.map((g) => [`brand-${g}.png`, shoot(BRAND, { css: BRAND_SQUARE, locate: (p) => p.locator(`li a[href="#/t/${g}"] [role=img]`) })]),
   ),
   "brand-index-heading.png": shoot(BRAND, { scale: 6, bare: true, css: "#tools-heading{line-height:1!important}", locate: (p) => p.locator("#tools-heading") }),
-  "brand-wordmark.png": shoot(BRAND, { scale: 6, bare: true, css: BRAND_SQUARE, locate: (p) => p.locator('header a[href="#/"]') }),
-  // The whole index at once: a viewport that tall renders every tile
-  "brand-index.png": shoot(BRAND, { viewport: { width: 1440, height: 6200 }, locate: (p) => p.locator("#tools") }),
-  "brand-sunburst-16x9.png": brandArt("sunburst", "16:9"),
-  "brand-sunburst-1x1.png": brandArt("sunburst", "1:1"),
-  "brand-sunburst-4x5.png": brandArt("sunburst", "4:5"),
   // A component as its wall tile draws it, without most of the tile's air. A tile mounts its component once it scrolls into view.
   ...Object.fromEntries(
     LITT_TILES.map((id) => [
@@ -163,13 +141,7 @@ const BRAND_INK = "#0a0a0b";
 // % of the stage (h in % of its height). Without h the image keeps its own
 // shape; with h it fits the box ("contain") or fills and crops it ("cover", at
 // pos). fill, pad and radius make the box a flat tile of its own.
-// An object with a view is a camera on a big capture instead: the capture at
-// its real size times zoom, with its point (left, top) at the stage's corner.
 function objectHtml(o) {
-  if (o.view) {
-    const { left, top, zoom } = o.view;
-    return `<img class="view" srcset="${cached(o.src)} ${o.density / zoom}x" style="left:${-left * zoom}px;top:${-top * zoom}px">`;
-  }
   const box = [
     `left:${o.x}%`,
     `top:${o.y}%`,
@@ -223,49 +195,9 @@ const BRAND_MOSAIC = {
     "type-repeat flow-field blur-echo index long-exposure halftone",
     "glitch-field blob line-sweep topography ink-bleed bar-type",
   ],
-  wide: [
-    "sunburst dither truchet screen-orb waves bauhaus particle-stream stamp",
-    "photogram rings mesh-gradient stipple-cloud index flow-field blur-echo long-exposure",
-    "halftone type-repeat glitch-field blob line-sweep topography ink-bleed bar-type",
-  ],
-  square: [
-    "sunburst dither truchet screen-orb waves",
-    "bauhaus particle-stream stamp photogram rings",
-    "mesh-gradient stipple-cloud index index flow-field",
-    "blur-echo long-exposure halftone type-repeat glitch-field",
-    "blob line-sweep topography ink-bleed bar-type",
-  ],
-  portrait: [
-    "sunburst dither truchet screen-orb",
-    "waves bauhaus particle-stream stamp",
-    "photogram rings mesh-gradient stipple-cloud",
-    "index flow-field blur-echo long-exposure",
-    "halftone type-repeat glitch-field blob",
-    "line-sweep topography ink-bleed bar-type",
-  ],
 };
 
-// Brand's wordmark on a chip of its black, its bottom edge bottom px up, and
-// its left edge left px in (or centred, without left). WORDMARK is the
-// capture's width over its height.
-const WORDMARK = 636 / 108;
-function wordmarkChip(shape, { left, bottom, width }) {
-  const { w: W, h: H } = SHAPES[shape];
-  const [padX, padY] = [14, 10];
-  const [cw, ch] = [width + 2 * padX, width / WORDMARK + 2 * padY];
-  const x = left === undefined ? 50 : ((left + cw / 2) / W) * 100;
-  return { src: "brand-wordmark.png", fill: BRAND_INK, pad: `${padY}px ${padX}px`, radius: 2, x, y: ((H - bottom - ch / 2) / H) * 100, w: (cw / W) * 100 };
-}
 const fullBleed = (src) => ({ src, x: 50, y: 50, w: 100, h: 100, fit: "cover" });
-
-// Brand's index on its black, as the site lays it out: a camera on the whole
-// index, in the capture's CSS px. Rows 13 to 15 (Dither, Stamp, Bauhaus Grid) start at 2581.
-const BRAND_INDEX = {
-  landscape: { left: 0, top: 2531, zoom: 0.75 },
-  wide: { left: 0, top: 2545, zoom: 0.75 },
-  square: { left: 0, top: 2556, zoom: 0.6 },
-  portrait: { left: 0, top: 2531, zoom: 0.6 },
-};
 
 // Every scene has a flat ground and, for each shape, the objects on it.
 // A scene with `html` draws itself.
@@ -274,18 +206,12 @@ const SCENES = {
     ground: "#b9cdd8",
     shapes: {
       landscape: [{ src: "hypher-note.png", x: 50, y: 50, w: 74 }],
-      wide: [{ src: "hypher-note.png", x: 50, y: 50, w: 58 }],
-      square: [{ src: "hypher-note.png", x: 50, y: 50, w: 106 }],
-      portrait: [{ src: "hypher-note.png", x: 50, y: 50, w: 112 }],
     },
   },
   "studio-os": {
     ground: "#f2f5f9",
     shapes: {
       landscape: [{ src: "studio-taste.png", x: 50, y: 50, w: 57 }],
-      wide: [{ src: "studio-taste.png", x: 50, y: 50, w: 47 }],
-      square: [{ src: "studio-taste.png", x: 50, y: 50, w: 80 }],
-      portrait: [{ src: "studio-taste.png", x: 50, y: 50, w: 84 }],
     },
   },
   vyo: { html: vyo },
@@ -293,19 +219,6 @@ const SCENES = {
   brand: {
     ground: BRAND_INK,
     shapes: byShape(BRAND_MOSAIC, (shape, rows) => areas(shape, rows, { gap: 4, cell: generatorCell })),
-  },
-  "brand-b": {
-    ground: BRAND_INK,
-    shapes: {
-      landscape: [fullBleed("brand-sunburst-16x9.png"), wordmarkChip("landscape", { left: 28, bottom: 28, width: 190 })],
-      wide: [fullBleed("brand-sunburst-16x9.png"), wordmarkChip("wide", { bottom: 24, width: 170 })],
-      square: [fullBleed("brand-sunburst-1x1.png"), wordmarkChip("square", { left: 28, bottom: 28, width: 170 })],
-      portrait: [fullBleed("brand-sunburst-4x5.png"), wordmarkChip("portrait", { left: 28, bottom: 28, width: 170 })],
-    },
-  },
-  "brand-c": {
-    ground: BRAND_INK,
-    shapes: byShape(BRAND_INDEX, (_, view) => [{ src: "brand-index.png", density: 2, view }]),
   },
   "litt-works": {
     ground: "#f4f2ee",
@@ -318,9 +231,6 @@ const SCENES = {
 // Each shape sets the 12 columns' outer edges, the top of the stack and each block's height.
 const VYO = {
   landscape: { left: 48, right: 48, top: 56, rows: [88, 104, 88, 88] },
-  wide: { left: 96, right: 96, top: 36, rows: [64, 76, 64, 64] },
-  square: { left: 40, right: 40, top: 64, rows: [96, 112, 96, 96] },
-  portrait: { left: 40, right: 40, top: 96, rows: [116, 132, 116, 116] },
 };
 
 function vyo(shape) {
@@ -378,7 +288,6 @@ const page = (body, { w, h }) => `<!doctype html><html><head><style>
   .ground{position:absolute;inset:0}
   .o{position:absolute;box-sizing:border-box;overflow:hidden;transform:translate(-50%,-50%)}
   .o img{display:block}
-  .view{position:absolute;max-width:none}
 </style></head><body><div class="stage">${body}</div></body></html>`;
 
 const args = process.argv.slice(2);
