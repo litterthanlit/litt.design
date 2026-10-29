@@ -6,6 +6,7 @@ export const metadata = { title: "Lab", robots: { index: false } };
 const PAGES = [
   { href: "/lab/grids", title: "Grids", note: "Five layouts of the same six cards" },
   { href: "/lab/reel", title: "Reel", note: "Three ways to slide through all of them" },
+  { href: "/lab/slider", title: "Slider", note: "Two or three in view, and a 3×2 grid" },
 ];
 
 const BRAND_OPTIONS = ["brand", "brand-b", "brand-c"];
