@@ -133,6 +133,14 @@ body::before {
   @apply mx-auto w-full max-w-[1200px] px-5 md:px-8 lg:px-12;
 }
 
+/* Homepage rows (components/home-row.tsx): a dashed hairline between one row
+   and the next, none above the first */
+.home-row + .home-row .home-row-grid {
+  background-image: linear-gradient(to right, rgb(10 10 10 / 0.14) 6px, transparent 6px);
+  background-size: 10px 1px;
+  background-repeat: repeat-x;
+}
+
 .content-section {
   content-visibility: auto;
   contain-intrinsic-size: 1px 860px;

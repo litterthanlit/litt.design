@@ -1,29 +1,25 @@
 import Image from "next/image";
 
+// Lines up with the content column of the rows below it
 export function IntroSection() {
   return (
-    <section className="section-shell pt-36 pb-12 md:pt-44 md:pb-16">
-      <div className="flex flex-col items-start gap-8 md:flex-row md:items-center md:gap-12">
-        <div className="reveal-in-scale h-[150px] w-[150px] shrink-0 overflow-hidden rounded-lg border-2 border-[rgba(0,0,0,0.08)] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.04)]">
+    <section className="section-shell pt-16 pb-4 md:pt-24 md:pb-6">
+      <div className="max-w-[800px] md:pl-[120px]">
+        <div className="reveal-in-scale size-16 overflow-hidden rounded-[10px] border border-line">
           <Image
             src="/nick.png"
             alt="Portrait of Nick"
-            width={150}
-            height={150}
+            width={64}
+            height={64}
             className="h-full w-full object-cover"
             priority
           />
         </div>
 
-        <div className="reveal-in max-w-[520px] [animation-delay:60ms]">
-          <h1 className="text-body font-medium text-ink">
-            Nick Georgiev
-            <span className="font-normal text-muted"> · Designer &amp; engineer</span>
-          </h1>
-          <p className="mt-3 text-intro text-ink">
-          Hi, I&apos;m Nick. I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
-          </p>
-        </div>
+        <h1 className="reveal-in mt-5 text-body [animation-delay:60ms]">
+          <span className="block font-medium text-ink">Nick Georgiev</span>
+          <span className="block text-muted">Designer &amp; engineer</span>
+        </h1>
       </div>
     </section>
   );
