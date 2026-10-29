@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { WorkSection } from "@/components/work-section";
 import { ContributionGraph } from "@/components/contribution-graph";
-import { ButtonLink, ExternalIcon } from "@/components/button-link";
 import { ThankYouOrb } from "@/components/footer";
 import { HomeRow } from "@/components/home-row";
 import { IntroSection } from "@/components/intro-section";
@@ -9,6 +8,10 @@ import { SocialLinks } from "@/components/social-links";
 import { DirectionalTransition } from "@/components/view-transitions";
 import { workCards } from "@/data/work";
 import { BOOKING_URL, siteSettings } from "@/data/site";
+
+// The call to action: ink words on a standing underline, which darkens on hover
+const CTA =
+  "underline decoration-ink/30 decoration-1 underline-offset-4 transition-[text-decoration-color] duration-150 ease-out hover:decoration-ink";
 
 export default function HomePage() {
   const { contactEmail, location, socialLinks } = siteSettings;
@@ -26,14 +29,18 @@ export default function HomePage() {
         </HomeRow>
 
         <HomeRow id="now" label="Now" className="reveal-in [animation-delay:180ms]">
-          <p className="max-w-[560px] text-body text-ink">Taking on new projects.</p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <ButtonLink href={BOOKING_URL} variant="primary" external icon={<ExternalIcon />}>
-              Book a call
-            </ButtonLink>
-            <ButtonLink href={`mailto:${contactEmail}`}>Email me</ButtonLink>
-          </div>
-          <p className="meta mt-4">
+          <p className="max-w-[560px] text-body text-ink">
+            Taking on new projects.{" "}
+            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className={CTA}>
+              Book a call<span className="sr-only"> (opens in a new tab)</span>
+            </a>{" "}
+            or{" "}
+            <a href={`mailto:${contactEmail}`} className={CTA}>
+              email me
+            </a>
+            .
+          </p>
+          <p className="meta mt-2">
             {location} &middot;{" "}
             <Link href="/services" transitionTypes={["nav-forward"]} className="link group">
               See services
