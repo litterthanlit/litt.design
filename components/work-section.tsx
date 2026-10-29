@@ -153,7 +153,7 @@ function Caption({ card, reduce, children }: { card: WorkCard; reduce: boolean; 
   return (
     <div className="mt-5 flex flex-col justify-between gap-6 lg:absolute lg:inset-y-0 lg:right-0 lg:mt-0 lg:w-[200px]">
       {/* Room for the longest line, so the controls never jump as the words change */}
-      <div className="min-h-[6rem] lg:min-h-[7.5rem]">
+      <div className="min-h-[6.25rem] lg:min-h-[7.5rem]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={card.key}
