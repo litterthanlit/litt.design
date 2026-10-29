@@ -39,13 +39,16 @@ type SlideProps = {
   ref?: Ref<HTMLDivElement>;
 };
 
-export function Slide({ index, count, ...rest }: SlideProps) {
+// The server renders the hidden first frame without knowing the motion setting,
+// so CSS shows a slide at once under reduced motion, before it scrolls into view
+export function Slide({ index, count, className = "", ...rest }: SlideProps) {
   const reduce = useReducedMotion();
   return (
     <motion.div
       role="group"
       aria-roledescription="slide"
       aria-label={`${index + 1} of ${count}`}
+      className={`motion-reduce:opacity-100! motion-reduce:transform-none! motion-reduce:filter-none! ${className}`}
       variants={entrance}
       transition={reduce ? { duration: 0 } : { ...SPRING, delay: index * 0.05 }}
       {...rest}
