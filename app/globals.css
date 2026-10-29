@@ -7,6 +7,8 @@
   --color-ink: #0a0a0a;
   --color-muted: #6b6b6b;
   --color-accent: #C2FF4D;
+  --color-card: #ededed; /* project card fill at rest */
+  --color-card-hover: #e6e6e6; /* one step down, for hover and press */
   --font-sans: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-sans);

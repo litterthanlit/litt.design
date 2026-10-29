@@ -17,7 +17,6 @@ export const projects: Project[] = [
     accent: "#E0364F",
     coverMedia: {
       background: "linear-gradient(135deg, #1f1f1f 0%, #3a3a3a 100%)",
-      preview: "/previews/carson.jpg",
     },
     externalUrl: "https://carson-navy.vercel.app/",
     heroFrames: [
@@ -64,7 +63,6 @@ export const projects: Project[] = [
     accent: "#FF4F1F",
     coverMedia: {
       background: "linear-gradient(135deg, #0a0a0a 0%, #1c2a30 100%)",
-      preview: "/previews/brand-v2.jpg",
     },
     externalUrl: "https://brand-five-gules.vercel.app/",
     heroFrames: [
@@ -111,7 +109,6 @@ export const projects: Project[] = [
     accent: "#3B82F6",
     coverMedia: {
       background: "linear-gradient(135deg, #f7f8fa 0%, #e8ecf3 100%)",
-      preview: "/previews/hypher.jpg",
     },
     externalUrl: "https://www.hypher.app/",
     heroFrames: [
@@ -158,7 +155,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #2D3436 0%, #636e72 50%, #b2bec3 100%)",
-      preview: "/previews/studio-os-cover.jpg",
     },
     externalUrl: "https://studio-os.io/",
     screens: [
@@ -196,6 +192,97 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "vyo",
+    title: "Vyo",
+    category: "Agent Skill",
+    status: "In progress",
+    description:
+      "A Cursor skill that reads a codebase and explains the app in plain English, on posters a non-engineer can read: how the app works, the project story, and an exploded view of its real parts. A built-in checker holds every poster to Swiss grid rules before it ships.",
+    oneLineOutcome:
+      "Turns a codebase into posters that explain the app to anyone.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Product Design", "Agent Design", "Information Design"],
+    stack: ["Cursor Skills", "React", "Playwright", "esbuild"],
+    accent: "#FF6A13",
+    coverMedia: {
+      background: "linear-gradient(135deg, #ff6a13 0%, #0a0a0a 100%)",
+    },
+    externalUrl: "https://github.com/litterthanlit/vyo",
+    heroFrames: [
+      { id: "vyo-1", background: "linear-gradient(180deg, #0A0A0A, #FF6A13)", focus: 0.3 },
+      { id: "vyo-2", background: "linear-gradient(180deg, #FF6A13, #0A0A0A)", focus: 0.5 },
+      { id: "vyo-3", background: "linear-gradient(180deg, #0A0A0A, #FF6A13)", focus: 0.7 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "Code explains itself only to coders",
+        body: "Clients, PMs and founders live with an app they can't read. Handoff docs go stale, and walkthroughs disappear after the call.",
+      },
+      {
+        label: "Approach",
+        heading: "A poster, not a document",
+        body: "The skill scans the repository and lays out what it finds on a real 12-column grid: journeys, screens, what runs under the hood, and an exploded view drawn from the code itself.",
+      },
+      {
+        label: "Execution",
+        heading: "Rules a machine can check",
+        body: "Two styles, Swiss and a Farrow-inspired Block. A checker renders each poster in Chromium and fails it on an off-grid line, a fifth type size or low contrast. Exports are PNG, PDF and editable SVG.",
+      },
+      {
+        label: "Result",
+        heading: "A shared picture of the app",
+        body: "One sheet a non-engineer can read in a minute and talk about with confidence.",
+      },
+    ],
+  },
+  {
+    slug: "litt-md",
+    title: "litt.md",
+    category: "Design System",
+    description:
+      "A design language packaged as a Claude Code plugin: the tokens, rules and taste an agent reads before it builds, a registry of tested React components it installs, and a check that scores any app against the language.",
+    oneLineOutcome:
+      "A design language an agent can install, follow and be checked against.",
+    client: "Personal Project",
+    year: "2026",
+    services: ["Design Systems", "Agent Design", "Front-End Development"],
+    stack: ["Claude Code", "React", "Tailwind CSS", "shadcn"],
+    accent: "#0957FD",
+    coverMedia: {
+      background: "linear-gradient(135deg, #f7f5f3 0%, #0957fd 100%)",
+    },
+    externalUrl: "https://littmd.vercel.app/",
+    heroFrames: [
+      { id: "litt-md-1", background: "linear-gradient(180deg, #F7F5F3, #0957FD)", focus: 0.3 },
+      { id: "litt-md-2", background: "linear-gradient(180deg, #0957FD, #F7F5F3)", focus: 0.5 },
+      { id: "litt-md-3", background: "linear-gradient(180deg, #F7F5F3, #0957FD)", focus: 0.7 },
+    ],
+    storyBlocks: [
+      {
+        label: "Challenge",
+        heading: "Agents build in everyone's voice but yours",
+        body: "Ask an agent for a page and you get the average of the internet: purple gradients, three icon cards, a bounce on everything.",
+      },
+      {
+        label: "Approach",
+        heading: "Taste, written down as rules",
+        body: "Nine rules, one token file and a taste journal that changes only through a review. The agent loads the skill before it touches anything visual.",
+      },
+      {
+        label: "Execution",
+        heading: "Components it can't get wrong",
+        body: "A shadcn registry of tested components, a gallery that shows each one live, and lints that fail on a stray hex value or an off-scale radius.",
+      },
+      {
+        label: "Result",
+        heading: "One voice across every project",
+        body: "New work starts on the language instead of drifting from it, and any app gets a score out of 100 with every fix listed.",
+      },
+    ],
+  },
+  {
     slug: "good-md",
     title: "Houston-MD",
     category: "Desktop App",
@@ -211,8 +298,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #00B894 0%, #55efc4 50%, #dfe6e9 100%)",
-      preview: "/previews/good-md.png",
-      position: "left center",
     },
     externalUrl: "https://houston-md.vercel.app/",
     heroFrames: [
@@ -266,7 +351,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #1A1A1A 0%, #4a4a4a 50%, #8a8a8a 100%)",
-      preview: "/previews/vceezy.png",
     },
     externalUrl: "https://vceezy.vercel.app/",
     heroFrames: [
@@ -320,7 +404,6 @@ export const projects: Project[] = [
     coverMedia: {
       background:
         "linear-gradient(135deg, #E17055 0%, #fab1a0 40%, #ffeaa7 100%)",
-      preview: "/previews/wavr.jpg",
     },
     externalUrl: "https://wavr-v1.vercel.app/",
     screens: [
