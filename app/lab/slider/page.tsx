@@ -8,14 +8,19 @@ export const metadata = { title: "Lab: slider", robots: { index: false } };
 // One project at a time, in the homepage column, with the next half shown and out of focus
 const FEATURES = [
   {
-    title: "One in view, description beside it",
-    note: "A panel on the left names the current project and says what it is; it changes as you slide.",
-    layout: "side",
+    title: "Description on the left",
+    note: "Your pick: a caption on the left names the current project and swaps as you slide.",
+    layout: "left",
   },
   {
-    title: "One in view, description in the card",
-    note: "Each card carries its own words on the left and its picture on the right.",
-    layout: "split",
+    title: "Description on the right, fixed",
+    note: "The same caption on the right. It stays put and swaps; the next picture waits past it and slides in behind the words.",
+    layout: "right",
+  },
+  {
+    title: "Description on the right, travelling",
+    note: "Each picture carries its words on its right, and they slide together.",
+    layout: "spread",
   },
 ] as const;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import Image from "next/image";
 import { AnimatePresence, animate, clamp, motion, useMotionValue, useReducedMotion, type PanInfo } from "framer-motion";
 import { CardLink } from "@/components/flat-card";
@@ -19,19 +19,42 @@ const RESTING = { filter: "blur(6px)", opacity: 0.55 };
 const FRAME =
   "group block h-full rounded-[12px] bg-card p-1 transition-colors duration-150 ease-out hover:bg-card-hover active:bg-card-hover focus-visible:outline-offset-4";
 
-type Layout = "side" | "split";
+// left: a caption on the left that swaps as the track moves.
+// right: the same caption, fixed on the right; the pictures pass behind it.
+// spread: each picture carries its words on its right, and they move together.
+type Layout = "left" | "right" | "spread";
 
-// A phone and a tablet show the next card inside the column; from lg it sits past it, on the empty right
-const SLIDE_WIDTH: Record<Layout, string> = {
-  side: "w-[78%] sm:w-[85%] lg:w-full",
-  split: "w-[78%] sm:w-[85%] lg:w-full",
+// From lg the words take a 200px column 24px from the picture, so a picture is
+// the column less 224px. Below lg the words sit above or below the track, and a
+// card is most of the width, so the next one peeks inside the column.
+const SLIDE: Record<Layout, string> = {
+  left: "w-[78%] sm:w-[85%] lg:w-full",
+  right: "w-[78%] sm:w-[85%] lg:w-[calc(100%-224px)]",
+  spread: "w-[78%] sm:w-[85%] lg:w-full",
+};
+
+// The fixed caption needs the next picture to wait past it, not under it
+const GAP: Record<Layout, string> = {
+  left: "gap-4 sm:gap-5",
+  right: "gap-4 sm:gap-5 lg:gap-[calc(224px+1.25rem)]",
+  spread: "gap-4 sm:gap-5",
+};
+
+// What the track shows from lg: from the column's start to half the next picture.
+// The fixed caption also cuts a window out of it, between the current picture and
+// the next, so a picture on its way in passes behind the words.
+const CLIP: Record<Layout, string> = {
+  left: "inset(-24px calc(-50% - 1.25rem) -24px 0)",
+  right:
+    "polygon(evenodd, 0 -24px, calc(150% - 112px + 1.25rem) -24px, calc(150% - 112px + 1.25rem) calc(100% + 24px), 0 calc(100% + 24px), 0 -24px," +
+    " calc(100% - 212px) -24px, calc(100% - 212px) calc(100% + 24px), calc(100% + 10px) calc(100% + 24px), calc(100% + 10px) -24px, calc(100% - 212px) -24px)",
+  spread: "inset(-24px calc(112px - 50% - 1.25rem) -24px 0)",
 };
 
 type FeatureSliderProps = {
   cards: WorkCard[];
   title: string;
   note: string;
-  // The description in a panel beside the card, or inside each card
   layout: Layout;
 };
 
@@ -102,6 +125,46 @@ export function FeatureSlider({ cards, title, note, layout }: FeatureSliderProps
     </div>
   );
 
+  const track = (
+    <div
+      className="[clip-path:inset(-24px_calc(-50%_-_1.25rem)_-24px_0)] lg:[clip-path:var(--track-clip)]"
+      style={{ "--track-clip": CLIP[layout] } as CSSProperties}
+    >
+      <motion.div
+        ref={trackRef}
+        className={`relative flex cursor-grab active:cursor-grabbing ${GAP[layout]}`}
+        style={{ x }}
+        drag="x"
+        dragConstraints={{ left: -lastStop, right: 0 }}
+        dragElastic={0.15}
+        dragMomentum={false}
+        onDragEnd={onDragEnd}
+      >
+        {cards.map((card, i) => (
+          <Slide
+            key={card.key}
+            index={i}
+            count={cards.length}
+            className={`shrink-0 ${SLIDE[layout]}`}
+            onFocus={(event) => {
+              if (isKeyboardFocus(event)) settle(i);
+            }}
+          >
+            <motion.div
+              className="h-full"
+              initial={false}
+              animate={i === index ? CURRENT : RESTING}
+              transition={reduce ? { duration: 0 } : SPRING}
+              onClickCapture={(event) => onCardClick(event, i)}
+            >
+              {layout === "spread" ? <Spread card={card} /> : <CoverCard card={card} />}
+            </motion.div>
+          </Slide>
+        ))}
+      </motion.div>
+    </div>
+  );
+
   return (
     <Carousel label={title} onKeyDown={onKeyDown}>
       <div className="section-shell mb-5">
@@ -113,63 +176,53 @@ export function FeatureSlider({ cards, title, note, layout }: FeatureSliderProps
       {/* clip, not hidden: a hidden box scrolls itself to show a focused card, under the transform */}
       <div className="overflow-x-clip" {...guard}>
         <div className="section-shell">
-          <div className={`max-w-[680px] ${layout === "side" ? "sm:grid sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-6" : ""}`}>
-            {layout === "side" && <Panel card={cards[index]} reduce={reduce} controls={controls} />}
-
-            {/* Cut at the start of the track, in line with the column, and half a card past its end */}
-            <div className="[clip-path:inset(-24px_calc(-50%_-_1.25rem)_-24px_0)]">
-              <motion.div
-                ref={trackRef}
-                className="relative flex cursor-grab gap-4 active:cursor-grabbing sm:gap-5"
-                style={{ x }}
-                drag="x"
-                dragConstraints={{ left: -lastStop, right: 0 }}
-                dragElastic={0.15}
-                dragMomentum={false}
-                onDragEnd={onDragEnd}
-              >
-                {cards.map((card, i) => (
-                  <Slide
-                    key={card.key}
-                    index={i}
-                    count={cards.length}
-                    className={`shrink-0 ${SLIDE_WIDTH[layout]}`}
-                    onFocus={(event) => {
-                      if (isKeyboardFocus(event)) settle(i);
-                    }}
-                  >
-                    <motion.div
-                      className="h-full"
-                      initial={false}
-                      animate={i === index ? CURRENT : RESTING}
-                      transition={reduce ? { duration: 0 } : SPRING}
-                      onClickCapture={(event) => onCardClick(event, i)}
-                    >
-                      {layout === "side" ? <CoverCard card={card} /> : <SplitCard card={card} />}
-                    </motion.div>
-                  </Slide>
-                ))}
-              </motion.div>
+          {layout === "left" && (
+            <div className="max-w-[680px] lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6">
+              <Panel card={cards[index]} reduce={reduce} controls={controls} className="mb-5 lg:mb-0" />
+              {track}
             </div>
-          </div>
+          )}
+          {layout === "right" && (
+            <div className="relative max-w-[680px]">
+              {track}
+              <Panel
+                card={cards[index]}
+                reduce={reduce}
+                controls={controls}
+                className="mt-5 lg:absolute lg:inset-y-0 lg:right-0 lg:mt-0 lg:w-[200px]"
+              />
+            </div>
+          )}
+          {layout === "spread" && (
+            <div className="max-w-[680px]">
+              {track}
+              <div className="mt-5 lg:ml-auto lg:w-[200px]">{controls}</div>
+            </div>
+          )}
         </div>
       </div>
-
-      {layout === "split" && (
-        <div className="section-shell mt-5">
-          <div className="max-w-[680px]">{controls}</div>
-        </div>
-      )}
     </Carousel>
   );
 }
 
-// The current project's name, line and details, which swap as the track moves
-function Panel({ card, reduce, controls }: { card: WorkCard; reduce: boolean; controls: ReactNode }) {
+function Details({ card }: { card: WorkCard }) {
   return (
-    <div className="mb-5 flex flex-col justify-between gap-6 sm:mb-0">
+    <>
+      <h3 className="text-body font-medium text-ink">{card.title}</h3>
+      <p className="mt-1 text-body text-ink/60">{card.summary}</p>
+      <p className="meta mt-3">
+        {card.category} · {card.year}
+      </p>
+    </>
+  );
+}
+
+// The current project's name, line and details, which swap as the track moves
+function Panel({ card, reduce, controls, className }: { card: WorkCard; reduce: boolean; controls: ReactNode; className: string }) {
+  return (
+    <div className={`flex flex-col justify-between gap-6 ${className}`}>
       {/* Room for the longest line, so the controls never jump as the words change */}
-      <div className="min-h-[6rem] sm:min-h-[7.5rem]">
+      <div className="min-h-[6rem] lg:min-h-[7.5rem]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={card.key}
@@ -178,11 +231,7 @@ function Panel({ card, reduce, controls }: { card: WorkCard; reduce: boolean; co
             exit={{ opacity: 0, y: -4, filter: "blur(4px)", transition: { duration: reduce ? 0 : 0.12 } }}
             transition={reduce ? { duration: 0 } : SPRING}
           >
-            <h3 className="text-body font-medium text-ink">{card.title}</h3>
-            <p className="mt-1 text-body text-ink/60">{card.summary}</p>
-            <p className="meta mt-3">
-              {card.category} · {card.year}
-            </p>
+            <Details card={card} />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -191,7 +240,7 @@ function Panel({ card, reduce, controls }: { card: WorkCard; reduce: boolean; co
   );
 }
 
-// The picture alone: the panel beside it carries the words
+// The picture alone: the caption beside it carries the words
 function CoverCard({ card }: { card: WorkCard }) {
   return (
     <CardLink card={card} className={FRAME}>
@@ -202,22 +251,14 @@ function CoverCard({ card }: { card: WorkCard }) {
   );
 }
 
-// The words on the left, the picture on the right; stacked on a phone
-function SplitCard({ card }: { card: WorkCard }) {
+// A picture with its words on the right, below it on a phone
+function Spread({ card }: { card: WorkCard }) {
   return (
-    <CardLink card={card} className={`${FRAME} grid sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]`}>
-      <div className="order-2 flex flex-col justify-between gap-6 px-3 pt-3 pb-2.5 sm:order-1 sm:p-4">
-        <div>
-          <h3 className="text-body font-medium text-ink">{card.title}</h3>
-          <p className="mt-1 text-body text-ink/60">{card.summary}</p>
-        </div>
-        <p className="meta">
-          {card.category} · {card.year}
-        </p>
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-6">
+      <CoverCard card={card} />
+      <div>
+        <Details card={card} />
       </div>
-      <div className="relative order-1 aspect-[4/3] overflow-hidden rounded-[8px] bg-card-hover sm:order-2">
-        <Image src={card.covers.square} alt={card.alt} fill sizes="(min-width: 1024px) 400px, 80vw" draggable={false} className="object-cover" />
-      </div>
-    </CardLink>
+    </div>
   );
 }
