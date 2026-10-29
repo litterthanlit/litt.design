@@ -9,6 +9,11 @@
   --color-accent: #C2FF4D;
   --color-card: #ededed; /* project card fill at rest */
   --color-card-hover: #e6e6e6; /* one step down, for hover and press */
+  /* The press material, after litt.md: a raised white block with a contact line
+     and a soft cast, which tightens while it is pressed */
+  --color-block: #ffffff;
+  --shadow-block-lift: 0 0.5px 1px rgba(10, 10, 10, 0.22), 0 0.5px 3px rgba(10, 10, 10, 0.16);
+  --shadow-block-press: 0 0.5px 1px rgba(10, 10, 10, 0.22), 0 0 1.5px rgba(10, 10, 10, 0.12);
   --font-sans: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-sans);
@@ -131,14 +136,6 @@ body::before {
 
 .section-shell {
   @apply mx-auto w-full max-w-[1200px] px-5 md:px-8 lg:px-12;
-}
-
-/* Homepage rows (components/home-row.tsx): a dashed hairline between one row
-   and the next, none above the first */
-.home-row + .home-row .home-row-grid {
-  background-image: linear-gradient(to right, rgb(10 10 10 / 0.14) 6px, transparent 6px);
-  background-size: 10px 1px;
-  background-repeat: repeat-x;
 }
 
 .content-section {

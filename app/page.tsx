@@ -1,17 +1,14 @@
 import Link from "next/link";
 import { WorkSection } from "@/components/work-section";
 import { ContributionGraph } from "@/components/contribution-graph";
+import { ButtonLink, ExternalIcon } from "@/components/button-link";
 import { ThankYouOrb } from "@/components/footer";
 import { HomeRow } from "@/components/home-row";
 import { IntroSection } from "@/components/intro-section";
+import { SocialLinks } from "@/components/social-links";
 import { DirectionalTransition } from "@/components/view-transitions";
 import { workCards } from "@/data/work";
 import { BOOKING_URL, siteSettings } from "@/data/site";
-
-// The call to action: ink chips that light up in the accent. Clone keeps the
-// chip whole on both lines when a phone wraps it.
-const CTA =
-  "rounded-[3px] bg-ink px-1 py-0.5 text-canvas box-decoration-clone transition-colors duration-150 ease-out hover:bg-accent hover:text-ink";
 
 export default function HomePage() {
   const { contactEmail, location, socialLinks } = siteSettings;
@@ -29,18 +26,14 @@ export default function HomePage() {
         </HomeRow>
 
         <HomeRow id="now" label="Now" className="reveal-in [animation-delay:180ms]">
-          <p className="max-w-[560px] text-body text-ink">
-            Taking on new projects.{" "}
-            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" className={CTA}>
-              Book a call<span className="sr-only"> (opens in a new tab)</span>
-            </a>{" "}
-            or{" "}
-            <a href={`mailto:${contactEmail}`} className={CTA}>
-              email me
-            </a>
-            .
-          </p>
-          <p className="meta mt-2">
+          <p className="max-w-[560px] text-body text-ink">Taking on new projects.</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <ButtonLink href={BOOKING_URL} variant="primary" external icon={<ExternalIcon />}>
+              Book a call
+            </ButtonLink>
+            <ButtonLink href={`mailto:${contactEmail}`}>Email me</ButtonLink>
+          </div>
+          <p className="meta mt-4">
             {location} &middot;{" "}
             <Link href="/services" transitionTypes={["nav-forward"]} className="link group">
               See services
@@ -58,20 +51,7 @@ export default function HomePage() {
         <ContributionGraph username="litterthanlit" />
 
         <HomeRow id="elsewhere" label="Elsewhere">
-          <ul className="flex flex-wrap gap-x-5 gap-y-1">
-            {socialLinks.map((link) => (
-              <li key={link.label}>
-                <a href={link.href} target="_blank" rel="noopener noreferrer" className="link text-body">
-                  {link.label}
-                </a>
-              </li>
-            ))}
-            <li>
-              <a href={`mailto:${contactEmail}`} className="link text-body">
-                {contactEmail}
-              </a>
-            </li>
-          </ul>
+          <SocialLinks socialLinks={socialLinks} contactEmail={contactEmail} />
         </HomeRow>
 
         <ThankYouOrb />

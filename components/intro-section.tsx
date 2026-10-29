@@ -5,7 +5,7 @@ export function IntroSection() {
   return (
     <section className="section-shell pt-16 pb-4 md:pt-24 md:pb-6">
       <div className="max-w-[800px] md:pl-[120px]">
-        <div className="reveal-in-scale size-16 overflow-hidden rounded-[10px] border border-line">
+        <div className="reveal-in-scale size-16 overflow-hidden rounded-[10px]">
           <Image
             src="/nick.png"
             alt="Portrait of Nick"
