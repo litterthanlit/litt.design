@@ -24,7 +24,7 @@ export default function HomePage() {
         {/* The first screen reveals in CSS, like the intro, so it paints before JS loads */}
         <HomeRow id="about" label="About" className="reveal-in [animation-delay:120ms]">
           <p className="max-w-[560px] text-body text-ink">
-            Hi, I&apos;m Nick. I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
+            I got into design through art and a fascination with how people interact with things - spaces, objects and screens. Studying marketing in Australia only made it worse. Now I design sites, products, and tools that are simple, usable, and feel considered.
           </p>
         </HomeRow>
 
