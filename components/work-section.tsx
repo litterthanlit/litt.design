@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, animate, clamp, motion, useMotionValue, useReducedMotion, type PanInfo } from "framer-motion";
 import { Carousel, RoundButton, SPRING, Slide, isKeyboardFocus, slidesOf, useDragGuard } from "@/components/carousel";
+import { HomeRow } from "@/components/home-row";
 import type { WorkCard } from "@/data/work";
 
 // A throw aims where its release velocity would carry the track in this many seconds
@@ -18,11 +19,11 @@ const CURRENT = { filter: "blur(0px)", opacity: 1, "--fade": "100%" };
 const RESTING = { filter: "blur(6px)", opacity: 0.55, "--fade": "0%" };
 const FADE = "linear-gradient(to right, #000 var(--fade), transparent calc(var(--fade) + var(--fade-length)))";
 
-// From lg the 680px column holds a 456px picture, 24px of air and the 200px
-// caption; the next picture waits 20px past the column, at 700px. This mask
-// starts 8px left of the column so the current picture's focus ring shows, and
-// ends with the next picture. It hides the caption's strip, so a picture on its
-// way in passes behind the words, not over them.
+// From lg the row's 680px content column holds a 456px picture, 24px of air and
+// the 200px caption; the next picture waits 20px past the column, at 700px. This
+// mask starts 8px left of the column so the current picture's focus ring shows,
+// and ends with the next picture. It hides the caption's strip, so a picture on
+// its way in passes behind the words, not over them.
 const MASK = "linear-gradient(to right, #000 0, #000 464px, transparent 488px, transparent 688px, #000 708px)";
 
 export function WorkSection({ cards }: { cards: WorkCard[] }) {
@@ -81,76 +82,68 @@ export function WorkSection({ cards }: { cards: WorkCard[] }) {
   }
 
   return (
-    <section id="work" aria-labelledby="work-heading" className="py-16 md:py-24">
+    // clip, not hidden: a hidden box scrolls itself to show a focused card, under the transform
+    <HomeRow id="work" label="Work" className="overflow-x-clip">
       <Carousel label="Selected work" onKeyDown={onKeyDown}>
-        <div className="section-shell">
-          <h2 id="work-heading" className="eyebrow mb-6">
-            Selected work
-          </h2>
-        </div>
-
-        {/* clip, not hidden: a hidden box scrolls itself to show a focused card, under the transform */}
-        <div className="overflow-x-clip" {...guard}>
-          <div className="section-shell">
-            <div className="relative max-w-[680px]">
-              {/* Below lg the next picture peeks inside the column, cut at its start; from lg the mask
-                  box runs 8px left of the column and 476px past it, to the next picture's end */}
-              <div
-                className="-my-6 py-6 max-lg:[clip-path:inset(0_calc(-50%_-_1.25rem)_0_0)] lg:-mr-[476px] lg:-ml-2 lg:pl-2 lg:[mask-image:var(--work-mask)] lg:[-webkit-mask-image:var(--work-mask)]"
-                style={{ "--work-mask": MASK } as CSSProperties}
+        {/* flow-root keeps the mask box's negative margins inside, so the caption spans the picture */}
+        <div className="relative flow-root max-w-[680px]">
+          {/* Below lg the next picture peeks inside the column, cut at its start; from lg the mask
+              box runs 8px left of the column and 476px past it, to the next picture's end */}
+          <div
+            {...guard}
+            className="-my-6 py-6 max-lg:[clip-path:inset(0_calc(-50%_-_1.25rem)_0_0)] lg:-mr-[476px] lg:-ml-2 lg:pl-2 lg:[mask-image:var(--work-mask)] lg:[-webkit-mask-image:var(--work-mask)]"
+            style={{ "--work-mask": MASK } as CSSProperties}
+          >
+            <div className="lg:mr-[476px]">
+              <motion.div
+                ref={trackRef}
+                className="relative flex cursor-grab gap-4 active:cursor-grabbing sm:gap-5 lg:gap-[calc(224px+1.25rem)]"
+                style={{ x }}
+                drag="x"
+                dragConstraints={{ left: -lastStop, right: 0 }}
+                dragElastic={0.15}
+                dragMomentum={false}
+                onDragEnd={onDragEnd}
               >
-                <div className="lg:mr-[476px]">
-                  <motion.div
-                    ref={trackRef}
-                    className="relative flex cursor-grab gap-4 active:cursor-grabbing sm:gap-5 lg:gap-[calc(224px+1.25rem)]"
-                    style={{ x }}
-                    drag="x"
-                    dragConstraints={{ left: -lastStop, right: 0 }}
-                    dragElastic={0.15}
-                    dragMomentum={false}
-                    onDragEnd={onDragEnd}
+                {cards.map((card, i) => (
+                  <Slide
+                    key={card.key}
+                    index={i}
+                    count={cards.length}
+                    className="w-[78%] shrink-0 [--fade-length:30%] sm:w-[85%] sm:[--fade-length:20%] lg:w-[calc(100%-224px)] lg:[--fade-length:70%]"
+                    onFocus={(event) => {
+                      if (isKeyboardFocus(event)) settle(i);
+                    }}
                   >
-                    {cards.map((card, i) => (
-                      <Slide
-                        key={card.key}
-                        index={i}
-                        count={cards.length}
-                        className="w-[78%] shrink-0 [--fade-length:30%] sm:w-[85%] sm:[--fade-length:20%] lg:w-[calc(100%-224px)] lg:[--fade-length:70%]"
-                        onFocus={(event) => {
-                          if (isKeyboardFocus(event)) settle(i);
-                        }}
-                      >
-                        {/* 8px of room around the picture keeps its focus ring inside the mask */}
-                        <motion.div
-                          className="-m-2 h-[calc(100%+1rem)] p-2"
-                          style={{ maskImage: FADE, WebkitMaskImage: FADE }}
-                          initial={false}
-                          animate={i === index ? CURRENT : RESTING}
-                          transition={reduce ? { duration: 0 } : SPRING}
-                          onClickCapture={(event) => onPictureClick(event, i)}
-                        >
-                          <Picture card={card} />
-                        </motion.div>
-                      </Slide>
-                    ))}
-                  </motion.div>
-                </div>
-              </div>
-
-              <Caption card={cards[index]} reduce={reduce}>
-                <p className="meta tabular-nums" aria-live="polite" aria-atomic="true">
-                  {index + 1} / {cards.length}
-                </p>
-                <div className="flex gap-2">
-                  <RoundButton icon="previous" label="Previous project" disabled={index === 0} onClick={() => settle(index - 1)} />
-                  <RoundButton icon="next" label="Next project" disabled={index === last} onClick={() => settle(index + 1)} />
-                </div>
-              </Caption>
+                    {/* 8px of room around the picture keeps its focus ring inside the mask */}
+                    <motion.div
+                      className="-m-2 h-[calc(100%+1rem)] p-2"
+                      style={{ maskImage: FADE, WebkitMaskImage: FADE }}
+                      initial={false}
+                      animate={i === index ? CURRENT : RESTING}
+                      transition={reduce ? { duration: 0 } : SPRING}
+                      onClickCapture={(event) => onPictureClick(event, i)}
+                    >
+                      <Picture card={card} />
+                    </motion.div>
+                  </Slide>
+                ))}
+              </motion.div>
             </div>
           </div>
+
+          <Caption card={cards[index]} reduce={reduce}>
+            <p className="meta tabular-nums" aria-live="polite" aria-atomic="true">
+              {index + 1} / {cards.length}
+            </p>
+            <div className="flex gap-2">
+              <RoundButton icon="previous" label="Previous project" disabled={index === 0} onClick={() => settle(index - 1)} />
+              <RoundButton icon="next" label="Next project" disabled={index === last} onClick={() => settle(index + 1)} />
+            </div>
+          </Caption>
         </div>
       </Carousel>
-    </section>
+    </HomeRow>
   );
 }
 
@@ -160,7 +153,7 @@ function Caption({ card, reduce, children }: { card: WorkCard; reduce: boolean; 
   return (
     <div className="mt-5 flex flex-col justify-between gap-6 lg:absolute lg:inset-y-0 lg:right-0 lg:mt-0 lg:w-[200px]">
       {/* Room for the longest line, so the controls never jump as the words change */}
-      <div className="min-h-[6rem] lg:min-h-[7.5rem]">
+      <div className="min-h-[6.25rem] lg:min-h-[7.5rem]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={card.key}

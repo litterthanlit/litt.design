@@ -75,9 +75,6 @@ export function SiteHeader() {
           <a href="/studies" className="link text-body">
             Studies
           </a>
-          <Link href="/#writing" className="link text-body">
-            Writing
-          </Link>
         </nav>
       </div>
     </header>

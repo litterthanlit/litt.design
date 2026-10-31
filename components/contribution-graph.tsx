@@ -1,3 +1,4 @@
+import { HomeRow } from "@/components/home-row";
 import { getContributions } from "@/lib/github-contributions";
 
 // Monochrome ink scale to match the rest of the site
@@ -27,17 +28,11 @@ export async function ContributionGraph({ username }: { username: string }) {
   const totalLabel = total.toLocaleString("en-US");
 
   return (
-    <section
-      id="activity"
-      aria-labelledby="activity-heading"
-      className="section-shell py-16 md:py-20"
-    >
+    <HomeRow id="activity" label="Activity">
       {/* Capped width keeps the squares near GitHub's own ~10px size */}
       <div className="max-w-[680px]">
         <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 id="activity-heading" className="eyebrow">
-            Building in public
-          </h2>
+          <p className="text-body text-ink">{totalLabel} contributions in the last year</p>
           <a
             href={`https://github.com/${username}`}
             target="_blank"
@@ -47,10 +42,6 @@ export async function ContributionGraph({ username }: { username: string }) {
             GitHub ↗
           </a>
         </div>
-
-        <p className="mb-5 text-body font-medium text-ink">
-          {totalLabel} contributions in the last year
-        </p>
 
         <div
           role="img"
@@ -105,6 +96,6 @@ export async function ContributionGraph({ username }: { username: string }) {
           </span>
         </div>
       </div>
-    </section>
+    </HomeRow>
   );
 }

@@ -10,7 +10,7 @@ export type WorkItem =
 
 export const workList: WorkItem[] = [
   { type: "project", slug: "hypher" },
-  { type: "project", slug: "brand" },
+  { type: "project", slug: "wavr" },
   { type: "project", slug: "studio-os" },
   { type: "project", slug: "vyo" },
   { type: "project", slug: "litt-md" },
