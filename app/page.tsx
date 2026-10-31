@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { WorkSection } from "@/components/work-section";
 import { ContributionGraph } from "@/components/contribution-graph";
-import { ThankYouOrb } from "@/components/footer";
+import { ThankYouOrb } from "@/components/thank-you-orb";
 import { HomeRow } from "@/components/home-row";
 import { IntroSection } from "@/components/intro-section";
 import { SocialLinks } from "@/components/social-links";
