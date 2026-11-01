@@ -105,13 +105,6 @@ function CardCaption({
     <div className="mt-3">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="flex items-center gap-1.5 text-body font-medium text-ink">
-          {status && (
-            <span
-              className="mr-0.5 h-1.5 w-1.5 shrink-0 self-center rounded-full bg-[#9BD62E]"
-              title={status}
-              aria-hidden="true"
-            />
-          )}
           {title}
           {status && <span className="sr-only"> ({status})</span>}
           <span
@@ -130,7 +123,7 @@ function CardCaption({
   );
 }
 
-function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({ project }: { project: Project }) {
   const { preview, background, position } = project.coverMedia;
 
   return (

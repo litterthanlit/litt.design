@@ -110,8 +110,8 @@ export const projects: Project[] = [
     stack: ["Next.js", "Convex", "TypeScript", "MCP"],
     accent: "#3B82F6",
     coverMedia: {
-      background: "linear-gradient(135deg, #f7f8fa 0%, #e8ecf3 100%)",
-      preview: "/previews/hypher.jpg",
+      background: "#0b0d0f",
+      preview: "/previews/hypher-bridge.webp",
     },
     externalUrl: "https://www.hypher.app/",
     heroFrames: [

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Footer } from "@/components/footer";
 import { ProjectDetail } from "@/components/project-detail";
 import { DirectionalTransition } from "@/components/view-transitions";
 import { projects } from "@/data/projects";
-import { OG_IMAGE } from "@/data/site";
+import { OG_IMAGE, siteSettings } from "@/data/site";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -50,6 +51,7 @@ export default async function ProjectPage({ params }: PageProps) {
   return (
     <DirectionalTransition>
       <ProjectDetail project={project} nextProject={nextProject} />
+      <Footer settings={siteSettings} />
     </DirectionalTransition>
   );
 }
