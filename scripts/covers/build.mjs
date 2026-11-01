@@ -42,23 +42,19 @@ const LITT_WALL = {
 };
 const LITT_TILES = [...new Set(Object.values(LITT_WALL).flatMap((s) => s.columns.flat()))];
 
-// Hypher's marketing CSS, minus every backdrop, so a card captures on transparent
-const HYPHER_BARE =
-  "html,body,main,section,.marketing-wrap,.marketing-section,.marketing-vtile,.marketing-photo,.marketing-vcards,.marketing-vcard{background:transparent!important}" +
-  ".marketing-photo__img{visibility:hidden!important}" +
-  ".marketing-photo::before,.marketing-photo::after,.marketing-vtile::before,.marketing-vtile::after{display:none!important}";
-
 // The screenshot is clipped to the element's whole CSS pixels, so no sliver of
-// the page shows at an edge, and grown by margin px to keep what overflows it
-const shoot = (url, { scale = 2, viewport = { width: 1440, height: 900 }, css, prepare, locate, bare = false, margin = 0 }) => async (browser) => {
-  const page = await browser.newPage({ viewport, deviceScaleFactor: scale, reducedMotion: "reduce" });
+// the page shows at an edge, and grown by margin px to keep what overflows it.
+// Captures run under reduced motion unless `motion` asks for a moment `wait` ms
+// into an animation.
+const shoot = (url, { scale = 2, viewport = { width: 1440, height: 900 }, css, prepare, locate, bare = false, margin = 0, motion = false, wait = 2500 }) => async (browser) => {
+  const page = await browser.newPage({ viewport, deviceScaleFactor: scale, reducedMotion: motion ? "no-preference" : "reduce" });
   try {
     await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
     if (css) await page.addStyleTag({ content: css });
     if (prepare) await prepare(page);
     const el = locate(page);
     await el.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(wait);
     if (bare) await el.evaluate((node) => { for (let p = node.parentElement; p; p = p.parentElement) p.style.background = "transparent"; });
     const b = await el.boundingBox();
     const [x, y] = [Math.ceil(b.x) - margin, Math.ceil(b.y) - margin];
@@ -112,7 +108,8 @@ const wavrLook = (look) =>
 
 const SOURCES = {
   ...Object.fromEntries(Object.keys(SHAPES).map((shape) => [`litt-works-${shape}.png`, littWorksOrb(shape)])),
-  "hypher-note.png": shoot("https://www.hypher.app/", { scale: 3, css: HYPHER_BARE, bare: true, locate: (p) => p.locator("#the-loop .marketing-vtile").nth(1) }),
+  // The handoff bridge mid-stream: 3s after it scrolls in, the streak runs end to end and both cards glow
+  "hypher-bridge.png": shoot("https://www.hypher.app/", { scale: 3, motion: true, wait: 3000, margin: 48, locate: (p) => p.locator("#handoff .ws-figure") }),
   // The taste rows, set into one dark panel of their own so the gaps read as the panel
   "studio-taste.png": shoot("https://studio-os.io/", {
     scale: 3,
@@ -152,10 +149,11 @@ const fullBleed = (src) => ({ src, x: 50, y: 50, w: 100, h: 100, fit: "cover" })
 // Every scene has a flat ground and, for each shape, the objects on it.
 // A scene with `html` draws itself.
 const SCENES = {
+  // The Claude Code to Codex CLI bridge on its own dark stage
   hypher: {
-    ground: "#b9cdd8",
+    ground: "#0b0c0e",
     shapes: {
-      landscape: [{ src: "hypher-note.png", x: 50, y: 50, w: 74 }],
+      landscape: [{ src: "hypher-bridge.png", x: 50, y: 50, w: 86 }],
     },
   },
   "studio-os": {
@@ -246,12 +244,17 @@ const fresh = args.includes("--fresh");
 const only = args.filter((a) => !a.startsWith("--"));
 const slugs = only.length ? only : Object.keys(SCENES);
 for (const slug of slugs) if (!SCENES[slug]) throw new Error(`No scene named ${slug}. Scenes: ${Object.keys(SCENES).join(", ")}`);
+// Capture only what the chosen scenes draw. A scene with `html` may use any source.
+const wanted = new Set(
+  slugs.flatMap((slug) => (SCENES[slug].html ? Object.keys(SOURCES) : Object.values(SCENES[slug].shapes).flat().map((o) => o.src))),
+);
 
 fs.mkdirSync(CACHE, { recursive: true });
 fs.mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch({ args: ["--enable-unsafe-swiftshader"] });
 try {
   for (const [name, get] of Object.entries(SOURCES)) {
+    if (!wanted.has(name)) continue;
     const file = path.join(CACHE, name);
     if (fresh || !fs.existsSync(file)) {
       fs.writeFileSync(file, await get(browser));
