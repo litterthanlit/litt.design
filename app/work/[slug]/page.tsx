@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProjectDetail } from "@/components/project-detail";
 import { DirectionalTransition } from "@/components/view-transitions";
 import { projects } from "@/data/projects";
+import { coverFor, sliderSlugs } from "@/data/work";
 import { OG_IMAGE } from "@/data/site";
 
 type PageProps = {
@@ -44,12 +45,15 @@ export default async function ProjectPage({ params }: PageProps) {
     notFound();
   }
 
-  const nextProject =
-    projects[(projects.findIndex((entry) => entry.slug === project.slug) + 1) % projects.length];
+  // Next follows the homepage slider, so it always leads to a project with a cover.
+  // A project outside the slider leads to the slider's first.
+  const nextSlug = sliderSlugs[(sliderSlugs.indexOf(project.slug) + 1) % sliderSlugs.length];
+  const nextProject = getProject(nextSlug) ?? project;
+  const cover = sliderSlugs.includes(project.slug) ? coverFor(project.slug) : undefined;
 
   return (
     <DirectionalTransition>
-      <ProjectDetail project={project} nextProject={nextProject} />
+      <ProjectDetail project={project} cover={cover} nextProject={nextProject} nextCover={coverFor(nextProject.slug)} />
     </DirectionalTransition>
   );
 }

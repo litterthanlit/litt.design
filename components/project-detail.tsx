@@ -1,177 +1,134 @@
-"use client";
-
-import { ViewTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { HomeRow } from "@/components/home-row";
 import type { Project } from "@/data/types";
 
 type ProjectDetailProps = {
   project: Project;
+  // The homepage card's cover, when the project has one
+  cover?: string;
   nextProject: Project;
+  nextCover: string;
 };
 
-function useFadeUp(delay = 0) {
-  const reduced = useReducedMotion();
-  return {
-    initial: reduced
-      ? { opacity: 1, y: 0, filter: "blur(0px)" }
-      : { opacity: 0, y: 20, filter: "blur(4px)" },
-    whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-    viewport: { once: true, margin: "-80px" },
-    transition: {
-      type: "spring" as const,
-      stiffness: 100,
-      damping: 30,
-      mass: 1,
-      delay,
-    },
-  };
+// The homepage card's grey frame around a 16:10 picture
+const FRAME = "rounded-[12px] bg-card p-1";
+const PICTURE = "relative aspect-[16/10] overflow-hidden rounded-[8px] bg-card-hover";
+
+function hostname(url: string) {
+  return new URL(url).hostname.replace(/^www\./, "");
 }
 
-// Plain-text tags: no pill, just weight and reduced opacity (see .meta)
-const TAG = "meta";
-
-export function ProjectDetail({ project, nextProject }: ProjectDetailProps) {
-  const reduceMotion = useReducedMotion();
-  const visitFade = useFadeUp(0.16);
+// Laid out in the homepage's rows: a muted label beside a 680px column
+export function ProjectDetail({ project, cover, nextProject, nextCover }: ProjectDetailProps) {
+  const facts = [project.category, project.year, project.status].filter(Boolean).join(" · ");
 
   return (
-    <main className="section-shell flex min-h-screen flex-col gap-16 pb-20 pt-36 md:pt-44">
-      {/* Thumbnail — hidden until better previews are ready */}
-
-      {/* Title + description */}
-      <section className="max-w-2xl space-y-4">
-        <ViewTransition name={`project-title-${project.slug}`} share="text-morph" default="none">
-          <motion.h1
-            className="text-intro font-medium text-ink"
-            initial={reduceMotion ? {} : { opacity: 0, y: 12, filter: "blur(4px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", stiffness: 80, damping: 30 }}
-          >
-            {project.title}
-          </motion.h1>
-        </ViewTransition>
-
-        <motion.p
-          className="text-body text-muted"
-          {...useFadeUp(0.06)}
-        >
-          {project.description}
-        </motion.p>
-
-        <motion.div className="flex flex-wrap items-center gap-x-5 gap-y-1" {...useFadeUp(0.12)}>
-          <span className={TAG}>{project.category}</span>
-          <span className={`${TAG} tabular-nums`}>{project.year}</span>
-          {project.status && (
-            <span className={`${TAG} inline-flex items-center gap-1.5`}>
-              <span className="h-1.5 w-1.5 rounded-full bg-[#9BD62E]" aria-hidden="true" />
-              {project.status}
-            </span>
-          )}
-        </motion.div>
-
-        {project.externalUrl && (
-          <motion.div {...visitFade}>
-            <a
-              href={project.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.12)] px-4 py-2 text-body font-medium text-ink transition-[background-color,border-color,scale] duration-150 ease-out hover:border-[rgba(0,0,0,0.24)] hover:bg-[rgba(0,0,0,0.03)] active:scale-[0.97] motion-reduce:active:scale-100"
-            >
-              Visit {project.title}
-              <span
-                className="text-body text-muted transition-[translate,color] duration-150 ease-out group-hover:-translate-y-px group-hover:translate-x-px group-hover:text-ink"
-                aria-hidden="true"
-              >
-                ↗
-              </span>
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          </motion.div>
-        )}
+    <main>
+      {/* Lines up with the rows, like the homepage intro */}
+      <section className="section-shell pt-16 pb-4 md:pt-24 md:pb-6">
+        <h1 className="reveal-in max-w-[800px] text-body md:pl-[120px]">
+          <span className="block font-medium text-ink">{project.title}</span>
+          <span className="block text-muted">{project.oneLineOutcome}</span>
+        </h1>
       </section>
 
-      {/* Story */}
-      {project.storyBlocks.length > 0 && (
-        <section className="max-w-2xl space-y-10">
-          {project.storyBlocks.map((block, i) => (
-            <motion.div
-              key={block.label}
-              initial={reduceMotion ? {} : { opacity: 0, y: 16, filter: "blur(4px)" }}
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ type: "spring", stiffness: 80, damping: 28, delay: i * 0.04 }}
-            >
-              <p className="meta">
-                {block.label}
-              </p>
-              <h2 className="mt-1 text-body font-medium text-ink">
-                {block.heading}
-              </h2>
-              <p className="mt-0.5 text-body text-muted">
-                {block.body}
-              </p>
-            </motion.div>
-          ))}
-        </section>
+      <HomeRow id="overview" label="Overview" className="reveal-in [animation-delay:60ms]">
+        {cover && (
+          <div className={`${FRAME} mb-6`}>
+            <div className={PICTURE}>
+              <Image
+                src={cover}
+                alt={`${project.title} — ${project.oneLineOutcome}`}
+                fill
+                priority
+                sizes="(min-width: 768px) 680px, 100vw"
+                className="object-cover"
+              />
+            </div>
+          </div>
+        )}
+        <p className="max-w-[560px] text-body text-ink">{project.description}</p>
+        <p className="meta mt-2">
+          {facts}
+          {project.externalUrl && (
+            <>
+              {" "}
+              &middot;{" "}
+              <a href={project.externalUrl} target="_blank" rel="noopener noreferrer" className="link">
+                {hostname(project.externalUrl)} <span aria-hidden="true">↗</span>
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </>
+          )}
+        </p>
+      </HomeRow>
+
+      {project.storyBlocks.map((block) => (
+        <HomeRow key={block.label} id={block.label.toLowerCase()} label={block.label}>
+          <h3 className="text-body font-medium text-ink">{block.heading}</h3>
+          <p className="mt-1 max-w-[560px] text-body text-ink/60">{block.body}</p>
+        </HomeRow>
+      ))}
+
+      {project.screens && project.screens.length > 0 && (
+        <HomeRow id="screens" label="Screens">
+          <div className="grid gap-6 sm:grid-cols-2 sm:gap-5">
+            {project.screens.map((screen) => (
+              <figure key={screen.src}>
+                <div className={FRAME}>
+                  <div className={PICTURE}>
+                    <Image
+                      src={screen.src}
+                      alt={`${project.title}: ${screen.description}`}
+                      fill
+                      sizes="(min-width: 640px) 330px, 100vw"
+                      className="object-cover object-top"
+                    />
+                  </div>
+                </div>
+                <figcaption className="mt-3">
+                  <span className="block text-body font-medium text-ink">{screen.label}</span>
+                  <span className="mt-1 block text-body text-ink/60">{screen.description}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </HomeRow>
       )}
 
-      {/* Screens — hidden until better previews are ready */}
+      <HomeRow id="stack" label="Stack">
+        <p className="text-body text-ink">{project.stack.join(" · ")}</p>
+      </HomeRow>
 
-      {/* Stack */}
-      <section>
-        <motion.p className="eyebrow mb-4" {...useFadeUp(0)}>
-          Stack
-        </motion.p>
-        <motion.div className="flex flex-wrap gap-x-5 gap-y-1" {...useFadeUp(0.06)}>
-          {project.stack.map((tech, i) => (
-            <motion.span
-              key={tech}
-              className={TAG}
-              initial={
-                reduceMotion
-                  ? {}
-                  : { opacity: 0, y: 12, filter: "blur(2px)" }
-              }
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              viewport={{ once: true }}
-              transition={{
-                type: "spring",
-                stiffness: 200,
-                damping: 25,
-                delay: 0.08 + i * 0.04,
-              }}
-            >
-              {tech}
-            </motion.span>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* Next project */}
-      <Link href={`/work/${nextProject.slug}`} transitionTypes={["nav-forward"]} className="group block">
-        <motion.div
-          className="flex items-center justify-between border-t border-[rgba(0,0,0,0.06)] py-6"
-          initial={reduceMotion ? {} : { opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 80, damping: 30 }}
+      <HomeRow id="next" label="Next">
+        <Link
+          href={`/work/${nextProject.slug}`}
+          transitionTypes={["nav-forward"]}
+          className="group grid gap-5 focus-visible:outline-offset-4 sm:grid-cols-[minmax(0,1fr)_200px]"
         >
+          <div className={`${FRAME} transition-colors duration-150 ease-out group-hover:bg-card-hover`}>
+            <div className={PICTURE}>
+              <Image src={nextCover} alt="" fill sizes="(min-width: 640px) 460px, 100vw" className="object-cover" />
+            </div>
+          </div>
           <div>
-            <p className="meta">
-              Next
-            </p>
-            <p className="mt-0.5 text-body font-medium text-ink">
+            <h3 className="text-body font-medium text-ink">
               {nextProject.title}
+              <span
+                className="ml-1 inline-block text-muted transition-[translate,color] duration-150 ease-out group-hover:translate-x-0.5 group-hover:text-ink"
+                aria-hidden="true"
+              >
+                →
+              </span>
+            </h3>
+            <p className="mt-1 text-body text-ink/60">{nextProject.oneLineOutcome}</p>
+            <p className="meta mt-3">
+              {nextProject.category} · {nextProject.year.slice(-4)}
             </p>
           </div>
-          <span className="text-body text-muted transition-[color,translate] duration-200 ease-out group-hover:translate-x-1 group-hover:text-ink group-focus-visible:translate-x-1 group-focus-visible:text-ink">
-            →
-          </span>
-        </motion.div>
-      </Link>
+        </Link>
+      </HomeRow>
     </main>
   );
 }

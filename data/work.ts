@@ -34,7 +34,10 @@ export type WorkCard = {
   cover: string;
 };
 
-const coverFor = (slug: string) => `/previews/covers/${slug}-landscape.jpg`;
+export const coverFor = (slug: string) => `/previews/covers/${slug}-landscape.jpg`;
+
+// The projects in the slider, in its order. Covers exist for these.
+export const sliderSlugs = workList.flatMap((item) => (item.type === "project" ? [item.slug] : []));
 
 export function workCards(items: WorkItem[] = workList): WorkCard[] {
   return items.flatMap((item): WorkCard[] => {
