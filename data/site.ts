@@ -74,10 +74,6 @@ export const siteSettings: SiteSettings = {
       href: "https://www.linkedin.com/in/nick-conversionflow/",
     },
     {
-      label: "Contra",
-      href: "https://contra.com/nick_georgiev_0qdgnw7z/work?r=nick_georgiev_0qdgnw7z",
-    },
-    {
       label: "GitHub",
       href: "https://github.com/litterthanlit",
     },

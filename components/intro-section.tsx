@@ -18,7 +18,7 @@ export function IntroSection() {
 
         <h1 className="reveal-in mt-5 text-body [animation-delay:60ms]">
           <span className="block font-medium text-ink">Nick Georgiev</span>
-          <span className="block text-muted">Designer &amp; engineer</span>
+          <span className="block text-muted">Designer who builds</span>
         </h1>
       </div>
     </section>
